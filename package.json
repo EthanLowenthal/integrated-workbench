@@ -58,6 +58,16 @@
         "command": "integratedWorkbench.reloadRegistries",
         "title": "Reload Registries",
         "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.showSketch",
+        "title": "Show Sketch",
+        "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.showTools",
+        "title": "Show Boards and Tools",
+        "category": "Integrated Workbench"
       }
     ],
     "menus": {
@@ -81,6 +91,13 @@
         {
           "command": "integratedWorkbench.upload",
           "when": "integratedWorkbench.inProject"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "integratedWorkbench.reloadRegistries",
+          "when": "view == integratedWorkbench.tools",
+          "group": "overflow"
         }
       ]
     },
@@ -140,7 +157,30 @@
         ],
         "url": "./workbench-registry/schema.json"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "integratedWorkbench",
+          "title": "Integrated Workbench",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "integratedWorkbench": [
+        {
+          "type": "webview",
+          "id": "integratedWorkbench.sketch",
+          "name": "Sketch"
+        },
+        {
+          "type": "webview",
+          "id": "integratedWorkbench.tools",
+          "name": "Boards and tools"
+        }
+      ]
+    }
   },
   "scripts": {
     "build": "node esbuild.mjs",
@@ -152,11 +192,14 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "package": "node esbuild.mjs --production && vsce package --no-dependencies",
-    "registry:check": "esbuild scripts/registry-check.ts --bundle --platform=node --format=esm --outfile=dist/registry-check.mjs --log-level=warning && node dist/registry-check.mjs"
+    "registry:check": "esbuild scripts/registry-check.ts --bundle --platform=node --format=esm --outfile=dist/registry-check.mjs --log-level=warning && node dist/registry-check.mjs",
+    "test:e2e": "node esbuild.mjs && node scripts/e2e.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
     "@types/vscode": "^1.90.0",
+    "@vscode/codicons": "^0.0.36",
+    "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.9.2",
     "esbuild": "^0.25.12",
     "eslint": "^9.39.5",

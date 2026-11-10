@@ -1,0 +1,276 @@
+/* Shared styles for the Integrated Workbench sidebar views. Only VS Code theme variables. */
+:root {
+  --gap: 8px;
+  --radius: 2px;
+}
+body {
+  padding: 0 14px 14px 20px;
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  line-height: 1.4;
+}
+.muted {
+  color: var(--vscode-descriptionForeground);
+}
+.small {
+  font-size: 0.92em;
+}
+.error {
+  color: var(--vscode-errorForeground);
+}
+.ok {
+  color: var(--vscode-testing-iconPassed, var(--vscode-charts-green));
+}
+.warn {
+  color: var(--vscode-editorWarning-foreground);
+}
+.accent {
+  color: var(--vscode-textLink-foreground);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  min-width: 0;
+}
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.section {
+  padding: 10px 0;
+  border-top: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-widget-border, transparent));
+}
+.section:first-child {
+  border-top: none;
+}
+.label {
+  width: 44px;
+  flex: none;
+  color: var(--vscode-descriptionForeground);
+}
+.heading {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vscode-descriptionForeground);
+  margin: 4px 0 6px;
+}
+.codicon {
+  vertical-align: text-bottom;
+}
+
+button {
+  font: inherit;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+  cursor: pointer;
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+button:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+button.primary {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+}
+button.primary:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+button.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--vscode-textLink-foreground);
+}
+button.link:hover {
+  text-decoration: underline;
+  background: none;
+}
+button.small {
+  padding: 1px 8px;
+  font-size: 0.92em;
+}
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+button.dim {
+  opacity: 0.6;
+}
+
+/* Dropdown-looking button (opens a native QuickPick) and native select */
+.picker,
+select {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  text-align: left;
+  justify-content: space-between;
+  color: var(--vscode-dropdown-foreground);
+  background: var(--vscode-dropdown-background);
+  border: 1px solid var(--vscode-dropdown-border, transparent);
+  border-radius: var(--radius);
+  padding: 3px 6px;
+}
+.picker:hover {
+  background: var(--vscode-dropdown-background);
+  border-color: var(--vscode-focusBorder);
+}
+.picker .value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+input[type='search'] {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: var(--radius);
+  padding: 4px 6px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: 6px 8px;
+  margin: 8px 0 4px;
+  border-radius: var(--radius);
+  background: var(--vscode-inputValidation-warningBackground);
+  border: 1px solid var(--vscode-inputValidation-warningBorder, transparent);
+}
+.progress {
+  height: 2px;
+  overflow: hidden;
+  background: transparent;
+  margin: 6px 0;
+  position: relative;
+}
+.progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: var(--vscode-progressBar-background);
+  animation: slide 1.2s ease-in-out infinite;
+}
+.progress.determinate::after {
+  animation: none;
+  width: var(--p, 0%);
+}
+@keyframes slide {
+  from {
+    left: -30%;
+  }
+  to {
+    left: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+
+.diag {
+  display: flex;
+  gap: 6px;
+  padding: 2px 0 2px 20px;
+  cursor: pointer;
+  min-width: 0;
+}
+.diag:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+.diag .where {
+  flex: none;
+}
+.card {
+  padding: 6px 0 8px;
+}
+.card .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* Boards and tools list */
+.item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--vscode-widget-border, transparent);
+}
+.item:last-child {
+  border-bottom: none;
+}
+.item.focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+.item .icon {
+  font-size: 20px;
+  flex: none;
+  width: 24px;
+  text-align: center;
+  padding-top: 1px;
+}
+.item .name {
+  font-weight: 600;
+}
+.item .why {
+  color: var(--vscode-textLink-foreground);
+  font-size: 0.92em;
+}
+.item .side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 8px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  vertical-align: middle;
+}
+.group {
+  margin-top: 10px;
+}
+.group > .heading {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+}

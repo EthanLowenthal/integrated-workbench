@@ -42,6 +42,15 @@
         "macos": "https://ftdichip.com/drivers/vcp-drivers/"
       },
       "verified": false
+    },
+    {
+      "id": "st-link",
+      "vendor": "STMicroelectronics",
+      "name": "ST-LINK USB driver",
+      "urls": {
+        "windows": "https://www.st.com/en/development-tools/stsw-link009.html"
+      },
+      "verified": false
     }
   ]
 }

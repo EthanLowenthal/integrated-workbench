@@ -14,7 +14,10 @@
           "usb": ["2341:0043", "2341:0001", "2341:0042", "2341:8036", "2341:0036", "2341:8037", "2341:0037"],
           "reason": "${device} plugged in"
         },
-        { "fqbn": ["arduino:avr:*"], "reason": "${sketch} builds for ${board}" }
+        {
+          "fqbn": ["arduino:avr:*"],
+          "reason": "${sketch} builds for ${board}"
+        }
       ]
     },
     {
@@ -23,7 +26,12 @@
       "platform": "arduino:renesas_uno",
       "name": "Arduino UNO R4 boards",
       "boards": ["UNO R4 Minima", "UNO R4 WiFi"],
-      "recommendWhen": [{ "fqbn": ["arduino:renesas_uno:*"], "reason": "${sketch} builds for ${board}" }]
+      "recommendWhen": [
+        {
+          "fqbn": ["arduino:renesas_uno:*"],
+          "reason": "${sketch} builds for ${board}"
+        }
+      ]
     },
     {
       "id": "esp32:esp32",
@@ -35,8 +43,14 @@
       "boardIndex": "https://espressif.github.io/arduino-esp32/package_esp32_index.json",
       "homepage": "https://github.com/espressif/arduino-esp32",
       "recommendWhen": [
-        { "usb": ["303a:*"], "reason": "${device} plugged in" },
-        { "fqbn": ["esp32:esp32:*"], "reason": "${sketch} builds for ${board}" }
+        {
+          "usb": ["303a:*"],
+          "reason": "${device} plugged in"
+        },
+        {
+          "fqbn": ["esp32:esp32:*"],
+          "reason": "${sketch} builds for ${board}"
+        }
       ]
     },
     {
@@ -49,8 +63,40 @@
       "boardIndex": "https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json",
       "homepage": "https://github.com/earlephilhower/arduino-pico",
       "recommendWhen": [
-        { "usb": ["2e8a:000a", "2e8a:0003"], "reason": "${device} plugged in" },
-        { "fqbn": ["rp2040:rp2040:*"], "reason": "${sketch} builds for ${board}" }
+        {
+          "usb": ["2e8a:000a", "2e8a:0003"],
+          "reason": "${device} plugged in"
+        },
+        {
+          "fqbn": ["rp2040:rp2040:*"],
+          "reason": "${sketch} builds for ${board}"
+        }
+      ]
+    },
+    {
+      "id": "stmicroelectronics:stm32",
+      "kind": "arduino-core",
+      "platform": "STMicroelectronics:stm32",
+      "name": "STM32 boards",
+      "description": "STMicroelectronics official Arduino core (stm32duino). Nucleo and Discovery boards upload by copying to the board drive, with nothing else to install. Other upload methods (SWD, DFU, serial) need ST STM32CubeProgrammer, a separate download from st.com.",
+      "boards": [
+        "Nucleo-64",
+        "Nucleo-144",
+        "Nucleo-32",
+        "Discovery",
+        "Generic STM32 (Blue Pill, Black Pill)"
+      ],
+      "boardIndex": "https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json",
+      "homepage": "https://github.com/stm32duino/Arduino_Core_STM32",
+      "recommendWhen": [
+        {
+          "usb": ["0483:*"],
+          "reason": "${device} plugged in"
+        },
+        {
+          "fqbn": ["STMicroelectronics:stm32:*"],
+          "reason": "${sketch} builds for ${board}"
+        }
       ]
     }
   ]

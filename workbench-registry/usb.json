@@ -217,6 +217,63 @@
       "family": "rp2040",
       "bootloader": true,
       "noSerialPort": true
+    },
+    {
+      "vid": "0483",
+      "name": "STMicroelectronics",
+      "kind": "native",
+      "family": "stm32"
+    },
+    {
+      "vid": "0483",
+      "pid": "374b",
+      "name": "ST-LINK/V2-1 (Nucleo, Discovery)",
+      "kind": "bridge",
+      "family": "stlink",
+      "driver": "st-link"
+    },
+    {
+      "vid": "0483",
+      "pid": "374e",
+      "name": "ST-LINK/V3",
+      "kind": "bridge",
+      "family": "stlink",
+      "driver": "st-link",
+      "verified": false
+    },
+    {
+      "vid": "0483",
+      "pid": "374f",
+      "name": "ST-LINK/V3",
+      "kind": "bridge",
+      "family": "stlink",
+      "driver": "st-link",
+      "verified": false
+    },
+    {
+      "vid": "0483",
+      "pid": "3753",
+      "name": "ST-LINK/V3",
+      "kind": "bridge",
+      "family": "stlink",
+      "driver": "st-link",
+      "verified": false
+    },
+    {
+      "vid": "0483",
+      "pid": "5740",
+      "name": "STM32 (USB serial)",
+      "kind": "native",
+      "family": "stm32"
+    },
+    {
+      "vid": "0483",
+      "pid": "df11",
+      "name": "STM32 (DFU bootloader)",
+      "kind": "native",
+      "family": "stm32",
+      "bootloader": true,
+      "noSerialPort": true
     }
   ]
 }

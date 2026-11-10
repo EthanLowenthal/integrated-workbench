@@ -28,6 +28,13 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - `src/core` defaults to the bundled `usb.json` / `drivers.json` so it still works standalone; the extension passes merged dbs.
 - Unverified entries carry `"verified": false` (replaces `// TODO verify` for data). `npm run registry:check [-- spec] [--downloads]` validates and lists them.
 
+## UI
+
+- Sidebar (Activity Bar container `integratedWorkbench`): webview views `integratedWorkbench.sketch` (src/views/sketchView.ts + media/sketch.js) and `integratedWorkbench.tools` (src/views/toolsView.ts + media/tools.js), shared media/sidebar.css using only VS Code theme variables, codicons copied into dist/ by esbuild.mjs.
+- No notification toasts for normal flow: progress/results live in the sidebar (Runs in src/runs.ts, ToolsModel in src/toolsModel.ts) plus one status bar item. Only modals kept: third-party registry trust, run-as-admin.
+- Board stored in the sketch's sketch.yaml (`default_fqbn`); port per machine in globalState.
+- `npm run test:e2e` runs test/e2e/suite.ts inside the installed VS Code with a throwaway profile.
+
 ## Commands
 
 - `npm test`, `npm run typecheck`, `npm run lint`, `npm run build` (esbuild -> dist/extension.js), `npm run package` (dev .vsix), `npm run format`

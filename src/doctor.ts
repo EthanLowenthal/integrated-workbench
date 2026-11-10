@@ -53,47 +53,22 @@ export class BoardDoctor implements vscode.Disposable {
   }
 }
 
-/** Board Doctor UI: pick a diagnosis, read the explanation, press a fix button. */
-export async function showBoardDoctor(
+/** Carries out a Board Doctor button. Never runs a shell command: commands are copied for the user. */
+export async function runDoctorAction(
+  action: Action,
   doctor: BoardDoctor,
   onSelectPort: (path: string) => Promise<void>,
 ): Promise<void> {
-  const state = await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Window, title: text.doctorChecking },
-    () => doctor.refresh(),
-  );
-  if (state.error) {
-    void vscode.window.showErrorMessage(text.doctorProbeFailed(state.error));
-    return;
-  }
-  const icon = { error: '$(error)', warning: '$(warning)', info: '$(info)', ok: '$(pass)' } as const;
-  const picked = await vscode.window.showQuickPick(
-    state.diagnoses.map((d) => ({ label: `${icon[d.severity]} ${d.title}`, detail: d.detail, d })),
-    { title: text.doctorTitle, matchOnDetail: true },
-  );
-  if (!picked) return;
-  const d = picked.d;
-  const buttons = d.actions.map((a) => a.label);
-  const choice = await vscode.window.showInformationMessage(
-    d.title,
-    { modal: true, detail: d.detail },
-    ...buttons,
-  );
-  const action = d.actions.find((a) => a.label === choice);
-  if (action) await runAction(action, doctor, onSelectPort);
-}
-
-/** Never runs a shell command: commands are copied for the user to run themselves. */
-async function runAction(action: Action, doctor: BoardDoctor, onSelectPort: (path: string) => Promise<void>) {
   switch (action.kind) {
     case 'openUrl':
       await vscode.env.openExternal(vscode.Uri.parse(action.url));
       return;
     case 'copyCommand':
       await vscode.env.clipboard.writeText(action.command);
-      void vscode.window.showInformationMessage(text.copied(action.command));
+      vscode.window.setStatusBarMessage(text.copied(action.command), 5000);
       return;
     case 'runCommand': {
+      // The one modal kept on purpose: it's about running something as administrator.
       const ok = await vscode.window.showWarningMessage(
         text.adminPrompt(action.command),
         { modal: true },
@@ -101,12 +76,12 @@ async function runAction(action: Action, doctor: BoardDoctor, onSelectPort: (pat
       );
       if (ok) {
         await vscode.env.clipboard.writeText(action.command);
-        void vscode.window.showInformationMessage(text.copied(action.command));
+        vscode.window.setStatusBarMessage(text.copied(action.command), 5000);
       }
       return;
     }
     case 'retry':
-      await showBoardDoctor(doctor, onSelectPort);
+      await doctor.refresh();
       return;
     case 'selectPort':
       await onSelectPort(action.path);

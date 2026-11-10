@@ -117,8 +117,8 @@ export const messages = {
   noBoards: (): Text => ({
     title: 'No boards found',
     detail:
-      'No USB-serial boards are connected. Use "Watch for Board" and plug your board in: Integrated Workbench will ' +
-      'see what changes and tell you what is wrong.',
+      'Plug your board in; it shows up here within a couple of seconds. If nothing happens, try a ' +
+      'different USB cable: many cables are charge-only and carry no data.',
   }),
 
   ok: (board: string, path: string): Text => ({

@@ -206,6 +206,27 @@ describe('recommend', () => {
     ]);
   });
 
+  it('STM32: a plugged-in Nucleo (ST-LINK/V2-1) recommends the STM32 board package', async () => {
+    const reg = mergeRegistries([await loadRegistry(root, nodeRegistryIO, { builtin: true })]);
+    const db = createChipDb(reg.usb);
+    const name = lookupChip('0483', '374b', db).chip!.name;
+    expect(name).toBe('ST-LINK/V2-1 (Nucleo, Discovery)');
+    expect(lookupChip('0483', 'df11', db).chip).toMatchObject({ bootloader: true, noSerialPort: true });
+    const recs = recommend(reg.packages, {
+      matchedGlobs: new Set(),
+      usb: [{ vid: '0483', pid: '374b', name }],
+      sketches: [],
+    });
+    expect(recs.map((r) => [r.pkg.id, r.reasons])).toEqual([
+      ['stmicroelectronics:stm32', ['ST-LINK/V2-1 (Nucleo, Discovery) plugged in']],
+    ]);
+    const stm = reg.packages.find((p) => p.id === 'stmicroelectronics:stm32');
+    expect(stm).toMatchObject({
+      platform: 'STMicroelectronics:stm32',
+      boardIndex: expect.stringContaining('stm32duino'),
+    });
+  });
+
   it('recommends nothing for an empty workspace with nothing plugged in', async () => {
     const reg = mergeRegistries([await loadRegistry(root, nodeRegistryIO, { builtin: true })]);
     expect(recommend(reg.packages, { matchedGlobs: new Set(), usb: [], sketches: [] })).toEqual([]);

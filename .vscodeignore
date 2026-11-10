@@ -12,3 +12,5 @@ eslint.config.mjs
 .github/**
 CLAUDE.md
 scripts/**
+dist/e2e/**
+dist/registry-check.mjs

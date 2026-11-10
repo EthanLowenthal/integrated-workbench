@@ -10,7 +10,7 @@ type TargetItem = vscode.QuickPickItem & { target?: BuildTarget };
 /** Board picker: plugged-in boards first, then every board from installed cores. */
 export async function pickBoard(
   session: Session,
-  installAvr: () => Promise<boolean>,
+  openTools: () => Promise<void>,
 ): Promise<BuildTarget | undefined> {
   const qp = vscode.window.createQuickPick<TargetItem>();
   qp.placeholder = text.pickBoard;
@@ -34,23 +34,25 @@ export async function pickBoard(
   }
   qp.busy = false;
 
-  if (all.length === 0) {
-    qp.hide();
-    const choice = await vscode.window.showInformationMessage(text.noCoresInstalled, text.installAvr);
-    if (choice === text.installAvr && (await installAvr())) return pickBoard(session, installAvr);
-    return undefined;
-  }
+  const empty: TargetItem[] = all.length
+    ? []
+    : [
+        { label: text.noBoardPackages, kind: vscode.QuickPickItemKind.Separator },
+        { label: `$(package) ${text.openTools}`, alwaysShow: true, target: undefined, detail: '' },
+      ];
 
   qp.items = [
     ...head,
-    { label: text.allBoardsSection, kind: vscode.QuickPickItemKind.Separator },
+    ...(all.length ? [{ label: text.allBoardsSection, kind: vscode.QuickPickItemKind.Separator }] : []),
     ...all.map((t) => ({ label: t.name, description: t.id, target: t })),
+    ...empty,
   ];
   const picked = await new Promise<TargetItem | undefined>((resolve) => {
     qp.onDidAccept(() => resolve(qp.selectedItems[0]));
     qp.onDidHide(() => resolve(undefined));
   });
   qp.dispose();
+  if (picked && !picked.target && picked.label.includes(text.openTools)) await openTools();
   return picked?.target;
 }
 
