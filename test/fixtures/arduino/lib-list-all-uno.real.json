@@ -1,0 +1,171 @@
+{
+  "installed_libraries": [
+    {
+      "library": {
+        "name": "Wire",
+        "author": "Arduino",
+        "maintainer": "Arduino <info@arduino.cc>",
+        "sentence": "This library allows you to communicate with I2C and Two Wire Interface devices.",
+        "paragraph": "It allows the communication with I2C devices like temperature sensors, realtime clocks and many others using SDA (Data Line) and SCL (Clock Line).",
+        "website": "http://www.arduino.cc/en/Reference/Wire",
+        "category": "Communication",
+        "architectures": [
+          "avr"
+        ],
+        "container_platform": "arduino:avr@1.8.8",
+        "version": "1.0",
+        "license": "Unspecified",
+        "properties": {},
+        "location": "platform",
+        "layout": "recursive",
+        "provides_includes": [
+          "Wire.h"
+        ],
+        "compatible_with": {
+          "arduino:avr:uno": true
+        }
+      }
+    },
+    {
+      "library": {
+        "name": "Servo",
+        "author": "Michael Margolis, Arduino",
+        "maintainer": "Arduino <info@arduino.cc>",
+        "sentence": "Allows Arduino boards to control a variety of servo motors.",
+        "paragraph": "This library can control a great number of servos.<br />It makes careful use of timers: the library can control 12 servos using only 1 timer.<br />On the Arduino Due you can control up to 60 servos.",
+        "website": "https://www.arduino.cc/reference/en/libraries/servo/",
+        "category": "Device Control",
+        "architectures": [
+          "avr",
+          "megaavr",
+          "sam",
+          "samd",
+          "nrf52",
+          "stm32f4",
+          "mbed",
+          "mbed_nano",
+          "mbed_portenta",
+          "mbed_rp2040",
+          "renesas",
+          "renesas_portenta",
+          "renesas_uno",
+          "zephyr"
+        ],
+        "version": "1.3.0",
+        "license": "Unspecified",
+        "properties": {},
+        "location": "user",
+        "layout": "recursive",
+        "provides_includes": [
+          "Servo.h"
+        ],
+        "compatible_with": {
+          "arduino:avr:uno": true
+        }
+      }
+    },
+    {
+      "library": {
+        "name": "EEPROM",
+        "author": "Arduino, Christopher Andrews",
+        "maintainer": "Arduino <info@arduino.cc>",
+        "sentence": "Enables reading and writing to the permanent board storage.",
+        "paragraph": "This library allows to read and write data in a memory type, the EEPROM, that keeps its content also when the board is powered off. The amount of EEPROM available depends on the microcontroller type.",
+        "website": "http://www.arduino.cc/en/Reference/EEPROM",
+        "category": "Data Storage",
+        "architectures": [
+          "avr"
+        ],
+        "container_platform": "arduino:avr@1.8.8",
+        "version": "2.0",
+        "license": "Unspecified",
+        "properties": {},
+        "location": "platform",
+        "layout": "recursive",
+        "provides_includes": [
+          "EEPROM.h"
+        ],
+        "compatible_with": {
+          "arduino:avr:uno": true
+        }
+      }
+    },
+    {
+      "library": {
+        "name": "HID",
+        "author": "Arduino",
+        "maintainer": "Arduino <info@arduino.cc>",
+        "sentence": "Module for PluggableUSB infrastructure. Exposes an API for devices like Keyboards, Mice and Gamepads.",
+        "website": "http://www.arduino.cc/en/Reference/HID",
+        "category": "Communication",
+        "architectures": [
+          "avr"
+        ],
+        "container_platform": "arduino:avr@1.8.8",
+        "version": "1.0",
+        "license": "Unspecified",
+        "properties": {},
+        "location": "platform",
+        "layout": "recursive",
+        "provides_includes": [
+          "HID.h"
+        ],
+        "compatible_with": {
+          "arduino:avr:uno": true
+        }
+      }
+    },
+    {
+      "library": {
+        "name": "SPI",
+        "author": "Arduino",
+        "maintainer": "Arduino <info@arduino.cc>",
+        "sentence": "Enables the communication with devices that use the Serial Peripheral Interface (SPI) Bus.",
+        "paragraph": "SPI is a synchronous serial data protocol used by microcontrollers for communicating with one or more peripheral devices quickly over short distances. It uses three lines common to all devices (MISO, MOSI and SCK) and one specific for each device.",
+        "website": "http://www.arduino.cc/en/Reference/SPI",
+        "category": "Communication",
+        "architectures": [
+          "avr"
+        ],
+        "container_platform": "arduino:avr@1.8.8",
+        "version": "1.0",
+        "license": "Unspecified",
+        "properties": {},
+        "location": "platform",
+        "layout": "recursive",
+        "provides_includes": [
+          "SPI.h"
+        ],
+        "compatible_with": {
+          "arduino:avr:uno": true
+        }
+      }
+    },
+    {
+      "library": {
+        "name": "SoftwareSerial",
+        "author": "Arduino",
+        "maintainer": "Arduino <info@arduino.cc>",
+        "sentence": "Enables serial communication on any digital pin.",
+        "paragraph": "The SoftwareSerial library has been developed to allow serial communication on any digital pin of the board, using software to replicate the functionality of the hardware UART. It is possible to have multiple software serial ports with speeds up to 115200 bps.",
+        "website": "http://www.arduino.cc/en/Reference/SoftwareSerial",
+        "category": "Communication",
+        "architectures": [
+          "avr"
+        ],
+        "container_platform": "arduino:avr@1.8.8",
+        "version": "1.0",
+        "license": "Unspecified",
+        "properties": {},
+        "location": "platform",
+        "layout": "recursive",
+        "provides_includes": [
+          "SoftwareSerial.h"
+        ],
+        "compatible_with": {
+          "arduino:avr:uno": true
+        }
+      }
+    }
+  ]
+}

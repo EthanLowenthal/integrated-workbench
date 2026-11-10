@@ -10,9 +10,10 @@ Integrated Workbench compiles and uploads Arduino sketches (`.ino`, `.cpp`, `.h`
 - **Board detection.** Connected boards are detected within a couple of seconds. Boards that identify themselves over USB are selected automatically; boards with a USB-serial chip (CH340, CP210x, FTDI) show the chip.
 - **Boards and Tools.** Install, update, and remove board packages. Packages recommended for the current workspace and connected boards are listed first, each with the reason.
 - **Serial Monitor.** Live output with timestamps, hex view, filter, and save. Send text with a choice of line ending and history. The Plot tab graphs values such as `temp=21.5 humidity=40`. The monitor releases the port during uploads and reconnects afterwards.
+- **Libraries.** Search, install, update, and remove libraries. Libraries a sketch includes but that are not installed are listed with an Install button, and a compile that fails on a missing `#include` offers the library that provides it.
 - **Sketch Settings.** Board, board options (flash size, CPU speed, upload method, and others), port, and Serial Monitor defaults in one page. The board and its options are stored in `sketch.yaml`, which arduino-cli and Arduino IDE 2 also read.
 - **IntelliSense.** With the C/C++ extension installed, autocomplete and error squiggles use the selected board's compiler, defines, include paths, and libraries. clangd users can write a `compile_commands.json`.
-- **Diagnostics.** When a board does not appear, the Sketch view explains why: a charge-only cable, a missing CH340 or CP210x driver, a port held by another program, or Linux permissions. Fixes come with links to vendor driver pages or commands to copy.
+- **Diagnostics.** **Detect Board** watches USB while you connect a board and reports what it saw. When a board does not appear, the Sketch view explains why: a charge-only cable, a missing CH340 or CP210x driver, a port held by another program, or Linux permissions. Fixes come with links to vendor driver pages or commands to copy.
 - **Registries.** Everything Integrated Workbench knows about boards, tools, and USB IDs comes from registries. Add your own in `integratedWorkbench.registries`.
 
 ## Getting started
@@ -59,7 +60,7 @@ Integrated Workbench collects no telemetry. It connects to the network only to d
 ## Known limitations
 
 - Arduino sketches are supported today. MicroPython and embedded Rust are planned.
-- IntelliSense for `.ino` files does not generate function prototypes, so a function used before its definition can show an error in the editor even though it compiles.
+- IntelliSense for `.ino` files includes generated function prototypes, except for functions whose signatures use types defined in the sketch; calling one of those before its definition can show an error in the editor even though it compiles.
 - Uploads to STM32 boards other than Nucleo and Discovery (for example over SWD or DFU) need STMicroelectronics' STM32CubeProgrammer, which is installed separately.
 
 ## License

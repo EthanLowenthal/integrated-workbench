@@ -12,6 +12,8 @@ import {
 import type { Session } from './session.js';
 import {
   COMPILE_DB,
+  extractPrototypes,
+  prototypesHeader,
   rewriteForSketch,
   sketchIntelliSense,
   type CompileDbEntry,
@@ -130,6 +132,20 @@ export class IntelliSense implements vscode.Disposable, CustomConfigurationProvi
       const data = sketchIntelliSense(raw, buildPath, project.root, inoFiles, (paths) =>
         paths.map((p) => join(p, 'Arduino.h')).find((p) => existsSync(p)),
       );
+      // Function prototypes arduino-cli generates for .ino files, so calling a function before its
+      // definition isn't flagged in the editor (the compiler accepts it).
+      const generated = await fsp
+        .readFile(join(buildPath, 'sketch', `${project.name}.ino.cpp`), 'utf8')
+        .catch(() => '');
+      const prototypes = extractPrototypes(generated);
+      if (prototypes.length) {
+        const header = join(buildPath, 'sketch', `${project.name}.prototypes.h`);
+        await fsp.writeFile(header, prototypesHeader(prototypes));
+        for (const ino of inoFiles) {
+          const cfg = data.files.get(ino);
+          if (cfg) data.files.set(ino, { ...cfg, forcedInclude: [...cfg.forcedInclude, header] });
+        }
+      }
       this.sketches.set(project.root, { ...data, raw, buildPath });
       this.status = 'ready';
       this.api?.didChangeCustomConfiguration(this);

@@ -1,0 +1,231 @@
+{
+  "libraries": [
+    {
+      "name": "Servo",
+      "latest": {
+        "author": "Michael Margolis, Arduino",
+        "version": "1.3.0",
+        "maintainer": "Arduino <info@arduino.cc>",
+        "sentence": "Allows Arduino boards to control a variety of servo motors.",
+        "website": "https://www.arduino.cc/reference/en/libraries/servo/",
+        "category": "Device Control",
+        "architectures": [
+          "avr",
+          "megaavr",
+          "sam",
+          "samd",
+          "nrf52",
+          "stm32f4",
+          "mbed",
+          "mbed_nano",
+          "mbed_portenta",
+          "mbed_rp2040",
+          "renesas",
+          "renesas_portenta",
+          "renesas_uno",
+          "zephyr"
+        ],
+        "types": [
+          "Arduino"
+        ]
+      },
+      "available_versions": [
+        "1.2.1",
+        "1.2.2",
+        "1.3.0"
+      ]
+    },
+    {
+      "name": "107-Arduino-Servo-RP2040",
+      "latest": {
+        "author": "Alexander Entinger <consulting@lxrobotics.com>",
+        "version": "0.2.0",
+        "maintainer": "Alexander Entinger <consulting@lxrobotics.com>",
+        "sentence": "Hardware-PWM based servo signal generation for RP2040.",
+        "website": "https://github.com/107-systems/107-Arduino-Servo-RP2040",
+        "category": "Other",
+        "architectures": [
+          "rp2040"
+        ],
+        "types": [
+          "Contributed"
+        ],
+        "provides_includes": [
+          "107-Arduino-Servo-RP2040.h"
+        ]
+      },
+      "available_versions": [
+        "0.1.0",
+        "0.2.0"
+      ]
+    },
+    {
+      "name": "AARUESP",
+      "latest": {
+        "author": "AARUTO <aaruto@example.com>",
+        "version": "2.2.1",
+        "maintainer": "AARUTO <aaruto@example.com>",
+        "sentence": "Universal ESP32 / ESP8266 library — 18000+ sensors, actuators, displays and comms in one consistent API.",
+        "website": "https://github.com/AARUTO347/AARUESP",
+        "category": "Other",
+        "architectures": [
+          "esp32",
+          "esp8266"
+        ],
+        "types": [
+          "Contributed"
+        ],
+        "provides_includes": [
+          "AARUESP.h"
+        ]
+      },
+      "available_versions": [
+        "2.1.0",
+        "2.2.0",
+        "2.2.1"
+      ]
+    },
+    {
+      "name": "AITINKR_AIOT_V2",
+      "latest": {
+        "author": "SchoolForAI",
+        "version": "1.2.0",
+        "maintainer": "AITINKR",
+        "sentence": "Library for controlling motors, servos, buttons, camera, and MQTT with the AITinkr AIOT V2.",
+        "website": "https://github.com/AITINKR/AITINKR_AIOT_V2",
+        "category": "Device Control",
+        "architectures": [
+          "esp32"
+        ],
+        "types": [
+          "Contributed"
+        ],
+        "dependencies": [
+          {
+            "name": "AITINKR_JSON_FIELDS"
+          },
+          {
+            "name": "ArduinoJson"
+          },
+          {
+            "name": "PubSubClient"
+          }
+        ]
+      },
+      "available_versions": [
+        "1.0.1",
+        "1.1.0",
+        "1.2.0"
+      ]
+    },
+    {
+      "name": "ATGenX_Hub",
+      "latest": {
+        "author": "Seif Emad / ARDUTECH0",
+        "version": "2.7.0",
+        "maintainer": "Seif Emad <support@atgenx.com>",
+        "sentence": "Connect ESP32 / ESP8266 boards to the ATGenX IoT cloud: outputs, sensors, dashboard and automations.",
+        "website": "https://github.com/ARDUTECH0/ATGenXIOT",
+        "category": "Communication",
+        "architectures": [
+          "esp32",
+          "esp8266"
+        ],
+        "types": [
+          "Contributed"
+        ],
+        "provides_includes": [
+          "ATGenXIOT.h"
+        ],
+        "dependencies": [
+          {
+            "name": "PubSubClient"
+          },
+          {
+            "name": "ArduinoJson"
+          },
+          {
+            "name": "DHT sensor library"
+          }
+        ]
+      },
+      "available_versions": [
+        "2.4.0",
+        "2.5.0",
+        "2.7.0"
+      ]
+    },
+    {
+      "name": "Accessories",
+      "latest": {
+        "author": "Thierry Paris - Locoduino",
+        "version": "1.2.2",
+        "maintainer": "Thierry Paris - Locoduino",
+        "sentence": "This is a library for Arduino to handle accessories like lights, motors.",
+        "website": "https://github.com/Locoduino/Accessories",
+        "category": "Device Control",
+        "architectures": [
+          "*"
+        ],
+        "types": [
+          "Contributed"
+        ]
+      },
+      "available_versions": [
+        "1.2.0",
+        "1.2.1",
+        "1.2.2"
+      ]
+    },
+    {
+      "name": "Adafruit PWM Servo Driver Library",
+      "latest": {
+        "author": "Adafruit",
+        "version": "3.0.3",
+        "maintainer": "Adafruit <info@adafruit.com>",
+        "sentence": "Adafruit PWM Servo Driver Library",
+        "website": "https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library",
+        "category": "Device Control",
+        "architectures": [
+          "*"
+        ],
+        "types": [
+          "Contributed"
+        ],
+        "dependencies": [
+          {
+            "name": "Adafruit BusIO"
+          }
+        ]
+      },
+      "available_versions": [
+        "3.0.1",
+        "3.0.2",
+        "3.0.3"
+      ]
+    },
+    {
+      "name": "Adafruit SoftServo",
+      "latest": {
+        "author": "Adafruit",
+        "version": "1.0.4",
+        "maintainer": "Adafruit <info@adafruit.com>",
+        "sentence": "A lightweight software servo library, designed for Trinket/Gemma but good for other Arduino-compats",
+        "website": "https://github.com/adafruit/Adafruit_SoftServo",
+        "category": "Device Control",
+        "architectures": [
+          "*"
+        ],
+        "types": [
+          "Contributed"
+        ]
+      },
+      "available_versions": [
+        "1.0.1",
+        "1.0.2",
+        "1.0.4"
+      ]
+    }
+  ],
+  "status": "success"
+}

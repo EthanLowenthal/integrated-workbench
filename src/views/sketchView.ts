@@ -34,6 +34,8 @@ type Msg =
   | { type: 'setOption'; id: string; value: string }
   | { type: 'installCpp' }
   | { type: 'openSettings' }
+  | { type: 'detectBoard' | 'cancelDetect' | 'clearDetect' }
+  | { type: 'detectAction'; d: number; a: number }
   | { type: 'openFile'; file: string; line: number; column?: number }
   | { type: 'showTools'; focus?: string }
   | { type: 'doctorAction'; d: number; a: number }
@@ -147,6 +149,20 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         last: last && { ...last, fix: last.fix && { label: last.fix.label, message: last.fix.message } },
       },
       missingRecommended: missing,
+      detect:
+        this.doctor.state.detect?.phase === 'waiting'
+          ? { phase: 'waiting', endsAt: this.doctor.state.detect.endsAt }
+          : this.doctor.state.detect?.phase === 'done'
+            ? {
+                phase: 'done',
+                result: this.doctor.state.detect.result.map((d) => ({
+                  title: d.title,
+                  detail: d.detail,
+                  severity: d.severity,
+                  actions: d.actions.map((a) => ({ label: a.label })),
+                })),
+              }
+            : undefined,
       doctor: doctor.map((d) => ({
         title: d.title,
         detail: d.detail,
@@ -176,6 +192,12 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         refreshPorts: text.refreshPorts,
         showOutput: text.showOutput,
         cancel: text.cancel,
+        detectDone: text.detectDone,
+        detectResult: text.detectResult,
+        detectSecondsLeft: text.detectSecondsLeft,
+        detectWaitingDetail: text.detectWaitingDetail,
+        detectWaiting: text.detectWaiting,
+        detectBoard: text.detectBoard,
         webview: text.webview,
       },
     };
@@ -214,6 +236,23 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         return this.session.setPort(m.path);
       case 'setOption':
         return this.session.setOption(m.id, m.value);
+      case 'detectBoard':
+        await vscode.commands.executeCommand('integratedWorkbench.detectBoard');
+        return;
+      case 'cancelDetect':
+      case 'clearDetect':
+        return this.doctor.cancelDetect();
+      case 'detectAction': {
+        const det = this.doctor.state.detect;
+        const action = det?.phase === 'done' ? det.result[m.d]?.actions[m.a] : undefined;
+        if (action) {
+          await runDoctorAction(action, this.doctor, async (path) => {
+            await this.session.setPort(path);
+            await this.session.refreshBoards();
+          });
+        }
+        return;
+      }
       case 'openSettings':
         await vscode.commands.executeCommand('integratedWorkbench.openSketchSettings');
         return;

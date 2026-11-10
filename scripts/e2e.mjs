@@ -28,6 +28,16 @@ const tmp = mkdtempSync(join(tmpdir(), 'iw-e2e-'));
 const ws = join(tmp, 'workspace');
 mkdirSync(join(ws, 'Blink'), { recursive: true });
 writeFileSync(join(ws, 'Blink', 'Blink.ino'), 'void setup() {}\nvoid loop() {}\n');
+mkdirSync(join(ws, 'UsesServo'), { recursive: true });
+writeFileSync(
+  join(ws, 'UsesServo', 'UsesServo.ino'),
+  '#include <Servo.h>\nServo s;\nvoid setup() { s.attach(9); }\nvoid loop() {}\n',
+);
+mkdirSync(join(ws, 'NeedsLib'), { recursive: true });
+writeFileSync(
+  join(ws, 'NeedsLib', 'NeedsLib.ino'),
+  '#include <FastLED.h>\nvoid setup() {}\nvoid loop() {}\n',
+);
 
 // With a real toolchain: start from a fresh Arduino data folder with no board packages, seeded with the
 // package indexes and download cache from E2E_ARDUINO_DATA, so installs work offline.

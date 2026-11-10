@@ -26,6 +26,8 @@ export const TIMEOUTS = {
   /** Installing a board package (toolchains can be hundreds of MB). */
   coreInstallMs: 30 * 60_000,
   coreUninstallMs: 2 * 60_000,
+  /** Installing a library (and its dependencies). */
+  libInstallMs: 10 * 60_000,
   /** Tool downloads: give up if no bytes arrive for this long... */
   downloadStallMs: 30_000,
   /** ...or if the whole download takes longer than this. */

@@ -131,30 +131,40 @@
       <div style="margin:6px 0 0 20px"><button class="link" data-action="showOutput">${esc(T.showOutput)}</button></div></div>`;
   }
 
-  function doctor(s, T) {
-    if (!s.doctor.length) return '';
+  function card(d, i, action) {
     const sev = {
       error: icon('error', 'error'),
       warning: icon('warning', 'warn'),
       info: icon('info'),
       ok: icon('pass', 'ok'),
     };
-    const cards = s.doctor
-      .map(
-        (
-          d,
-          di,
-        ) => `<div class="card"><div class="row" style="align-items:flex-start">${sev[d.severity] || ''}<span class="grow" style="font-weight:600">${esc(d.title)}</span></div>
-        <div class="muted small" style="margin:2px 0 0 20px">${esc(d.detail)}</div>
-        <div class="buttons" style="margin-left:20px">${d.actions
-          .map(
-            (a, ai) =>
-              `<button class="small" data-action="doctorAction" data-d="${di}" data-a="${ai}">${esc(a.label)}</button>`,
-          )
-          .join('')}</div></div>`,
-      )
-      .join('');
-    return `<div class="section"><div class="heading">${esc(T.boardCheck)}</div>${cards}</div>`;
+    return `<div class="card"><div class="row" style="align-items:flex-start">${sev[d.severity] || ''}<span class="grow" style="font-weight:600">${esc(d.title)}</span></div>
+      <div class="muted small" style="margin:2px 0 0 20px">${esc(d.detail)}</div>
+      <div class="buttons" style="margin-left:20px">${d.actions
+        .map(
+          (a, ai) =>
+            `<button class="small" data-action="${action}" data-d="${i}" data-a="${ai}">${esc(a.label)}</button>`,
+        )
+        .join('')}</div></div>`;
+  }
+
+  function doctor(s, T) {
+    const det = s.detect;
+    if (det && det.phase === 'waiting') {
+      return `<div class="section"><div class="heading">${esc(T.boardCheck)}</div>
+        <div class="card"><div class="row">${icon('loading', 'codicon-modifier-spin')}<span class="grow" style="font-weight:600">${esc(T.detectWaiting)}</span>
+          <span class="muted small"><span data-ends="${det.endsAt}"></span>${esc(T.detectSecondsLeft)}</span></div>
+          <div class="muted small" style="margin:2px 0 0 20px">${esc(T.detectWaitingDetail)}</div>
+          <div class="buttons" style="margin-left:20px"><button class="small" data-action="cancelDetect">${esc(T.cancel)}</button></div></div></div>`;
+    }
+    if (det && det.phase === 'done') {
+      return `<div class="section"><div class="heading">${esc(T.detectResult)}</div>${det.result.map((d, i) => card(d, i, 'detectAction')).join('')}
+        <div style="margin-left:20px"><button class="small" data-action="clearDetect">${esc(T.detectDone)}</button></div></div>`;
+    }
+    const cards = s.doctor.map((d, i) => card(d, i, 'doctorAction')).join('');
+    const detect = `<div style="margin:4px 0 0 20px"><button class="link" data-action="detectBoard">${icon('debug-disconnect')} ${esc(T.detectBoard)}</button></div>`;
+    if (!s.doctor.length && s.ports.length) return '';
+    return `<div class="section"><div class="heading">${esc(T.boardCheck)}</div>${cards}${detect}</div>`;
   }
 
   function render() {
@@ -199,5 +209,11 @@
       render();
     }
   });
+  // Detect Board countdown.
+  setInterval(() => {
+    for (const el of document.querySelectorAll('[data-ends]')) {
+      el.textContent = String(Math.max(0, Math.ceil((Number(el.dataset.ends) - Date.now()) / 1000)));
+    }
+  }, 250);
   vscode.postMessage({ type: 'ready' });
 })();

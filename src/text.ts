@@ -24,6 +24,13 @@ export const text = {
   recommendedMissing: (n: number) => `${n} recommended package${n === 1 ? '' : 's'} not installed.`,
   install: 'Install',
   view: 'View',
+  detectBoard: 'Detect Board...',
+  detectWaiting: 'Connect your board now',
+  detectWaitingDetail:
+    'Watching USB for a new device. Use a data cable, and plug it in directly if possible.',
+  detectSecondsLeft: 's left',
+  detectResult: 'Detection Result',
+  detectDone: 'Done',
   boardCheck: 'Diagnostics',
   openMonitor: 'Open Serial Monitor',
   unknownBoard: 'Unknown device',
@@ -148,6 +155,35 @@ export const text = {
       refreshIntellisense: 'Refresh',
       writeCompileCommands: 'Write compile_commands.json',
       clangdHint: 'Using clangd instead? Write a compile_commands.json into the sketch folder.',
+    },
+  },
+
+  libraries: {
+    installing: 'Installing',
+    uninstalling: 'Uninstalling',
+    installFailed: (name: string) =>
+      `Failed to install ${name}. See the Integrated Workbench output for details.`,
+    uninstallFailed: (name: string) =>
+      `Failed to uninstall ${name}. See the Integrated Workbench output for details.`,
+    /** Static strings for the Libraries webview. */
+    ui: {
+      searchPlaceholder: 'Search libraries',
+      refresh: 'Refresh',
+      required: 'Required by This Sketch',
+      requiredHint: 'Included by the sketch but not installed.',
+      noLibraryFor: 'No library found that provides this header.',
+      installed: 'Installed',
+      noneInstalled: 'No libraries installed.',
+      results: 'Search Results',
+      noResults: 'No matching libraries.',
+      searchHint: 'Type at least two characters to search the Arduino library index.',
+      engineMissing: 'Install the build engine to manage libraries.',
+      openTools: 'Open Boards and Tools',
+      install: 'Install',
+      update: 'Update',
+      uninstall: 'Uninstall',
+      by: 'by',
+      output: 'Show Output',
     },
   },
 

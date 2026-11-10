@@ -4,6 +4,14 @@ import { basename, dirname, extname, join } from 'node:path';
 import type { ProbeHost } from '../../core/probes/host.js';
 import { streamProcess, type StreamRunner } from '../process.js';
 import { parseFqbn } from './fqbn.js';
+import {
+  architectureOf,
+  libraryForHeader,
+  parseLibList,
+  parseLibSearch,
+  type InstalledLibrary,
+  type LibraryInfo,
+} from './libraries.js';
 import type {
   BoardOption,
   BuildResult,
@@ -21,6 +29,7 @@ import {
   parseBoardListAll,
   parseBoardDetails,
   parseCoreSearch,
+  parseMissingHeaders,
   type CoreInfo,
   parseCompilerDiagnostics,
   parseMissingPlatform,
@@ -256,7 +265,10 @@ export class ArduinoToolchain implements Toolchain {
     return {
       success: res.code === 0,
       diagnostics: parseCompilerDiagnostics(all, { buildPath, sketchRoot: ctx.project.root }),
-      fix: res.code === 0 ? undefined : this.platformFix(all, ctx.target.id),
+      fix:
+        res.code === 0
+          ? undefined
+          : (this.platformFix(all, ctx.target.id) ?? (await this.libraryFix(all, ctx.target.id))),
       error: res.timedOut ? `Stopped after ${describeTimeout(TIMEOUTS.compileMs)} (time limit).` : undefined,
     };
   }
@@ -328,6 +340,102 @@ export class ArduinoToolchain implements Toolchain {
     }
     this.clearCaches();
     return true;
+  }
+
+  // ---- Libraries ----
+
+  private libIndexUpdated = false;
+
+  /** Refreshes the library index (a few MB) once per session, or when forced. */
+  async updateLibraryIndex(force = false, signal?: AbortSignal): Promise<void> {
+    if (this.libIndexUpdated && !force) return;
+    const res = await this.stream(await this.cli(), ['lib', 'update-index'], {
+      signal,
+      timeoutMs: TIMEOUTS.updateIndexMs,
+    });
+    if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not update the library list.');
+    this.libIndexUpdated = true;
+  }
+
+  /** Searches the library index. Terms must all match (arduino-cli semantics). */
+  async searchLibraries(query: string): Promise<LibraryInfo[]> {
+    const terms = query.trim().split(/\s+/).filter(Boolean);
+    const res = await this.opts.host.run(await this.cli(), ['lib', 'search', ...terms, '--format', 'json'], {
+      timeoutMs: TIMEOUTS.cliSearchMs,
+    });
+    if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not search libraries.');
+    return parseLibSearch(res.stdout);
+  }
+
+  /** Installed libraries; with a board ID, also the libraries bundled with its board package. */
+  async installedLibraries(fqbn?: string): Promise<InstalledLibrary[]> {
+    const args = [
+      'lib',
+      'list',
+      '--format',
+      'json',
+      ...(fqbn ? ['--all', '--fqbn', parseFqbn(fqbn).base] : []),
+    ];
+    const res = await this.opts.host.run(await this.cli(), args, { timeoutMs: TIMEOUTS.cliListMs });
+    if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not list libraries.');
+    return parseLibList(res.stdout);
+  }
+
+  /** The library to offer for a missing header (see libraryForHeader for the ranking). */
+  async findLibraryForHeader(header: string, fqbn?: string): Promise<LibraryInfo | undefined> {
+    const base = header.replace(/\.(h|hpp|hh)$/i, '');
+    const [byName, byHeader] = await Promise.all([
+      this.searchLibraries(`name=${base}`).catch(() => []),
+      this.searchLibraries(`provides=${header}`).catch(() => []),
+    ]);
+    return libraryForHeader(header, [...byName, ...byHeader], architectureOf(fqbn));
+  }
+
+  /** Installs (or updates to the latest) a library and its dependencies. Only after the user asked. */
+  async installLibrary(name: string, onOutput: (t: string) => void, signal?: AbortSignal): Promise<boolean> {
+    const args = ['lib', 'install', name];
+    onOutput(`$ arduino-cli ${args.join(' ')}\n`);
+    const res = await this.stream(await this.cli(), args, {
+      onStdout: onOutput,
+      onStderr: onOutput,
+      signal,
+      timeoutMs: TIMEOUTS.libInstallMs,
+    });
+    return res.code === 0;
+  }
+
+  async uninstallLibrary(
+    name: string,
+    onOutput: (t: string) => void,
+    signal?: AbortSignal,
+  ): Promise<boolean> {
+    const args = ['lib', 'uninstall', name];
+    onOutput(`$ arduino-cli ${args.join(' ')}\n`);
+    const res = await this.stream(await this.cli(), args, {
+      onStdout: onOutput,
+      onStderr: onOutput,
+      signal,
+      timeoutMs: TIMEOUTS.coreUninstallMs,
+    });
+    return res.code === 0;
+  }
+
+  /** A missing #include becomes an "Install <library>" fix when the index has a match. */
+  private async libraryFix(output: string, fqbn: string): Promise<SuggestedFix | undefined> {
+    const header = parseMissingHeaders(output)[0];
+    if (!header) return undefined;
+    try {
+      await this.updateLibraryIndex();
+      const lib = await this.findLibraryForHeader(header, fqbn);
+      if (!lib) return undefined;
+      return {
+        message: `${header} is provided by the ${lib.name} library, which is not installed.`,
+        label: `Install ${lib.name}`,
+        apply: (onOutput, signal) => this.installLibrary(lib.name, onOutput, signal),
+      };
+    } catch {
+      return undefined;
+    }
   }
 
   /** Installed board packages (`core list`). */

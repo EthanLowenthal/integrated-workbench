@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Libraries view: search the Arduino library index, install, update, and uninstall libraries. "Required by This Sketch" lists headers the sketch includes that no installed library provides, with the library to install.
+- A compile that fails on a missing `#include` offers to install the library that provides it, then compiles again.
+- IntelliSense for `.ino` files includes the function prototypes arduino-cli generates, so calling a function before its definition is no longer flagged (except for functions that use types defined in the sketch).
+- Detect Board: watches USB while you connect a board and reports what it saw, such as a board on a port, a chip without a driver, an unknown device, or nothing (usually a charge-only cable).
+
 ## 0.1.1
 
 - Select Board lists boards from board packages that aren't installed yet. Selecting one installs its package, then selects the board.

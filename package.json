@@ -2,7 +2,7 @@
   "name": "integrated-workbench",
   "displayName": "Integrated Workbench",
   "description": "Build, upload, and monitor microcontroller projects. Detects connected boards, manages board packages, and includes a Serial Monitor with a plotter. Supports Arduino sketches for AVR, ESP32, STM32, and Raspberry Pi Pico.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "integrated-workbench",
   "license": "MIT",
   "engines": {
@@ -107,6 +107,16 @@
       {
         "command": "integratedWorkbench.getStarted",
         "title": "Get Started",
+        "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.showLibraries",
+        "title": "Show Libraries",
+        "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.detectBoard",
+        "title": "Detect Board...",
         "category": "Integrated Workbench"
       }
     ],
@@ -246,6 +256,11 @@
           "type": "webview",
           "id": "integratedWorkbench.tools",
           "name": "Boards and Tools"
+        },
+        {
+          "type": "webview",
+          "id": "integratedWorkbench.libraries",
+          "name": "Libraries"
         }
       ],
       "integratedWorkbenchMonitor": [
@@ -299,7 +314,7 @@
           {
             "id": "connect",
             "title": "Connect your board",
-            "description": "Plug the board in with a USB data cable and select its port.\n[Show Sketch View](command:integratedWorkbench.showSketch)",
+            "description": "Plug the board in with a USB data cable and select its port. If it does not appear, Detect Board watches USB while you plug it in and explains what it sees.\n[Detect Board](command:integratedWorkbench.detectBoard)",
             "media": {
               "markdown": "media/walkthrough/connect.md"
             },

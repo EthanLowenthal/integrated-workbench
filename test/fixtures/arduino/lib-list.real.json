@@ -1,0 +1,40 @@
+{
+  "installed_libraries": [
+    {
+      "library": {
+        "name": "Servo",
+        "author": "Michael Margolis, Arduino",
+        "maintainer": "Arduino <info@arduino.cc>",
+        "sentence": "Allows Arduino boards to control a variety of servo motors.",
+        "paragraph": "This library can control a great number of servos.<br />It makes careful use of timers: the library can control 12 servos using only 1 timer.<br />On the Arduino Due you can control up to 60 servos.",
+        "website": "https://www.arduino.cc/reference/en/libraries/servo/",
+        "category": "Device Control",
+        "architectures": [
+          "avr",
+          "megaavr",
+          "sam",
+          "samd",
+          "nrf52",
+          "stm32f4",
+          "mbed",
+          "mbed_nano",
+          "mbed_portenta",
+          "mbed_rp2040",
+          "renesas",
+          "renesas_portenta",
+          "renesas_uno",
+          "zephyr"
+        ],
+        "version": "1.3.0",
+        "license": "Unspecified",
+        "properties": {},
+        "location": "user",
+        "layout": "recursive",
+        "provides_includes": [
+          "Servo.h"
+        ],
+        "compatible_with": {}
+      }
+    }
+  ]
+}

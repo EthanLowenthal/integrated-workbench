@@ -13,6 +13,8 @@ import { CPPTOOLS_ID, IntelliSense } from './intellisense.js';
 import { MonitorController } from './monitor/controller.js';
 import type { BuildTarget } from './toolchains/types.js';
 import { ToolsModel } from './toolsModel.js';
+import { LibrariesModel } from './librariesModel.js';
+import { LIBRARIES_VIEW, LibrariesView } from './views/librariesView.js';
 import { MONITOR_VIEW, MonitorView } from './views/monitorView.js';
 import { SettingsPage } from './views/settingsPage.js';
 import { SKETCH_VIEW, SketchView } from './views/sketchView.js';
@@ -30,6 +32,8 @@ export interface TestApi {
   intellisense: IntelliSense;
   /** The board picker's install-then-select path. */
   installBoard: (packageId: string, board: string) => Promise<BuildTarget | undefined>;
+  libraries: LibrariesModel;
+  doctor: BoardDoctor;
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<TestApi> {
@@ -111,6 +115,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   const monitorView = new MonitorView(context.extensionUri, monitor);
   const intellisense = new IntelliSense(context.extension.id, session, arduino, output);
   sketchView.intellisense = intellisense;
+  const libraries = new LibrariesModel(arduino, session, output, () => void intellisense.refresh());
+  const librariesView = new LibrariesView(context.extensionUri, libraries, output);
   const settingsPage = new SettingsPage(context.extensionUri, session, monitor, intellisense, registry);
   // The monitor gives the port back for uploads and takes it again once the board is back.
   runs.uploadHooks = {
@@ -132,6 +138,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     monitor,
     monitorView,
     intellisense,
+    libraries,
+    librariesView,
+    vscode.window.registerWebviewViewProvider(LIBRARIES_VIEW, librariesView),
+    vscode.commands.registerCommand('integratedWorkbench.showLibraries', () =>
+      vscode.commands.executeCommand(`${LIBRARIES_VIEW}.focus`),
+    ),
     settingsPage,
     vscode.commands.registerCommand('integratedWorkbench.openSketchSettings', () => settingsPage.open()),
     vscode.commands.registerCommand('integratedWorkbench.installCppExtension', () =>
@@ -178,6 +190,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     vscode.commands.registerCommand('integratedWorkbench.showTools', (id?: string) =>
       toolsView.focus(id === 'engine' ? engineId() : id),
     ),
+    vscode.commands.registerCommand('integratedWorkbench.detectBoard', async () => {
+      await showSketch();
+      await doctor.detect();
+      await session.refreshBoards();
+    }),
     vscode.commands.registerCommand('integratedWorkbench.boardDoctor', async () => {
       await showSketch();
       await doctor.refresh();
@@ -209,7 +226,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   // Background: these talk to arduino-cli and the network, which can be slow.
   void session.start();
   void tools.refresh();
-  return { session, tools, registry, runs, monitor, intellisense, installBoard: installFor };
+  return {
+    session,
+    tools,
+    registry,
+    runs,
+    monitor,
+    intellisense,
+    installBoard: installFor,
+    libraries,
+    doctor,
+  };
 }
 
 export function deactivate(): void {}

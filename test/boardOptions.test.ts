@@ -91,3 +91,36 @@ describe('IntelliSense from the compilation database (real MultiFile)', () => {
     expect(out.some((e) => e.file.endsWith('WString.cpp'))).toBe(true); // core entries kept as-is
   });
 });
+
+describe('.ino prototypes for IntelliSense (real arduino-cli output)', () => {
+  it('keeps prototypes with built-in types, skips ones using types the sketch defines', async () => {
+    const { extractPrototypes, prototypesHeader } = await import('../src/toolchains/arduino/compileDb.js');
+    const protos = extractPrototypes(fixture('arduino/proto-generated.real.ino.cpp'));
+    expect(protos).toEqual(['void setup();', 'void loop();', 'void blinkTimes(int n);']);
+    const h = prototypesHeader(protos);
+    expect(h).toContain('#include <Arduino.h>');
+    expect(h).toContain('void blinkTimes(int n);');
+    expect(h).not.toContain('Reading');
+  });
+
+  it('handles unsigned/uint8_t/pointers/defaults and stops at the first function body', async () => {
+    const { extractPrototypes } = await import('../src/toolchains/arduino/compileDb.js');
+    const gen = [
+      '#include <Arduino.h>',
+      '#line 1 "/s/A.ino"',
+      'int x;',
+      '#line 3 "/s/A.ino"',
+      'unsigned long elapsed(uint8_t pin, const char *label, int times = 2);',
+      '#line 7 "/s/A.ino"',
+      'void setup();',
+      '#line 3 "/s/A.ino"',
+      'unsigned long elapsed(uint8_t pin, const char *label, int times) {',
+      '#line 20 "/s/A.ino"',
+      'void notAPrototype();',
+    ].join('\n');
+    expect(extractPrototypes(gen)).toEqual([
+      'unsigned long elapsed(uint8_t pin, const char *label, int times = 2);',
+      'void setup();',
+    ]);
+  });
+});

@@ -173,5 +173,43 @@ export async function run(): Promise<void> {
       `real toolchain: nano options loaded, sketch.yaml updated, ${api.runs.state.last?.summary} in ${api.runs.state.last?.durationMs} ms`,
     );
   }
+  // Detect Board: starts waiting for a board, and cancels cleanly.
+  const detecting = api.doctor.detect();
+  await until('detect waiting', () => (api.doctor.state.detect?.phase === 'waiting' ? true : undefined));
+  api.doctor.cancelDetect();
+  await detecting;
+  assert.equal(api.doctor.state.detect, undefined);
+  log('detect board: waited, cancelled cleanly');
+
+  if (process.env.E2E_CLI) {
+    // Libraries: a sketch that includes <Servo.h> lists Servo as required; installing it makes it compile.
+    await vscode.window.showTextDocument(vscode.Uri.joinPath(folder.uri, 'UsesServo', 'UsesServo.ino'));
+    await until('UsesServo sketch', () => (api.session.project?.name === 'UsesServo' ? true : undefined));
+    await api.session.setTarget({ id: 'arduino:avr:uno', name: 'Arduino Uno' });
+    await api.libraries.activate();
+    const req = await until(
+      'Servo required',
+      () => api.libraries.state.required.find((r) => r.header === 'Servo.h'),
+      60000,
+    );
+    assert.equal(req.library?.name, 'Servo', 'the official Servo, not a lookalike');
+    log(`libraries: UsesServo requires Servo.h -> ${req.library?.name} ${req.library?.latestVersion}`);
+    assert.equal(await api.libraries.install('Servo'), true);
+    assert.ok(api.libraries.state.installed.some((l) => l.name === 'Servo'));
+    assert.equal(api.libraries.state.required.length, 0);
+    assert.equal(await api.runs.build(), true, api.runs.state.last?.summary);
+    log(`libraries: installed Servo; UsesServo ${api.runs.state.last?.summary}`);
+    await api.libraries.search('servo');
+    assert.ok(api.libraries.state.results.length > 3);
+    log(`libraries: search "servo" -> ${api.libraries.state.results.length} results`);
+
+    // Missing #include: the failed compile offers to install the library.
+    await vscode.window.showTextDocument(vscode.Uri.joinPath(folder.uri, 'NeedsLib', 'NeedsLib.ino'));
+    await until('NeedsLib sketch', () => (api.session.project?.name === 'NeedsLib' ? true : undefined));
+    await api.session.setTarget({ id: 'arduino:avr:uno', name: 'Arduino Uno' });
+    assert.equal(await api.runs.build(), false);
+    assert.equal(api.runs.state.last?.fix?.label, 'Install FastLED');
+    log(`missing include: "${api.runs.state.last?.fix?.message}" [${api.runs.state.last?.fix?.label}]`);
+  }
   log('PASS');
 }

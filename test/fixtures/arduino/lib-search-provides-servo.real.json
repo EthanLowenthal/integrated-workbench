@@ -1,0 +1,53 @@
+{
+  "libraries": [
+    {
+      "name": "XMC_Servo",
+      "latest": {
+        "author": "Paul Carpenter <paul@pcserviceselectronics.co.uk>",
+        "version": "1.0.1",
+        "maintainer": "Paul Carpenter <paul@pcserviceselectronics.co.uk>",
+        "sentence": "Allows Infineon XMC arm boards using Hardware PWM to control a variety of servo motors and controls.",
+        "website": "https://github.com/techpaul/XMC_Servo.git",
+        "category": "Device Control",
+        "architectures": [
+          "xmc",
+          "arm"
+        ],
+        "types": [
+          "Contributed"
+        ],
+        "provides_includes": [
+          "Servo.h"
+        ]
+      },
+      "available_versions": [
+        "1.0.1"
+      ]
+    },
+    {
+      "name": "vovagorodok_Servo",
+      "latest": {
+        "author": "vovagorodok",
+        "version": "1.0.1",
+        "maintainer": "vovagorodok <vovagorodok2@gmail.com>",
+        "sentence": "Simple servo library",
+        "website": "https://github.com/vovagorodok/Servo",
+        "category": "Uncategorized",
+        "architectures": [
+          "*"
+        ],
+        "types": [
+          "Contributed"
+        ],
+        "provides_includes": [
+          "Servo.h"
+        ]
+      },
+      "available_versions": [
+        "1.0.0",
+        "1.0.1"
+      ]
+    }
+  ],
+  "status": "success"
+}

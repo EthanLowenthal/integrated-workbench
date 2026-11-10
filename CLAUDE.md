@@ -48,6 +48,12 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - Larger UIs open as editor-tab pages (`src/views/settingsPage.ts`, Sketch Settings). Get Started is a native walkthrough (`package.json` walkthroughs + `media/walkthrough/*.md`), opened once on first activation; steps complete via context keys set in Session.
 - e2e with a real toolchain: `E2E_CLI=<arduino-cli> E2E_ARDUINO_DATA=<data dir with arduino:avr> npm run test:e2e`.
 
+## Libraries, prototypes, Detect Board
+
+- Libraries: `src/toolchains/arduino/libraries.ts` (pure parsers + `libraryForHeader`: name match beats header-only match, because the index often lacks provides_includes for official libraries, e.g. Servo), `src/librariesModel.ts`, `src/views/librariesView.ts`. A compile failing on a missing header gets an "Install <library>" fix.
+- .ino prototypes: `extractPrototypes` reads arduino-cli's generated `<Name>.ino.cpp` and force-includes the ones using only built-in/Arduino types.
+- Detect Board: `BoardDoctor.detect()` uses core `watchForDevice` and reports only what the connection changed.
+
 ## Timeouts and responsiveness
 
 - Every external call has a limit from `src/core/timeouts.ts` (probes, arduino-cli, downloads with stall + total limits, registry fetches, workspace searches). `runWithTimeout` in `src/core/probes/host.ts` always settles: SIGTERM, then SIGKILL after a grace period, resolving immediately with `timedOut: true`. `StreamOptions.timeoutMs` is required so new long-running calls can't forget one.
