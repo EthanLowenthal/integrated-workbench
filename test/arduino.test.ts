@@ -5,6 +5,7 @@ import {
   parseBoardListAll,
   parseCompilerDiagnostics,
   parseMissingHeaders,
+  parseMemoryUsage,
   parseMissingPlatform,
   parseVersion,
 } from '../src/toolchains/arduino/parse.js';
@@ -268,5 +269,20 @@ describe('board package install verification', () => {
     const out: string[] = [];
     expect(await tc.installCore('arduino:avr', (t) => out.push(t))).toBe(false);
     expect(out.join('')).toMatch(/arduino:avr did not finish installing/);
+  });
+});
+
+describe('compile memory summary', () => {
+  it('reads flash and RAM use with their limits (arduino-cli 1.5.1, real)', () => {
+    expect(parseMemoryUsage(fixture('arduino/compile-ok-nano.real.txt'))).toEqual({
+      flash: { used: 444, max: 30720 },
+      ram: { used: 9, max: 2048 },
+    });
+  });
+  it('accepts a summary without a maximum, and output without a summary', () => {
+    expect(parseMemoryUsage('Sketch uses 1200 bytes of program storage space.')).toEqual({
+      flash: { used: 1200 },
+    });
+    expect(parseMemoryUsage('Compiling sketch...')).toBeUndefined();
   });
 });

@@ -18,6 +18,8 @@ import { LIBRARIES_VIEW, LibrariesView } from './views/librariesView.js';
 import { MONITOR_VIEW, MonitorView } from './views/monitorView.js';
 import { SettingsPage } from './views/settingsPage.js';
 import { SKETCH_VIEW, SketchView } from './views/sketchView.js';
+import { BUILD_VIEW, BuildView } from './views/buildView.js';
+import { BuildLog } from './buildLog.js';
 import { TOOLS_VIEW, ToolsView } from './views/toolsView.js';
 
 const config = () => vscode.workspace.getConfiguration('integratedWorkbench');
@@ -98,7 +100,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     return target;
   };
 
-  const runs = new Runs(session, doctor, output, problems, async (what) => {
+  const buildLog = new BuildLog(output);
+  const runs = new Runs(session, doctor, buildLog, problems, async (what) => {
     // Something's missing: open the sidebar where it gets fixed. No popups.
     if (what === 'engine') return toolsView.focus(engineId());
     if (what === 'boardPackage') return toolsView.focus(boardPackageId());
@@ -113,6 +116,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   const statusBar = new StatusBar(session, doctor, runs);
   const monitor = new MonitorController(registry, toolsDir, session, context.workspaceState, output);
   const monitorView = new MonitorView(context.extensionUri, monitor);
+  const buildView = new BuildView(context.extensionUri, buildLog, runs, session);
   const intellisense = new IntelliSense(context.extension.id, session, arduino, output);
   sketchView.intellisense = intellisense;
   const libraries = new LibrariesModel(arduino, session, output, () => void intellisense.refresh());
@@ -138,6 +142,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     statusBar,
     monitor,
     monitorView,
+    buildLog,
+    buildView,
+    vscode.window.registerWebviewViewProvider(BUILD_VIEW, buildView, {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
     intellisense,
     libraries,
     librariesView,
@@ -188,7 +197,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
       if (port) await session.setPort(port);
     }),
     vscode.commands.registerCommand('integratedWorkbench.showSketch', showSketch),
-    vscode.commands.registerCommand('integratedWorkbench.showOutput', () => output.show(true)),
+    vscode.commands.registerCommand('integratedWorkbench.showOutput', () => buildView.reveal()),
+    vscode.commands.registerCommand('integratedWorkbench.uploadAndMonitor', async () => {
+      if (await runs.upload()) await vscode.commands.executeCommand('integratedWorkbench.openMonitor');
+    }),
     vscode.commands.registerCommand('integratedWorkbench.showTools', (id?: string) =>
       toolsView.focus(id === 'engine' ? engineId() : id),
     ),
@@ -215,12 +227,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
         arduino.resetCli();
         void session.recheckTool();
         void tools.refresh();
-        void intellisense.start();
-        // First run: open the Get Started walkthrough once.
-        if (!context.globalState.get<boolean>('integratedWorkbench.welcomed')) {
-          void context.globalState.update('integratedWorkbench.welcomed', true);
-          void vscode.commands.executeCommand('integratedWorkbench.getStarted');
-        }
+        void intellisense.refresh();
       }
     }),
   );
@@ -228,6 +235,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   // Background: these talk to arduino-cli and the network, which can be slow.
   void session.start();
   void tools.refresh();
+  void intellisense.start();
+  // Library updates are checked once the build engine is ready (lib index download, time-limited).
+  const checkLibs = () => {
+    if (session.toolReady) {
+      libUpdatesSub.dispose();
+      void libraries.checkUpdates();
+    }
+  };
+  const libUpdatesSub = session.onDidChange(checkLibs);
+  context.subscriptions.push(libUpdatesSub);
+  // First run: open the Get Started walkthrough once.
+  if (!context.globalState.get<boolean>('integratedWorkbench.welcomed')) {
+    void context.globalState.update('integratedWorkbench.welcomed', true);
+    void vscode.commands.executeCommand('integratedWorkbench.getStarted');
+  }
   return {
     session,
     tools,

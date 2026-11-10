@@ -8,6 +8,8 @@ import {
   architectureOf,
   libraryForHeader,
   parseLibList,
+  parseLibUpdatable,
+  type LibraryUpdate,
   parseLibSearch,
   type InstalledLibrary,
   type LibraryInfo,
@@ -32,6 +34,7 @@ import {
   parseMissingHeaders,
   type CoreInfo,
   parseCompilerDiagnostics,
+  parseMemoryUsage,
   parseMissingPlatform,
   parseVersion,
 } from './parse.js';
@@ -264,6 +267,7 @@ export class ArduinoToolchain implements Toolchain {
     const all = `${res.stdout}\n${res.stderr}`;
     return {
       success: res.code === 0,
+      memory: res.code === 0 ? parseMemoryUsage(res.stdout) : undefined,
       diagnostics: parseCompilerDiagnostics(all, { buildPath, sketchRoot: ctx.project.root }),
       fix:
         res.code === 0
@@ -355,6 +359,17 @@ export class ArduinoToolchain implements Toolchain {
     });
     if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not update the library list.');
     this.libIndexUpdated = true;
+  }
+
+  /** Installed libraries with a newer version in the index (call updateLibraryIndex first). */
+  async updatableLibraries(): Promise<LibraryUpdate[]> {
+    const res = await this.opts.host.run(
+      await this.cli(),
+      ['lib', 'list', '--updatable', '--format', 'json'],
+      { timeoutMs: TIMEOUTS.cliListMs },
+    );
+    if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not list library updates.');
+    return parseLibUpdatable(res.stdout);
   }
 
   /** Searches the library index. Terms must all match (arduino-cli semantics). */

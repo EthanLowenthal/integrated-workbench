@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
+import type { BuildLog } from './buildLog.js';
 import type { BoardDoctor } from './doctor.js';
 import type { Session } from './session.js';
 import { text } from './text.js';
-import type { BuildDiagnostic, SuggestedFix } from './toolchains/types.js';
+import type { BuildDiagnostic, MemoryUsage, SuggestedFix } from './toolchains/types.js';
 
 export type RunKind = 'build' | 'upload' | 'fix';
 
@@ -18,6 +19,8 @@ export interface LastRun {
   fix?: SuggestedFix;
   /** What Board Doctor found about the port after a failed upload. */
   hint?: string;
+  /** Flash and RAM use from the compile. */
+  memory?: MemoryUsage;
 }
 
 export interface RunState {
@@ -39,13 +42,14 @@ export class Runs implements vscode.Disposable {
   readonly onDidChange = this.changed.event;
   state: RunState = {};
   private abort?: AbortController;
+  private lastMemory?: MemoryUsage;
   /** Called around the flash step so the Serial Monitor can release and re-take the port. */
   uploadHooks: { before?: (port: string) => Promise<void>; after?: (port: string) => Promise<void> } = {};
 
   constructor(
     private readonly session: Session,
     private readonly doctor: BoardDoctor,
-    private readonly output: vscode.OutputChannel,
+    private readonly log: BuildLog,
     private readonly problems: vscode.DiagnosticCollection,
     /** Opens the sidebar on the thing that's missing. */
     private readonly needsSetup: (what: 'engine' | 'board' | 'boardPackage' | 'port') => Promise<void>,
@@ -127,14 +131,17 @@ export class Runs implements vscode.Disposable {
     const project = s.project!;
     const target = s.target!;
     await vscode.workspace.saveAll(false); // compile what's on screen
-    this.output.clear();
-    this.output.appendLine(`Compiling ${project.name} for ${target.name}`);
+    const title = text.building(project.name, target.name);
+    this.log.start(kind, title);
     const started = Date.now();
-    const result = await this.track(kind, text.building(project.name, target.name), (signal) =>
-      s.toolchain.build({ project, target, onOutput: (t) => this.output.append(t), signal }),
+    const result = await this.track(kind, title, (signal) =>
+      s.toolchain.build({ project, target, onOutput: (t) => this.log.append(t), signal }),
     );
+    this.lastMemory = result.memory;
     this.publish(result.diagnostics);
     const errors = result.diagnostics.filter((d) => d.severity === 'error').length;
+    const summary = result.success ? text.buildOk : text.buildFailed(errors);
+    if (!result.success || kind === 'build') this.log.finish(result.success, summary);
     if (!result.success || kind === 'build') {
       this.set({
         last: {
@@ -142,10 +149,11 @@ export class Runs implements vscode.Disposable {
           ok: result.success,
           durationMs: Date.now() - started,
           sketch: project.name,
-          summary: result.success ? text.buildOk : text.buildFailed(errors),
+          summary,
           diagnostics: result.diagnostics,
           fix: result.fix,
           hint: result.error,
+          memory: result.memory,
         },
       });
     }
@@ -166,8 +174,11 @@ export class Runs implements vscode.Disposable {
     const project = s.project!;
     const target = s.target!;
     await this.uploadHooks.before?.(port);
-    const res = await this.track('upload', text.uploading(project.name, port), (signal) =>
-      s.toolchain.flash({ project, target, port, onOutput: (t) => this.output.append(t), signal }),
+    const title = text.uploading(project.name, port);
+    this.log.retitle('upload', title);
+    this.log.append(`\n${title}\n`);
+    const res = await this.track('upload', title, (signal) =>
+      s.toolchain.flash({ project, target, port, onOutput: (t) => this.log.append(t), signal }),
     );
     void this.uploadHooks.after?.(port);
     let hint = res.error;
@@ -178,15 +189,18 @@ export class Runs implements vscode.Disposable {
         (d) => d.port?.path === port && (d.severity === 'error' || d.severity === 'warning'),
       )?.title;
     }
+    const summary = res.success ? text.uploadOk(port) : text.uploadFailed(port);
+    this.log.finish(res.success, summary);
     this.set({
       last: {
         kind: 'upload',
         ok: res.success,
         durationMs: Date.now() - started,
         sketch: project.name,
-        summary: res.success ? text.uploadOk(port) : text.uploadFailed(port),
+        summary,
         diagnostics: [],
         hint,
+        memory: this.lastMemory,
       },
     });
     return res.success;
@@ -196,9 +210,9 @@ export class Runs implements vscode.Disposable {
   async applyFix(): Promise<void> {
     const fix = this.state.last?.fix;
     if (!fix || this.state.running) return;
-    const ok = await this.track('fix', fix.label, (signal) =>
-      fix.apply((t) => this.output.append(t), signal),
-    );
+    this.log.start('fix', fix.label);
+    const ok = await this.track('fix', fix.label, (signal) => fix.apply((t) => this.log.append(t), signal));
+    this.log.finish(ok, fix.label);
     if (ok) {
       await this.session.recheckTool();
       await this.build(this.state.last?.kind ?? 'build');

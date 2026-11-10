@@ -2,7 +2,7 @@
   "name": "integrated-workbench",
   "displayName": "Integrated Workbench",
   "description": "Build, upload, and monitor microcontroller projects. Detects connected boards, manages board packages, and includes a Serial Monitor with a plotter. Supports Arduino sketches for AVR, ESP32, STM32, and Raspberry Pi Pico.",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "publisher": "integrated-workbench",
   "license": "MIT",
   "engines": {
@@ -124,6 +124,11 @@
         "title": "Show Build Output",
         "category": "Integrated Workbench",
         "icon": "$(output)"
+      },
+      {
+        "command": "integratedWorkbench.uploadAndMonitor",
+        "title": "Upload and Open Serial Monitor",
+        "category": "Integrated Workbench"
       }
     ],
     "menus": {
@@ -174,6 +179,11 @@
           "command": "integratedWorkbench.newSketch",
           "when": "view == integratedWorkbench.sketch",
           "group": "navigation"
+        },
+        {
+          "command": "integratedWorkbench.uploadAndMonitor",
+          "when": "view == integratedWorkbench.sketch",
+          "group": "overflow"
         }
       ]
     },
@@ -194,6 +204,12 @@
         "command": "integratedWorkbench.openMonitor",
         "key": "ctrl+alt+m",
         "mac": "cmd+alt+m",
+        "when": "integratedWorkbench.inProject"
+      },
+      {
+        "command": "integratedWorkbench.uploadAndMonitor",
+        "key": "ctrl+alt+shift+u",
+        "mac": "cmd+alt+shift+u",
         "when": "integratedWorkbench.inProject"
       }
     ],
@@ -262,6 +278,11 @@
           "id": "integratedWorkbenchMonitor",
           "title": "Serial Monitor",
           "icon": "media/icon.svg"
+        },
+        {
+          "id": "integratedWorkbenchBuild",
+          "title": "Build",
+          "icon": "media/icon.svg"
         }
       ]
     },
@@ -290,6 +311,13 @@
           "type": "webview",
           "id": "integratedWorkbench.monitor",
           "name": "Serial Monitor"
+        }
+      ],
+      "integratedWorkbenchBuild": [
+        {
+          "type": "webview",
+          "id": "integratedWorkbench.build",
+          "name": "Build"
         }
       ]
     },

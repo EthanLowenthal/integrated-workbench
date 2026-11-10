@@ -26,6 +26,8 @@ export const text = {
   boardPackageMissing: 'Board package not installed.',
   boardPackageMissingDetail: (board: string) => `${board} needs its board package to compile and upload.`,
   registryErrors: (name: string, n: number) => `Registry "${name}" has ${n} error${n === 1 ? '' : 's'}.`,
+  packageUpdates: (n: number) => `${n} board package or tool update${n === 1 ? '' : 's'} available.`,
+  libraryUpdates: (n: number) => `${n} library update${n === 1 ? '' : 's'} available.`,
   librariesRequired: (n: number) =>
     `${n} librar${n === 1 ? 'y' : 'ies'} used by this sketch ${n === 1 ? 'is' : 'are'} not installed.`,
   install: 'Install',
@@ -188,6 +190,15 @@ export const text = {
     },
   },
 
+  /** Build panel (output of Verify and Upload). */
+  build: {
+    ui: {
+      empty: 'No builds yet. Output from Verify and Upload appears here.',
+      openLine: 'Go to this line',
+      copy: 'Copy Output',
+    },
+  },
+
   /** IntelliSense (autocomplete and error squiggles in the editor). */
   intellisense: {
     needsExtension: 'IntelliSense requires the C/C++ extension.',
@@ -251,6 +262,10 @@ export const text = {
     board: 'Board',
     port: 'Port',
     disconnected: 'disconnected',
+    flash: 'Flash',
+    flashTip: 'Program storage used',
+    ram: 'RAM',
+    ramTip: 'RAM used by global variables',
     verify: 'Verify',
     upload: 'Upload',
     monitor: 'Monitor',

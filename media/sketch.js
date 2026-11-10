@@ -118,7 +118,25 @@
       : '';
     const hint = l.hint ? `<div class="warn small" style="margin:4px 0 0 20px">${esc(l.hint)}</div>` : '';
     const output = `<div style="margin:6px 0 0 20px"><button class="link" data-action="showOutput">${icon('output')} ${esc(T.showOutput)}</button></div>`;
-    return `<div class="section">${head}${diags}${more}${hint}${fix}${output}</div>`;
+    return `<div class="section">${head}${memory(l.memory, W)}${diags}${more}${hint}${fix}${output}</div>`;
+  }
+
+  const kb = (n) =>
+    n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(2)} MB`;
+
+  // Flash and RAM use after a compile: a bar when the limit is known, otherwise just the size.
+  function memory(m, W) {
+    if (!m) return '';
+    const row = (label, f, tip) => {
+      if (!f) return '';
+      if (!f.max) return `<span class="muted">${esc(label)}</span><span></span><span>${kb(f.used)}</span>`;
+      const pct = Math.min(100, Math.round((f.used / f.max) * 100));
+      const cls = pct >= 95 ? 'full' : pct >= 80 ? 'high' : '';
+      return `<span class="muted">${esc(label)}</span>
+        <span class="bar ${cls}" title="${esc(tip)}: ${kb(f.used)} / ${kb(f.max)}"><span style="width:${pct}%"></span></span>
+        <span title="${kb(f.used)} / ${kb(f.max)}">${pct}%</span>`;
+    };
+    return `<div class="mem">${row(W.flash, m.flash, W.flashTip)}${row(W.ram, m.ram, W.ramTip)}</div>`;
   }
 
   function render() {

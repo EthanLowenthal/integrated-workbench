@@ -37,6 +37,8 @@ export interface LibrariesState {
   results: LibItem[];
   installed: LibItem[];
   required: RequiredItem[];
+  /** Installed libraries with a newer version, from the last update check. */
+  updates: { name: string; installed: string; latest: string }[];
   busy: Record<string, string>;
 }
 
@@ -55,6 +57,7 @@ export class LibrariesModel implements vscode.Disposable {
     results: [],
     installed: [],
     required: [],
+    updates: [],
     busy: {},
   };
   private latest = new Map<string, string>();
@@ -89,7 +92,8 @@ export class LibrariesModel implements vscode.Disposable {
   }
 
   private item(name: string, installed?: InstalledLibrary, info?: LibraryInfo): LibItem {
-    const latestVersion = info?.version ?? this.latest.get(name);
+    const latestVersion =
+      info?.version ?? this.latest.get(name) ?? this.state.updates.find((u) => u.name === name)?.latest;
     return {
       name,
       installedVersion: installed?.version,
@@ -102,6 +106,17 @@ export class LibrariesModel implements vscode.Disposable {
           : 'installed'
         : 'available',
     };
+  }
+
+  /** Looks for newer versions of installed libraries. Failures are ignored (offline is normal). */
+  async checkUpdates(): Promise<void> {
+    if (!this.session.toolReady) return;
+    try {
+      await this.arduino.updateLibraryIndex();
+      this.set({ updates: await this.arduino.updatableLibraries() });
+    } catch {
+      // No network or no index: no update notice.
+    }
   }
 
   /** Re-reads installed libraries and the sketch's includes. */
@@ -207,6 +222,7 @@ export class LibrariesModel implements vscode.Disposable {
     if (!ok) this.set({ error: text.libraries.installFailed(name) });
     this.headerCache.clear();
     await this.refresh();
+    await this.checkUpdates();
     this.onLibrariesChanged();
     return ok;
   }
@@ -218,6 +234,7 @@ export class LibrariesModel implements vscode.Disposable {
     this.setBusy(name);
     if (!ok) this.set({ error: text.libraries.uninstallFailed(name) });
     await this.refresh();
+    await this.checkUpdates();
     this.onLibrariesChanged();
   }
 

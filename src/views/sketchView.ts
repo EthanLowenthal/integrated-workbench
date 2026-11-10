@@ -282,6 +282,36 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         ],
       });
     }
+    // Updates: informational, dismissible, not counted on the badge.
+    const coreUpdates = tools.installed.filter((i) => i.state === 'update');
+    if (coreUpdates.length) {
+      out.push({
+        id: `updates:tools:${coreUpdates.map((i) => `${i.id}@${i.latestVersion}`).join(',')}`,
+        severity: 'info',
+        title: text.packageUpdates(coreUpdates.length),
+        detail: coreUpdates.map((i) => `${i.name}: ${i.installedVersion} -> ${i.latestVersion}`).join('\n'),
+        actions: [
+          { label: text.view, run: () => vscode.commands.executeCommand('integratedWorkbench.showTools') },
+        ],
+        dismissible: true,
+      });
+    }
+    const libUpdates = libs?.updates ?? [];
+    if (libUpdates.length) {
+      out.push({
+        id: `updates:libraries:${libUpdates.map((u) => `${u.name}@${u.latest}`).join(',')}`,
+        severity: 'info',
+        title: text.libraryUpdates(libUpdates.length),
+        detail: libUpdates.map((u) => `${u.name}: ${u.installed} -> ${u.latest}`).join('\n'),
+        actions: [
+          {
+            label: text.view,
+            run: () => vscode.commands.executeCommand('integratedWorkbench.showLibraries'),
+          },
+        ],
+        dismissible: true,
+      });
+    }
     const intelli = this.intelli?.status;
     if (s.project && intelli === 'needsExtension') {
       out.push({
@@ -359,7 +389,8 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         await this.doctor.refresh();
         return this.session.refreshBoards();
       case 'showOutput':
-        return this.output.show();
+        await vscode.commands.executeCommand('integratedWorkbench.showOutput');
+        return;
       case 'showTools':
         await vscode.commands.executeCommand('integratedWorkbench.showTools', m.focus);
         return;

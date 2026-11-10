@@ -6,6 +6,7 @@ import {
   libraryForHeader,
   parseLibList,
   parseLibSearch,
+  parseLibUpdatable,
   unresolvedIncludes,
 } from '../src/toolchains/arduino/libraries.js';
 import type { StreamRunner } from '../src/toolchains/process.js';
@@ -109,5 +110,15 @@ describe('missing #include -> Install library fix', () => {
     expect(res.fix?.message).toBe('FastLED.h is provided by the FastLED library, which is not installed.');
     expect(await res.fix!.apply(() => {})).toBe(true);
     expect(calls.at(-1)?.slice(0, 3)).toEqual(['lib', 'install', 'FastLED']);
+  });
+});
+
+describe('library updates', () => {
+  it('lists installed libraries with a newer release (arduino-cli 1.5.1, real)', () => {
+    expect(parseLibUpdatable(fixture('arduino/lib-list-updatable.real.json'))).toEqual([
+      { name: 'Servo', installed: '1.2.0', latest: '1.3.0' },
+    ]);
+    expect(parseLibUpdatable('{"installed_libraries":[]}')).toEqual([]);
+    expect(parseLibUpdatable('')).toEqual([]);
   });
 });

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Build panel: a **Build** tab next to the Serial Monitor shows compiler and upload output live, with errors in red and warnings in yellow. Select an error or warning line to open the file at that line. The last five runs are kept; **Copy Output** copies one. **Show Output** and **Show Build Output** open it.
+- Memory use: after a compile, the result shows flash and RAM use as bars, yellow from 80% and red from 95%. Hover for bytes used and the limit.
+- **Upload and Open Serial Monitor** (`Cmd+Alt+Shift+U` / `Ctrl+Alt+Shift+U`, also in the Sketch view's "..." menu) uploads, then opens and connects the Serial Monitor.
+- Updates: notifications list available updates for installed board packages and tools, and for installed libraries (checked once the build engine is installed). They can be dismissed and don't count toward the badge.
+- Fixed: the Get Started walkthrough did not open on first run, and IntelliSense did not connect to the C/C++ extension at startup (both only happened after changing `integratedWorkbench.arduinoCliPath`).
+- The extension has a new Marketplace icon.
+
 ## 0.2.2
 
 - Notifications: warnings and errors from every view (build engine or board package missing, board problems, Detect Board results, registry and library errors, missing libraries, IntelliSense) are listed in one place at the top of the Sketch view. The Integrated Workbench icon in the Activity Bar shows how many need attention.

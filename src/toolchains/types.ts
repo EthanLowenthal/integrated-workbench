@@ -63,8 +63,22 @@ export interface RunContext {
   signal?: AbortSignal;
 }
 
+/** Bytes used, and the limit when the toolchain reports one. */
+export interface MemoryFigure {
+  used: number;
+  max?: number;
+}
+
+/** Program (flash) and static RAM use reported after a successful compile. */
+export interface MemoryUsage {
+  flash?: MemoryFigure;
+  ram?: MemoryFigure;
+}
+
 export interface BuildResult {
   success: boolean;
+  /** Flash and RAM use, when the compiler reported it. */
+  memory?: MemoryUsage;
   diagnostics: BuildDiagnostic[];
   /** A known, fixable cause, e.g. the board's core isn't installed. */
   fix?: SuggestedFix;

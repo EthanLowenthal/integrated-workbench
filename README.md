@@ -9,6 +9,7 @@ Integrated Workbench compiles and uploads Arduino sketches (`.ino`, `.cpp`, `.h`
 - **Sidebar.** The Sketch view shows the sketch, its board, and the connected port, with Verify, Upload, and Monitor. Progress and compiler errors appear inline, and select-to-open takes you to the line.
 - **Board detection.** Connected boards are detected within a couple of seconds. Boards that identify themselves over USB are selected automatically; boards with a USB-serial chip (CH340, CP210x, FTDI) show the chip.
 - **Boards and Tools.** Install, update, and remove board packages. Packages recommended for the current workspace and connected boards are listed first, each with the reason.
+- **Build output.** The Build panel tab shows compiler and upload output live; select an error to go to that line. After a compile, flash and RAM use show as bars in the Sketch view.
 - **Serial Monitor.** Live output with timestamps, hex view, filter, and save. Send text with a choice of line ending and history. The Plot tab graphs values such as `temp=21.5 humidity=40`. The monitor releases the port during uploads and reconnects afterwards.
 - **Libraries.** Search, install, update, and remove libraries. Libraries a sketch includes but that are not installed are listed with an Install button, and a compile that fails on a missing `#include` offers the library that provides it.
 - **Sketch Settings.** Board, board options (flash size, CPU speed, upload method, and others), port, and Serial Monitor defaults in one page. The board and its options are stored in the workspace settings (`.vscode/settings.json`). A sketch from Arduino IDE 2 opens with the board from its `sketch.yaml`, which is never changed.
@@ -47,11 +48,12 @@ For IntelliSense, install the [C/C++ extension](https://marketplace.visualstudio
 
 ## Keyboard shortcuts
 
-| Command             | Windows / Linux | macOS       |
-| ------------------- | --------------- | ----------- |
-| Verify              | `Ctrl+Alt+R`    | `Cmd+Alt+R` |
-| Upload              | `Ctrl+Alt+U`    | `Cmd+Alt+U` |
-| Open Serial Monitor | `Ctrl+Alt+M`    | `Cmd+Alt+M` |
+| Command                        | Windows / Linux    | macOS             |
+| ------------------------------ | ------------------ | ----------------- |
+| Verify                         | `Ctrl+Alt+R`       | `Cmd+Alt+R`       |
+| Upload                         | `Ctrl+Alt+U`       | `Cmd+Alt+U`       |
+| Open Serial Monitor            | `Ctrl+Alt+M`       | `Cmd+Alt+M`       |
+| Upload and Open Serial Monitor | `Ctrl+Alt+Shift+U` | `Cmd+Alt+Shift+U` |
 
 ## Privacy
 

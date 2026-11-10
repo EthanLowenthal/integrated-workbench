@@ -84,6 +84,26 @@ export function parseLibList(json: string): InstalledLibrary[] {
     }));
 }
 
+export interface LibraryUpdate {
+  name: string;
+  installed: string;
+  latest: string;
+}
+
+/** `lib list --updatable --format json`: installed libraries with a newer release in the index. */
+export function parseLibUpdatable(json: string): LibraryUpdate[] {
+  const parsed = JSON.parse(json || '{}') as {
+    installed_libraries?: (RawInstalled & { release?: { version?: string } })[];
+  };
+  return (parsed.installed_libraries ?? [])
+    .filter((e) => e.library?.name && e.release?.version && e.release.version !== e.library.version)
+    .map((e) => ({
+      name: e.library!.name!,
+      installed: e.library!.version ?? '',
+      latest: e.release!.version!,
+    }));
+}
+
 /** "esp32:esp32:esp32s3" -> "esp32"; "arduino:avr:uno" -> "avr". */
 export function architectureOf(fqbn: string | undefined): string | undefined {
   return fqbn?.split(':')[1];

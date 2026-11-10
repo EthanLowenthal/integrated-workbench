@@ -208,6 +208,10 @@ export async function run(): Promise<void> {
     log(
       `real toolchain: nano options loaded and saved to settings, ${api.runs.state.last?.summary} in ${api.runs.state.last?.durationMs} ms`,
     );
+    const mem = api.runs.state.last?.memory;
+    assert.ok(mem?.flash?.used && mem.flash.max === 30720, `flash use reported: ${JSON.stringify(mem)}`);
+    assert.ok(mem?.ram?.max === 2048, 'RAM use reported');
+    log(`build result: flash ${mem.flash.used}/${mem.flash.max} B, RAM ${mem.ram?.used}/${mem.ram?.max} B`);
   }
   // Detect Board: starts waiting for a board, and cancels cleanly.
   const detecting = api.doctor.detect();
@@ -230,7 +234,15 @@ export async function run(): Promise<void> {
     );
     assert.equal(req.library?.name, 'Servo', 'the official Servo, not a lookalike');
     log(`libraries: UsesServo requires Servo.h -> ${req.library?.name} ${req.library?.latestVersion}`);
+    assert.equal(await api.libraries.install('Servo@1.2.0'), true);
+    assert.deepEqual(
+      api.libraries.state.updates.map((u) => `${u.name} ${u.installed} -> ${u.latest}`),
+      [`Servo 1.2.0 -> ${req.library?.latestVersion}`],
+      'an older Servo shows an update',
+    );
+    log(`updates: ${api.libraries.state.updates.map((u) => `${u.name} ${u.installed} -> ${u.latest}`)}`);
     assert.equal(await api.libraries.install('Servo'), true);
+    assert.equal(api.libraries.state.updates.length, 0, 'updating clears the notice');
     assert.ok(api.libraries.state.installed.some((l) => l.name === 'Servo'));
     assert.equal(api.libraries.state.required.length, 0);
     assert.equal(await api.runs.build(), true, api.runs.state.last?.summary);

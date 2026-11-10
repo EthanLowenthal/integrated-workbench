@@ -1,4 +1,11 @@
-import type { BoardOption, BuildDiagnostic, BuildTarget, DetectedBoard } from '../types.js';
+import type {
+  BoardOption,
+  BuildDiagnostic,
+  BuildTarget,
+  DetectedBoard,
+  MemoryFigure,
+  MemoryUsage,
+} from '../types.js';
 
 /** Pure parsers for arduino-cli output. Formats checked against arduino-cli 1.x; 0.x shapes accepted too. */
 
@@ -217,4 +224,23 @@ export function parseBoardDetails(json: string): BoardOption[] {
     });
   }
   return out;
+}
+
+/**
+ * Flash and RAM use from arduino-cli's compile summary:
+ *   "Sketch uses 444 bytes (1%) of program storage space. Maximum is 30720 bytes."
+ *   "Global variables use 9 bytes (0%) of dynamic memory, leaving 2039 bytes ... Maximum is 2048 bytes."
+ * Some platforms omit the maximum; then only `used` is set.
+ */
+export function parseMemoryUsage(output: string): MemoryUsage | undefined {
+  const figure = (re: RegExp): MemoryFigure | undefined => {
+    const m = re.exec(output);
+    if (!m) return undefined;
+    const max = /Maximum is (\d+) bytes/.exec(m[0]);
+    return { used: Number(m[1]), ...(max ? { max: Number(max[1]) } : {}) };
+  };
+  const flash = figure(/Sketch uses (\d+) bytes[^\n]*/);
+  const ram = figure(/Global variables use (\d+) bytes[^\n]*/);
+  if (!flash && !ram) return undefined;
+  return { ...(flash ? { flash } : {}), ...(ram ? { ram } : {}) };
 }
