@@ -1,0 +1,10 @@
+{
+  "devices": [
+    { "name": "usb1", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1", "attrs": { "idVendor": "1d6b", "idProduct": "0002" }, "driver": "usb" },
+    { "name": "1-2", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-2", "attrs": { "idVendor": "1a86", "idProduct": "7523", "product": "USB Serial" }, "driver": "usb" },
+    { "name": "1-2:1.0", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.0", "attrs": {}, "driver": "ch341" }
+  ],
+  "ttys": [
+    { "name": "ttyUSB0", "devicePath": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.0/ttyUSB0" }
+  ]
+}

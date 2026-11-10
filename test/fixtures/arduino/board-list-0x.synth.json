@@ -1,0 +1,9 @@
+[
+  {
+    "matching_boards": [
+      { "name": "Arduino Leonardo", "fqbn": "arduino:avr:leonardo" },
+      { "name": "Arduino Leonardo ETH", "fqbn": "arduino:avr:leonardoeth" }
+    ],
+    "port": { "address": "COM9", "label": "COM9", "protocol": "serial", "properties": { "pid": "0x8036", "vid": "0x2341" } }
+  }
+]

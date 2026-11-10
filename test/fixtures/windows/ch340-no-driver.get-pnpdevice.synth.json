@@ -1,0 +1,9 @@
+[
+  {
+    "InstanceId": "USB\\VID_1A86&PID_7523\\5&3753427A&0&2",
+    "FriendlyName": "USB2.0-Serial",
+    "Status": "Error",
+    "Class": null,
+    "Problem": "CM_PROB_FAILED_INSTALL"
+  }
+]

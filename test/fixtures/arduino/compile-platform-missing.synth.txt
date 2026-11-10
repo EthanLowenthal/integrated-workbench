@@ -1,0 +1,1 @@
+Error during build: Platform 'esp32:esp32' not found: platform not installed

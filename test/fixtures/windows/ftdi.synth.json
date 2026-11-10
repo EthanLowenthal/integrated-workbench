@@ -1,0 +1,29 @@
+[
+  {
+    "PNPDeviceID": "USB\\ROOT_HUB30\\4&1B2C3D4E&0&0",
+    "Name": "USB Root Hub (USB 3.0)",
+    "Status": "OK",
+    "PNPClass": "USB",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard USB HUBs)",
+    "Service": "USBHUB3"
+  },
+  {
+    "PNPDeviceID": "USB\\VID_0403&PID_6001\\A50285BI",
+    "Name": "USB Serial Converter",
+    "Status": "OK",
+    "PNPClass": "USB",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "FTDI",
+    "Service": "FTDIBUS"
+  },
+  {
+    "PNPDeviceID": "FTDIBUS\\VID_0403+PID_6001+A50285BIA\\0000",
+    "Name": "USB Serial Port (COM7)",
+    "Status": "OK",
+    "PNPClass": "Ports",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "FTDI",
+    "Service": "FTSER2K"
+  }
+]

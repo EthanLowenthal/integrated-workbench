@@ -1,0 +1,10 @@
+/Users/me/Arduino/Blink/Blink.ino: In function 'void loop()':
+/Users/me/Arduino/Blink/Blink.ino:7:3: error: 'digitalWirte' was not declared in this scope
+   digitalWirte(LED_BUILTIN, HIGH);
+   ^~~~~~~~~~~~
+/Users/me/Arduino/Blink/Blink.ino:7:3: note: suggested alternative: 'digitalWrite'
+/tmp/sd-build/Blink-abc/sketch/helper.cpp:12:7: warning: unused variable 'x' [-Wunused-variable]
+/Users/me/Arduino/Blink/Blink.ino:7:3: error: 'digitalWirte' was not declared in this scope
+exit status 1
+
+Compilation error: 'digitalWirte' was not declared in this scope

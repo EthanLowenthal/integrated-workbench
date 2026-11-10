@@ -1,0 +1,29 @@
+[
+  {
+    "PNPDeviceID": "ACPI\\PNP0501\\0",
+    "Name": "Communications Port (COM1)",
+    "Status": "OK",
+    "PNPClass": "Ports",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard port types)",
+    "Service": "Serial"
+  },
+  {
+    "PNPDeviceID": "USB\\ROOT_HUB30\\4&1B2C3D4E&0&0",
+    "Name": "USB Root Hub (USB 3.0)",
+    "Status": "OK",
+    "PNPClass": "USB",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard USB HUBs)",
+    "Service": "USBHUB3"
+  },
+  {
+    "PNPDeviceID": "USB\\VID_1A86&PID_7523\\5&3753427A&0&2",
+    "Name": "USB2.0-Serial",
+    "Status": "Error",
+    "PNPClass": null,
+    "ConfigManagerErrorCode": 28,
+    "Manufacturer": null,
+    "Service": null
+  }
+]

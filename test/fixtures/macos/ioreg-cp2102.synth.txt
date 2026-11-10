@@ -1,0 +1,40 @@
++-o CP2102 USB to UART Bridge Controller@01200000  <class IOUSBHostDevice, id 0x0, registered, matched, active, busy 0 (12 ms), retain 30>
+  | {
+  |   "sessionID" = 0
+  |   "idProduct" = 60000
+  |   "iManufacturer" = 1
+  |   "bDeviceClass" = 255
+  |   "locationID" = 18874368
+  |   "USB Product Name" = "CP2102 USB to UART Bridge Controller"
+  |   "USB Vendor Name" = "Silicon Labs"
+  |   "USB Serial Number" = "0001"
+  |   "idVendor" = 4292
+  |   "kUSBProductString" = "CP2102 USB to UART Bridge Controller"
+  | }
+  | 
+  +-o AppleUSBHostLegacyClient  <class AppleUSBHostLegacyClient, id 0x0, !registered, !matched, active, busy 0, retain 9>
+  |   {
+  |     "IOClass" = "AppleUSBHostLegacyClient"
+  |   }
+  |   
+  +-o IOUSBHostInterface@0  <class IOUSBHostInterface, id 0x0, registered, matched, active, busy 0 (8 ms), retain 9>
+    | {
+    |   "bInterfaceNumber" = 0
+    |   "idProduct" = 60000
+    |   "idVendor" = 4292
+    |   "locationID" = 18874368
+    | }
+    | 
+    +-o AppleUSBSLCOMDevice  <class AppleUSBSLCOMDevice, id 0x0, registered, matched, active, busy 0 (3 ms), retain 7>
+      | {
+      |   "IOClass" = "AppleUSBSLCOMDevice"
+      | }
+      | 
+      +-o IOSerialBSDClient  <class IOSerialBSDClient, id 0x0, registered, matched, active, busy 0 (0 ms), retain 6>
+          {
+            "IOTTYBaseName" = "usbserial-"
+            "IOCalloutDevice" = "/dev/cu.usbserial-0001"
+            "IODialinDevice" = "/dev/tty.usbserial-0001"
+            "IOSerialBSDClientType" = "IORS232SerialStream"
+          }
+          

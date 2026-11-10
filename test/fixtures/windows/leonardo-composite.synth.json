@@ -1,0 +1,38 @@
+[
+  {
+    "PNPDeviceID": "USB\\ROOT_HUB30\\4&1B2C3D4E&0&0",
+    "Name": "USB Root Hub (USB 3.0)",
+    "Status": "OK",
+    "PNPClass": "USB",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard USB HUBs)",
+    "Service": "USBHUB3"
+  },
+  {
+    "PNPDeviceID": "USB\\VID_2341&PID_8036\\6&1F2E3D4C&0&1",
+    "Name": "USB Composite Device",
+    "Status": "OK",
+    "PNPClass": "USB",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard USB Host Controller)",
+    "Service": "usbccgp"
+  },
+  {
+    "PNPDeviceID": "USB\\VID_2341&PID_8036&MI_00\\7&2A3B4C5D&0&0000",
+    "Name": "Arduino Leonardo (COM9)",
+    "Status": "OK",
+    "PNPClass": "Ports",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "Arduino LLC (www.arduino.cc)",
+    "Service": "usbser"
+  },
+  {
+    "PNPDeviceID": "USB\\VID_2341&PID_8036&MI_02\\7&2A3B4C5D&0&0002",
+    "Name": "USB Input Device",
+    "Status": "OK",
+    "PNPClass": "HIDClass",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard system devices)",
+    "Service": "HidUsb"
+  }
+]

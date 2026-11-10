@@ -1,0 +1,142 @@
+{
+  "name": "sketchdesk",
+  "displayName": "SketchDesk",
+  "description": "Board-aware microcontroller development: pick up the plugged-in board, compile, upload, and find out in plain English why a board isn't showing up. Builds and uploads Arduino sketches via arduino-cli.",
+  "version": "0.0.1",
+  "publisher": "sketchdesk",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0",
+    "node": ">=20"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "arduino",
+    "esp32",
+    "ch340",
+    "serial port",
+    "board not detected"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:**/*.ino",
+    "onLanguage:cpp",
+    "onLanguage:c"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "sketchdesk.build",
+        "title": "Verify",
+        "category": "SketchDesk",
+        "icon": "$(check)"
+      },
+      {
+        "command": "sketchdesk.upload",
+        "title": "Upload",
+        "category": "SketchDesk",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "sketchdesk.selectBoard",
+        "title": "Select Board",
+        "category": "SketchDesk"
+      },
+      {
+        "command": "sketchdesk.selectPort",
+        "title": "Select Port",
+        "category": "SketchDesk"
+      },
+      {
+        "command": "sketchdesk.boardDoctor",
+        "title": "Board Doctor",
+        "category": "SketchDesk"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "sketchdesk.build",
+          "when": "sketchdesk.inProject",
+          "group": "navigation@1"
+        },
+        {
+          "command": "sketchdesk.upload",
+          "when": "sketchdesk.inProject",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "sketchdesk.build",
+          "when": "sketchdesk.inProject"
+        },
+        {
+          "command": "sketchdesk.upload",
+          "when": "sketchdesk.inProject"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "sketchdesk.build",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r",
+        "when": "sketchdesk.inProject"
+      },
+      {
+        "command": "sketchdesk.upload",
+        "key": "ctrl+alt+u",
+        "mac": "cmd+alt+u",
+        "when": "sketchdesk.inProject"
+      }
+    ],
+    "configuration": {
+      "title": "SketchDesk",
+      "properties": {
+        "sketchdesk.arduinoCliPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to arduino-cli. Leave empty to find it automatically (PATH, Homebrew, Arduino IDE)."
+        },
+        "sketchdesk.pollIntervalMs": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 500,
+          "description": "How often to check for boards being plugged in or unplugged while a sketch is open and VS Code is focused."
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "cpp",
+        "extensions": [
+          ".ino",
+          ".pde"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.25.12",
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^3.2.7"
+  }
+}

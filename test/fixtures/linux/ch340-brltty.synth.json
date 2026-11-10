@@ -1,0 +1,11 @@
+{
+  "devices": [
+    { "name": "usb1", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1", "attrs": { "idVendor": "1d6b", "idProduct": "0002", "product": "xHCI Host Controller" }, "driver": "usb" },
+    { "name": "1-0:1.0", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-0:1.0", "attrs": {}, "driver": "hub" },
+    { "name": "1-2", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-2", "attrs": { "idVendor": "1a86", "idProduct": "7523", "product": "USB Serial" }, "driver": "usb" },
+    { "name": "1-2:1.0", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.0", "attrs": {}, "driver": "usbfs" },
+    { "name": "1-3", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-3", "attrs": { "idVendor": "046d", "idProduct": "c52b", "manufacturer": "Logitech", "product": "USB Receiver" }, "driver": "usb" },
+    { "name": "1-3:1.0", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0", "attrs": {}, "driver": "usbhid" }
+  ],
+  "ttys": []
+}

@@ -1,0 +1,19 @@
+{
+  "SPUSBDataType" : [
+    {
+      "_name" : "USB31Bus",
+      "host_controller" : "AppleUSBXHCITR",
+      "_items" : [
+        {
+          "_name" : "USB2.0-Serial",
+          "bcd_device" : "2.64",
+          "bus_power" : "500",
+          "location_id" : "0x14100000 / 7",
+          "product_id" : "0x7523",
+          "vendor_id" : "0x1a86",
+          "manufacturer" : "QinHeng Electronics"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "PNPDeviceID": "USB\\VID_10C4&PID_EA60\\0001",
+  "Name": "Silicon Labs CP210x USB to UART Bridge (COM4)",
+  "Status": "OK",
+  "PNPClass": "Ports",
+  "ConfigManagerErrorCode": 0,
+  "Manufacturer": "Silicon Labs",
+  "Service": "silabser"
+}

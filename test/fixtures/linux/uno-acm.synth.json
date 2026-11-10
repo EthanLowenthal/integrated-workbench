@@ -1,0 +1,11 @@
+{
+  "devices": [
+    { "name": "usb1", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1", "attrs": { "idVendor": "1d6b", "idProduct": "0002" }, "driver": "usb" },
+    { "name": "1-4", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-4", "attrs": { "idVendor": "2341", "idProduct": "0043", "manufacturer": "Arduino (www.arduino.cc)", "serial": "95530343834351A0B1C2" }, "driver": "usb" },
+    { "name": "1-4:1.0", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-4/1-4:1.0", "attrs": {}, "driver": "cdc_acm" },
+    { "name": "1-4:1.1", "path": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-4/1-4:1.1", "attrs": {}, "driver": "cdc_acm" }
+  ],
+  "ttys": [
+    { "name": "ttyACM0", "devicePath": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-4/1-4:1.0" }
+  ]
+}

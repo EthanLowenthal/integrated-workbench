@@ -1,0 +1,13 @@
+.vscode/**
+src/**
+test/**
+docs/**
+node_modules/**
+**/*.map
+esbuild.mjs
+vitest.config.ts
+tsconfig.json
+eslint.config.mjs
+.prettier*
+.github/**
+CLAUDE.md

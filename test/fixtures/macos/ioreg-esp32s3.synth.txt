@@ -1,0 +1,40 @@
++-o USB JTAG/serial debug unit@01100000  <class IOUSBHostDevice, id 0x0, registered, matched, active, busy 0 (12 ms), retain 30>
+  | {
+  |   "sessionID" = 0
+  |   "idProduct" = 4097
+  |   "iManufacturer" = 1
+  |   "bDeviceClass" = 239
+  |   "locationID" = 17825792
+  |   "USB Product Name" = "USB JTAG/serial debug unit"
+  |   "USB Vendor Name" = "Espressif"
+  |   "USB Serial Number" = "F4:12:FA:00:00:01"
+  |   "idVendor" = 12346
+  |   "kUSBProductString" = "USB JTAG/serial debug unit"
+  | }
+  | 
+  +-o AppleUSBHostLegacyClient  <class AppleUSBHostLegacyClient, id 0x0, !registered, !matched, active, busy 0, retain 9>
+  |   {
+  |     "IOClass" = "AppleUSBHostLegacyClient"
+  |   }
+  |   
+  +-o IOUSBHostInterface@0  <class IOUSBHostInterface, id 0x0, registered, matched, active, busy 0 (8 ms), retain 9>
+    | {
+    |   "bInterfaceNumber" = 0
+    |   "idProduct" = 4097
+    |   "idVendor" = 12346
+    |   "locationID" = 17825792
+    | }
+    | 
+    +-o AppleUSBACMData  <class AppleUSBACMData, id 0x0, registered, matched, active, busy 0 (3 ms), retain 7>
+      | {
+      |   "IOClass" = "AppleUSBACMData"
+      | }
+      | 
+      +-o IOSerialBSDClient  <class IOSerialBSDClient, id 0x0, registered, matched, active, busy 0 (0 ms), retain 6>
+          {
+            "IOTTYBaseName" = "usbserial-"
+            "IOCalloutDevice" = "/dev/cu.usbmodem1101"
+            "IODialinDevice" = "/dev/tty.usbmodem1101"
+            "IOSerialBSDClientType" = "IORS232SerialStream"
+          }
+          

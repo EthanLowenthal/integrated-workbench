@@ -1,0 +1,155 @@
+{
+  "SPUSBHostDataType" : [
+    {
+      "_name" : "USB 4.0 Bus",
+      "Driver" : "AppleT6050USBXHCIAUSS",
+      "USBKeyHardwareType" : "Built-in",
+      "USBKeyLocationID" : "0x08000000"
+    },
+    {
+      "_name" : "USB 3.1 Bus",
+      "Driver" : "AppleT8142USBXHCI",
+      "USBKeyHardwareType" : "Built-in",
+      "USBKeyLocationID" : "0x02000000"
+    },
+    {
+      "_items" : [
+        {
+          "_items" : [
+            {
+              "_items" : [
+                {
+                  "_name" : "USB2.0 Hub",
+                  "USBDeviceKeyLinkSpeed" : "480 Mb/s",
+                  "USBDeviceKeyProductID" : "0x8153",
+                  "USBDeviceKeyProductVersion" : "0x0803",
+                  "USBDeviceKeySerialNumber" : "REDACTED",
+                  "USBDeviceKeyVendorID" : "0x047d",
+                  "USBDeviceKeyVendorName" : "VIA Labs, Inc.",
+                  "USBKeyHardwareType" : "Non-removable",
+                  "USBKeyLocationID" : "0x00141000"
+                },
+                {
+                  "_name" : "USB Receiver",
+                  "USBDeviceKeyLinkSpeed" : "12 Mb/s",
+                  "USBDeviceKeyProductID" : "0xc548",
+                  "USBDeviceKeyProductVersion" : "0x0502",
+                  "USBDeviceKeySerialNumber" : "REDACTED",
+                  "USBDeviceKeyVendorID" : "0x046d",
+                  "USBDeviceKeyVendorName" : "Logitech",
+                  "USBKeyHardwareType" : "Removable",
+                  "USBKeyLocationID" : "0x00144000"
+                },
+                {
+                  "_name" : "USB Receiver",
+                  "USBDeviceKeyLinkSpeed" : "12 Mb/s",
+                  "USBDeviceKeyProductID" : "0xc52b",
+                  "USBDeviceKeyProductVersion" : "0x1211",
+                  "USBDeviceKeySerialNumber" : "REDACTED",
+                  "USBDeviceKeyVendorID" : "0x046d",
+                  "USBDeviceKeyVendorName" : "Logitech",
+                  "USBKeyHardwareType" : "Removable",
+                  "USBKeyLocationID" : "0x00143000"
+                }
+              ],
+              "_name" : "USB2.0 Hub",
+              "USBDeviceKeyLinkSpeed" : "480 Mb/s",
+              "USBDeviceKeyProductID" : "0x8151",
+              "USBDeviceKeyProductVersion" : "0x0904",
+              "USBDeviceKeySerialNumber" : "REDACTED",
+              "USBDeviceKeyVendorID" : "0x047d",
+              "USBDeviceKeyVendorName" : "VIA Labs, Inc.",
+              "USBKeyHardwareType" : "Removable",
+              "USBKeyLocationID" : "0x00140000"
+            },
+            {
+              "_name" : "SD5000T5 EQ Thunderbolt 5 Dock",
+              "USBDeviceKeyLinkSpeed" : "12 Mb/s",
+              "USBDeviceKeyProductID" : "0x8155",
+              "USBDeviceKeyProductVersion" : "0x0001",
+              "USBDeviceKeySerialNumber" : "REDACTED",
+              "USBDeviceKeyVendorID" : "0x047d",
+              "USBDeviceKeyVendorName" : "Kensington",
+              "USBKeyHardwareType" : "Removable",
+              "USBKeyLocationID" : "0x00150000"
+            }
+          ],
+          "_name" : "USB2.0 Hub",
+          "USBDeviceKeyLinkSpeed" : "480 Mb/s",
+          "USBDeviceKeyProductID" : "0x5801",
+          "USBDeviceKeyProductVersion" : "0x0101",
+          "USBDeviceKeySerialNumber" : "REDACTED",
+          "USBDeviceKeyVendorID" : "0x1d5c",
+          "USBDeviceKeyVendorName" : "Fresco Logic, Inc.",
+          "USBKeyHardwareType" : "Removable",
+          "USBKeyLocationID" : "0x00100000"
+        },
+        {
+          "_items" : [
+            {
+              "_items" : [
+                {
+                  "_items" : [
+                    {
+                      "_name" : "USB 10/100/1G/2.5G LAN",
+                      "USBDeviceKeyLinkSpeed" : "5 Gb/s",
+                      "USBDeviceKeyPowerAllocation" : "1.28 W (256 mA)",
+                      "USBDeviceKeyProductID" : "0x8156",
+                      "USBDeviceKeyProductVersion" : "0x3100",
+                      "USBDeviceKeySerialNumber" : "REDACTED",
+                      "USBDeviceKeyUSB4Tunnel" : "Yes",
+                      "USBDeviceKeyVendorID" : "0x0bda",
+                      "USBDeviceKeyVendorName" : "Realtek",
+                      "USBKeyHardwareType" : "Non-removable",
+                      "USBKeyLocationID" : "0x00241400"
+                    }
+                  ],
+                  "_name" : "USB3.0 Hub",
+                  "USBDeviceKeyLinkSpeed" : "5 Gb/s",
+                  "USBDeviceKeyProductID" : "0x8154",
+                  "USBDeviceKeyProductVersion" : "0x0803",
+                  "USBDeviceKeySerialNumber" : "REDACTED",
+                  "USBDeviceKeyUSB4Tunnel" : "Yes",
+                  "USBDeviceKeyVendorID" : "0x047d",
+                  "USBDeviceKeyVendorName" : "VIA Labs, Inc.",
+                  "USBKeyHardwareType" : "Non-removable",
+                  "USBKeyLocationID" : "0x00241000"
+                }
+              ],
+              "_name" : "USB3.1 Hub",
+              "USBDeviceKeyLinkSpeed" : "10 Gb/s",
+              "USBDeviceKeyProductID" : "0x8152",
+              "USBDeviceKeyProductVersion" : "0x0904",
+              "USBDeviceKeySerialNumber" : "REDACTED",
+              "USBDeviceKeyUSB4Tunnel" : "Yes",
+              "USBDeviceKeyVendorID" : "0x047d",
+              "USBDeviceKeyVendorName" : "VIA Labs, Inc.",
+              "USBKeyHardwareType" : "Removable",
+              "USBKeyLocationID" : "0x00240000"
+            }
+          ],
+          "_name" : "USB3 HUB",
+          "USBDeviceKeyLinkSpeed" : "10 Gb/s",
+          "USBDeviceKeyProductID" : "0x5787",
+          "USBDeviceKeyProductVersion" : "0x0000",
+          "USBDeviceKeySerialNumber" : "REDACTED",
+          "USBDeviceKeyUSB4Tunnel" : "Yes",
+          "USBDeviceKeyVendorID" : "0x8087",
+          "USBDeviceKeyVendorName" : "Intel Corporation",
+          "USBKeyHardwareType" : "Removable",
+          "USBKeyLocationID" : "0x00200000"
+        }
+      ],
+      "_name" : "USB 3.1 Bus",
+      "Driver" : "AppleT8142USBXHCI",
+      "USBKeyHardwareType" : "Built-in",
+      "USBKeyLocationID" : "0x00000000"
+    },
+    {
+      "_name" : "USB 3.1 Bus",
+      "Driver" : "AppleT8142USBXHCI",
+      "USBKeyHardwareType" : "Built-in",
+      "USBKeyLocationID" : "0x01000000"
+    }
+  ]
+}

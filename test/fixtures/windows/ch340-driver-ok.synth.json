@@ -1,0 +1,38 @@
+[
+  {
+    "PNPDeviceID": "ACPI\\PNP0501\\0",
+    "Name": "Communications Port (COM1)",
+    "Status": "OK",
+    "PNPClass": "Ports",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard port types)",
+    "Service": "Serial"
+  },
+  {
+    "PNPDeviceID": "USB\\ROOT_HUB30\\4&1B2C3D4E&0&0",
+    "Name": "USB Root Hub (USB 3.0)",
+    "Status": "OK",
+    "PNPClass": "USB",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard USB HUBs)",
+    "Service": "USBHUB3"
+  },
+  {
+    "PNPDeviceID": "USB\\VID_046D&PID_C52B\\5&2A3B4C5D&0&3",
+    "Name": "USB Composite Device",
+    "Status": "OK",
+    "PNPClass": "USB",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "(Standard USB Host Controller)",
+    "Service": "usbccgp"
+  },
+  {
+    "PNPDeviceID": "USB\\VID_1A86&PID_7523\\5&3753427A&0&2",
+    "Name": "USB-SERIAL CH340 (COM5)",
+    "Status": "OK",
+    "PNPClass": "Ports",
+    "ConfigManagerErrorCode": 0,
+    "Manufacturer": "wch.cn",
+    "Service": "CH341SER_A64"
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "boards": [
+    { "name": "Arduino Uno", "fqbn": "arduino:avr:uno", "platform": { "metadata": { "id": "arduino:avr" } } },
+    { "name": "Arduino Mega or Mega 2560", "fqbn": "arduino:avr:mega" },
+    { "name": "Arduino Leonardo", "fqbn": "arduino:avr:leonardo" }
+  ]
+}
