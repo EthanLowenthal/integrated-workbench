@@ -177,7 +177,7 @@
         {
           "type": "webview",
           "id": "integratedWorkbench.tools",
-          "name": "Boards and tools"
+          "name": "Boards and Tools"
         }
       ]
     }

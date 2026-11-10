@@ -1,5 +1,6 @@
-// Sketch view: board, port, Verify/Upload/Monitor, last result, board check.
-// Renders state posted by the extension; every button posts a message back. No logic lives here.
+// Sketch view: board, port, Verify/Upload/Monitor, last result, diagnostics.
+// Renders state posted by the extension; every button posts a message back. All text comes from
+// the extension (src/text.ts), so this file holds no user-facing strings.
 (function () {
   const vscode = acquireVsCodeApi();
   const root = document.getElementById('root');
@@ -13,33 +14,34 @@
   const basename = (p) => String(p).split(/[\\/]/).pop();
   const seconds = (ms) => (ms < 10000 ? (ms / 1000).toFixed(1) : Math.round(ms / 1000)) + ' s';
 
-  function noProject(s) {
+  let state;
+
+  function noProject(s, T) {
     const list = s.sketches.length
-      ? `<div class="heading">Sketches in this workspace</div>` +
+      ? `<div class="heading">${esc(T.sketchesHeading)}</div>` +
         s.sketches
           .map(
             (k) =>
               `<div class="diag" style="padding-left:0" data-action="openSketch" data-path="${esc(k.path)}">${icon('file-code')}<span class="ellipsis">${esc(k.name)}</span></div>`,
           )
           .join('')
-      : `<p class="muted">No Arduino sketches in this workspace yet. A sketch is a folder with a <code>.ino</code> file of the same name, like <code>Blink/Blink.ino</code>.</p>`;
-    return `<div class="section"><p>${esc(s.text.openSketch)}</p>${list}</div>`;
+      : `<p class="muted">${esc(T.noSketches)}</p>`;
+    return `<div class="section"><p>${esc(T.openSketch)}</p>${list}</div>`;
   }
 
-  function banner(s) {
-    if (!s.engineReady)
-      return `<div class="banner">${icon('warning', 'warn')}<span class="grow">${esc(s.text.engineMissing)}</span><button class="small primary" data-action="showTools" data-focus="engine">${esc(s.text.setUp)}</button></div>`;
-    if (s.board && !s.boardInstalled)
-      return `<div class="banner">${icon('warning', 'warn')}<span class="grow">${esc(s.text.boardPackageMissing)}</span><button class="small primary" data-action="showTools">${esc(s.text.setUp)}</button></div>`;
-    if (s.missingRecommended > 0)
-      return `<div class="banner">${icon('lightbulb')}<span class="grow">${esc(s.text.recommendedMissing)}</span><button class="small" data-action="showTools">${esc(s.text.show)}</button></div>`;
+  function banner(s, T) {
+    const b = (ic, cls, msg, btn, primary, focus) =>
+      `<div class="banner">${icon(ic, cls)}<span class="grow">${esc(msg)}</span><button class="small ${primary ? 'primary' : ''}" data-action="showTools" ${focus ? `data-focus="${focus}"` : ''}>${esc(btn)}</button></div>`;
+    if (!s.engineReady) return b('warning', 'warn', T.engineMissing, T.install, true, 'engine');
+    if (s.board && !s.boardInstalled) return b('warning', 'warn', T.boardPackageMissing, T.install, true);
+    if (s.missingRecommended > 0) return b('info', '', T.recommendedMissing, T.view, false);
     return '';
   }
 
-  function pickers(s) {
-    const board = `<div class="row"><span class="label">Board</span>
+  function pickers(s, T, W) {
+    const board = `<div class="row"><span class="label">${esc(W.board)}</span>
       <button class="picker" data-action="selectBoard" title="${esc(s.board ? s.board.id : '')}">
-        <span class="value ${s.board ? '' : 'muted'}">${esc(s.board ? s.board.name : s.text.selectBoard)}</span>${icon('chevron-down')}
+        <span class="value ${s.board ? '' : 'muted'}">${esc(s.board ? s.board.name : T.selectBoard)}</span>${icon('chevron-down')}
       </button></div>`;
     const opts = s.ports
       .map(
@@ -49,37 +51,37 @@
       .join('');
     const missingSaved =
       s.port && !s.ports.some((p) => p.path === s.port)
-        ? `<option value="${esc(s.port)}" selected>${esc(s.port)} (unplugged)</option>`
+        ? `<option value="${esc(s.port)}" selected>${esc(s.port)} (${esc(W.disconnected)})</option>`
         : '';
-    const port = `<div class="row" style="margin-top:6px"><span class="label">Port</span>
-      <select data-action="selectPort" aria-label="Port">
-        ${s.ports.length || missingSaved ? '' : `<option value="" selected>${esc(s.text.noBoardsPlugged)}</option>`}
+    const port = `<div class="row" style="margin-top:6px"><span class="label">${esc(W.port)}</span>
+      <select data-action="selectPort" aria-label="${esc(W.port)}">
+        ${s.ports.length || missingSaved ? '' : `<option value="" selected>${esc(T.noBoardsPlugged)}</option>`}
         ${missingSaved}${opts}
       </select>
-      <button class="small" data-action="refreshPorts" title="Look for boards again" aria-label="Refresh ports">${icon('refresh')}</button></div>`;
+      <button class="small" data-action="refreshPorts" title="${esc(T.refreshPorts)}" aria-label="${esc(T.refreshPorts)}">${icon('refresh')}</button></div>`;
     const where = s.board
-      ? `<div class="muted small" style="margin:4px 0 0 52px">${esc(s.text.boardSaved)}</div>`
+      ? `<div class="muted small" style="margin:4px 0 0 52px">${esc(T.boardSaved)}</div>`
       : '';
     return `<div class="section">${board}${where}${port}</div>`;
   }
 
-  function actions(s) {
+  function actions(s, T, W) {
     const r = s.run.running;
     if (r) {
       return `<div class="section"><div class="row"><span class="grow ellipsis">${icon('loading', 'codicon-modifier-spin')} ${esc(r.title)}</span>
-        ${r.kind === 'fix' ? '' : `<button class="small" data-action="cancel">Cancel</button>`}</div><div class="progress"></div></div>`;
+        ${r.kind === 'fix' ? '' : `<button class="small" data-action="cancel">${esc(T.cancel)}</button>`}</div><div class="progress"></div></div>`;
     }
     const blocked = s.run.blocked
       ? `<div class="warn small" style="margin-top:6px">${esc(s.run.blocked)}</div>`
       : '';
     return `<div class="section"><div class="actions">
-      <button data-action="build" title="Compile (${esc(s.keys.build)})">${icon('check')} Verify</button>
-      <button class="primary" data-action="upload" title="Compile and upload (${esc(s.keys.upload)})">${icon('arrow-right')} Upload</button>
-      <button class="dim" data-action="monitor" title="${esc(s.text.monitorSoon)}">${icon('terminal')} Monitor</button>
+      <button data-action="build" title="${esc(W.verifyTip)} (${esc(s.keys.build)})">${icon('check')} ${esc(W.verify)}</button>
+      <button class="primary" data-action="upload" title="${esc(W.uploadTip)} (${esc(s.keys.upload)})">${icon('arrow-right')} ${esc(W.upload)}</button>
+      <button class="dim" data-action="monitor" title="${esc(T.monitorSoon)}">${icon('terminal')} ${esc(W.monitor)}</button>
     </div>${blocked}</div>`;
   }
 
-  function lastRun(s) {
+  function lastRun(s, T, W) {
     const l = s.run.last;
     if (!l) return '';
     const head = `<div class="row">${l.ok ? icon('pass', 'ok') : icon('error', 'error')}
@@ -95,17 +97,17 @@
       .join('');
     const more =
       l.diagnostics.length > 30
-        ? `<div class="muted small" style="padding-left:20px">${l.diagnostics.length - 30} more in the Problems panel</div>`
+        ? `<div class="muted small" style="padding-left:20px">${l.diagnostics.length - 30} ${esc(W.moreInProblems)}</div>`
         : '';
     const fix = l.fix
       ? `<div class="card"><div>${esc(l.fix.message)}</div><div class="buttons"><button class="primary small" data-action="applyFix">${esc(l.fix.label)}</button></div></div>`
       : '';
     const hint = l.hint ? `<div class="warn small" style="margin:4px 0 0 20px">${esc(l.hint)}</div>` : '';
     return `<div class="section">${head}${diags}${more}${hint}${fix}
-      <div style="margin:6px 0 0 20px"><button class="link" data-action="showOutput">Show full output</button></div></div>`;
+      <div style="margin:6px 0 0 20px"><button class="link" data-action="showOutput">${esc(T.showOutput)}</button></div></div>`;
   }
 
-  function doctor(s) {
+  function doctor(s, T) {
     if (!s.doctor.length) return '';
     const sev = {
       error: icon('error', 'error'),
@@ -128,20 +130,21 @@
           .join('')}</div></div>`,
       )
       .join('');
-    return `<div class="section"><div class="heading">${esc(s.text.boardCheck)}</div>${cards}</div>`;
+    return `<div class="section"><div class="heading">${esc(T.boardCheck)}</div>${cards}</div>`;
   }
 
-  let state;
   function render() {
     const s = state;
     if (!s) return;
+    const T = s.text;
+    const W = s.text.webview;
     root.innerHTML = s.project
-      ? `<div class="section" style="padding-top:6px"><div class="row">${icon('folder')}<span style="font-weight:600" class="ellipsis">${esc(s.project.name)}</span><span class="muted small">Arduino sketch</span></div>${banner(s)}</div>` +
-        pickers(s) +
-        actions(s) +
-        lastRun(s) +
-        doctor(s)
-      : noProject(s) + doctor(s);
+      ? `<div class="section" style="padding-top:6px"><div class="row">${icon('folder')}<span style="font-weight:600" class="ellipsis">${esc(s.project.name)}</span><span class="muted small">${esc(T.sketchKind)}</span></div>${banner(s, T)}</div>` +
+        pickers(s, T, W) +
+        actions(s, T, W) +
+        lastRun(s, T, W) +
+        doctor(s, T)
+      : noProject(s, T) + doctor(s, T);
   }
 
   root.addEventListener('click', (e) => {

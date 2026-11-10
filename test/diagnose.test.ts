@@ -22,8 +22,8 @@ describe('diagnose: Windows', () => {
 
   it('CH340 with driver -> OK on COM5', () => {
     const [d] = diagnose(win('ch340-driver-ok.synth.json'));
-    expect(d).toMatchObject({ code: 'OK', severity: 'ok', title: 'Board (CH340) ready on COM5' });
-    expect(d!.actions).toContainEqual({ kind: 'selectPort', label: 'Use this port', path: 'COM5' });
+    expect(d).toMatchObject({ code: 'OK', severity: 'ok', title: 'Board (CH340) on COM5' });
+    expect(d!.actions).toContainEqual({ kind: 'selectPort', label: 'Use This Port', path: 'COM5' });
   });
 
   it('CH340 without driver -> DRIVER_MISSING with WCH link, Windows Update, and confirm-only rescan', () => {
@@ -39,7 +39,7 @@ describe('diagnose: Windows', () => {
   it('genuine Uno -> OK with board name', () => {
     expect(diagnose(win('uno-genuine.synth.json'))[0]).toMatchObject({
       code: 'OK',
-      title: 'Uno R3 ready on COM3',
+      title: 'Uno R3 on COM3',
     });
   });
 
@@ -47,7 +47,7 @@ describe('diagnose: Windows', () => {
     expect(codes(diagnose(win('ftdi.synth.json')))).toEqual(['OK']);
     expect(diagnose(win('leonardo-composite.synth.json'))[0]).toMatchObject({
       code: 'OK',
-      title: 'Leonardo ready on COM9',
+      title: 'Leonardo on COM9',
     });
   });
 
@@ -57,7 +57,7 @@ describe('diagnose: Windows', () => {
     const [d] = diagnose(s);
     expect(d).toMatchObject({
       code: 'DRIVER_MISSING',
-      title: "The CH340 driver is installed but isn't working",
+      title: 'CH340 driver failed to start',
     });
     expect(d!.detail).toContain('43');
   });
@@ -71,11 +71,11 @@ describe('diagnose: macOS', () => {
   it('CH340 -> OK; CP2102 -> OK; ESP32-S3 native -> OK', () => {
     expect(diagnose(mac('ioreg-ch340.synth.txt'))[0]).toMatchObject({
       code: 'OK',
-      title: 'Board (CH340) ready on /dev/cu.usbserial-110',
+      title: 'Board (CH340) on /dev/cu.usbserial-110',
     });
     expect(diagnose(mac('ioreg-cp2102.synth.txt'))[0]).toMatchObject({
       code: 'OK',
-      title: 'Board (CP210x) ready on /dev/cu.usbserial-0001',
+      title: 'Board (CP210x) on /dev/cu.usbserial-0001',
     });
     expect(diagnose(mac('ioreg-esp32s3.synth.txt'))[0]).toMatchObject({
       code: 'OK',
@@ -95,7 +95,7 @@ describe('diagnose: macOS', () => {
     expect(codes(ds)).toEqual(['MULTIPLE_CANDIDATES', 'OK', 'OK']);
     expect(ds[0]!.actions[0]).toEqual({
       kind: 'pickPort',
-      label: 'Pick a port',
+      label: 'Select Port...',
       paths: ['/dev/cu.usbserial-110', '/dev/cu.usbserial-0001'],
     });
   });
@@ -105,7 +105,7 @@ describe('diagnose: macOS', () => {
     s.ports[0]!.inUseBy = { pid: 4321, name: 'screen' };
     const ds = diagnose(s);
     expect(codes(ds)).toEqual(['PORT_IN_USE']);
-    expect(ds[0]!.title).toBe('/dev/cu.usbserial-110 is being used by screen');
+    expect(ds[0]!.title).toBe('/dev/cu.usbserial-110 in use by screen');
   });
 
   it('unlinked usbserial port from /dev listing still counts', () => {
@@ -143,7 +143,7 @@ describe('diagnose: Linux', () => {
     expect(d!.code).toBe('LINUX_PERMISSION');
     expect(d!.actions[0]).toEqual({
       kind: 'copyCommand',
-      label: 'Copy fix command',
+      label: 'Copy Command',
       command: 'sudo usermod -aG dialout $USER',
     });
   });
@@ -160,7 +160,7 @@ describe('diagnose: Linux', () => {
     s.ports[0]!.permissionOk = false;
     s.ports[0]!.ownerGroup = 'dialout';
     const [d] = diagnose(s);
-    expect(d!.title).toBe('Log out and back in to use this port');
+    expect(d!.title).toBe('Log out to apply group membership');
     expect(d!.actions.map((a) => a.kind)).toEqual(['retry']);
   });
 
@@ -243,7 +243,7 @@ describe('diagnose: plug-in watch', () => {
     };
     const ds = diagnose(after, { watch: diffSnapshots(before, after) });
     expect(codes(ds)).toEqual(['UNKNOWN_DEVICE_NO_PORT']);
-    expect(ds[0]!.actions[0]).toEqual({ kind: 'copyCommand', label: 'Copy device ID', command: 'abcd:1234' });
+    expect(ds[0]!.actions[0]).toEqual({ kind: 'copyCommand', label: 'Copy Device ID', command: 'abcd:1234' });
   });
 
   it('unknown devices are NOT reported outside a watch (keyboards, hubs, etc.)', () => {
@@ -267,7 +267,7 @@ describe('diagnose: output contract', () => {
       const ds = diagnose(s);
       for (const d of ds) {
         expect(d.title.length).toBeGreaterThan(5);
-        expect(d.detail.length).toBeGreaterThan(20);
+        expect(d.detail.length).toBeGreaterThan(10);
         expect(d.actions.length).toBeGreaterThan(0);
       }
       const ranks = ds.map((d) => rank[d.severity]);

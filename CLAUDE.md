@@ -8,7 +8,7 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - `src/core` never imports `vscode` (enforced by eslint).
 - Run commands with `execFile` + argument arrays via `ProbeHost.run`; never `exec` or shell strings built from device data (enforced by eslint).
 - Never run elevated or destructive commands automatically. Surface them as `runCommand` / `copyCommand` actions the user confirms.
-- User-facing text: diagnosis text in `src/core/messages.ts`, VS Code UI text in `src/text.ts`. Driver URLs live in `src/core/drivers.ts`.
+- User-facing text: diagnosis text in `src/core/messages.ts`, VS Code UI text (including every string the webviews render) in `src/text.ts`. Style matches VS Code: Title Case for buttons, links, commands and view names; short neutral sentence-case messages; no chatty phrasing. Driver URLs live in `src/core/drivers.ts`.
 - Mark any VID:PID or URL not verified against a primary source with `// TODO verify`.
 - Single VS Code extension project. Board detection/diagnosis engine lives in `src/core/` and may be extracted later.
 

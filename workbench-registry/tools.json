@@ -6,7 +6,7 @@
     {
       "id": "arduino-cli",
       "kind": "tool",
-      "name": "Arduino build engine",
+      "name": "Arduino Build Engine",
       "description": "arduino-cli: compiles and uploads Arduino sketches and manages board packages.",
       "homepage": "https://github.com/arduino/arduino-cli",
       "license": "GPL-3.0",
@@ -15,7 +15,7 @@
       "recommendWhen": [
         {
           "files": ["**/*.ino"],
-          "reason": "Needed to build .ino sketches"
+          "reason": "Required to build .ino sketches"
         }
       ],
       "downloads": {

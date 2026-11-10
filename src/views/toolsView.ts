@@ -10,7 +10,7 @@ type Msg =
   | { type: 'ready' | 'refresh' | 'addRegistry' | 'editRegistries' | 'registryHelp' | 'showOutput' }
   | { type: 'install' | 'uninstall'; id: string };
 
-/** The "Boards and tools" section of the sidebar. */
+/** The "Boards and Tools" section of the sidebar. */
 export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable {
   private view?: vscode.WebviewView;
   private loadedOnce = false;
@@ -28,7 +28,7 @@ export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable 
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view;
     view.webview.options = webviewOptions(this.extensionUri);
-    view.webview.html = webviewHtml(view.webview, this.extensionUri, 'tools.js', 'Boards and tools');
+    view.webview.html = webviewHtml(view.webview, this.extensionUri, 'tools.js', 'Boards and Tools');
     view.webview.onDidReceiveMessage((m: Msg) => void this.onMessage(m));
     view.onDidChangeVisibility(() => view.visible && this.post());
   }
@@ -42,7 +42,7 @@ export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable 
 
   private post(): void {
     if (!this.view?.visible) return;
-    void this.view.webview.postMessage({ type: 'state', state: this.model.state });
+    void this.view.webview.postMessage({ type: 'state', state: { ...this.model.state, text: text.webview } });
     if (this.pendingFocus) {
       void this.view.webview.postMessage({ type: 'focus', id: this.pendingFocus });
       this.pendingFocus = undefined;

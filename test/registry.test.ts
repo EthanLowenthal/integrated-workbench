@@ -200,9 +200,9 @@ describe('recommend', () => {
       sketches: [{ name: 'Blink', fqbn: 'arduino:avr:uno', boardName: 'Arduino Uno' }],
     });
     expect(recs.map((r) => [r.pkg.id, r.reasons])).toEqual([
-      ['arduino-cli', ['Needed to build .ino sketches']],
-      ['arduino:avr', ['Blink builds for Arduino Uno']],
-      ['esp32:esp32', ['ESP32-S3 plugged in']],
+      ['arduino-cli', ['Required to build .ino sketches']],
+      ['arduino:avr', ['Blink targets Arduino Uno']],
+      ['esp32:esp32', ['ESP32-S3 connected']],
     ]);
   });
 
@@ -218,7 +218,7 @@ describe('recommend', () => {
       sketches: [],
     });
     expect(recs.map((r) => [r.pkg.id, r.reasons])).toEqual([
-      ['stmicroelectronics:stm32', ['ST-LINK/V2-1 (Nucleo, Discovery) plugged in']],
+      ['stmicroelectronics:stm32', ['ST-LINK/V2-1 (Nucleo, Discovery) connected']],
     ]);
     const stm = reg.packages.find((p) => p.id === 'stmicroelectronics:stm32');
     expect(stm).toMatchObject({

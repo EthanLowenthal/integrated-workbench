@@ -1,5 +1,6 @@
-// Boards and tools view: recommended / installed / search-all, install / update / uninstall, registries.
-// Renders state posted by the extension; every button posts a message back.
+// Boards and Tools view: recommended / installed / search, install / update / uninstall, registries.
+// Renders state posted by the extension; every button posts a message back. All text comes from
+// the extension (src/text.ts), so this file holds no user-facing strings.
 (function () {
   const vscode = acquireVsCodeApi();
   const root = document.getElementById('root');
@@ -25,20 +26,22 @@
     );
   }
 
-  function button(item) {
+  function button(item, W) {
     const busy = state.busy[item.id];
     if (busy) {
       const pct = busy.fraction !== undefined ? Math.round(busy.fraction * 100) : undefined;
       return `<span class="muted small">${esc(busy.label)}${pct !== undefined ? ` ${pct}%` : ''}</span>`;
     }
     if (item.kind === 'soon') return '';
+    const id = esc(item.id);
     if (item.state === 'available')
-      return `<button class="small ${item.reasons.length ? 'primary' : ''}" data-action="install" data-id="${esc(item.id)}">Install</button>`;
+      return `<button class="small ${item.reasons.length ? 'primary' : ''}" data-action="install" data-id="${id}">${esc(W.install)}</button>`;
     if (item.state === 'update')
-      return `<button class="small primary" data-action="install" data-id="${esc(item.id)}">Update</button>`;
+      return `<button class="small primary" data-action="install" data-id="${id}">${esc(W.update)}</button>`;
     if (item.state === 'installed' && item.kind === 'arduino-core')
-      return `<button class="small" data-action="uninstall" data-id="${esc(item.id)}" title="Remove this board package">Uninstall</button>`;
-    if (item.state === 'installed') return `<span class="muted small">${icon('check')} Installed</span>`;
+      return `<button class="small" data-action="uninstall" data-id="${id}" title="${esc(W.uninstallTip)}">${esc(W.uninstall)}</button>`;
+    if (item.state === 'installed')
+      return `<span class="muted small">${icon('check')} ${esc(W.installed)}</span>`;
     return '';
   }
 
@@ -52,15 +55,15 @@
     return parts.join(' · ');
   }
 
-  function itemHtml(item) {
+  function itemHtml(item, W) {
     const busy = state.busy[item.id];
     const pct = busy && busy.fraction !== undefined ? Math.round(busy.fraction * 100) : undefined;
     const badges = [
       item.source
-        ? `<span class="badge" title="From the ${esc(item.source)} registry">${esc(item.source)}</span>`
+        ? `<span class="badge" title="${esc(W.sourceTip)}: ${esc(item.source)}">${esc(item.source)}</span>`
         : '',
       item.unverified
-        ? `<span class="badge" title="Some details haven't been verified against a primary source yet">unverified</span>`
+        ? `<span class="badge" title="${esc(W.unverifiedTip)}">${esc(W.unverifiedBadge)}</span>`
         : '',
     ].join(' ');
     return `<div class="item ${focusId === item.id ? 'focus' : ''}" id="item-${esc(item.id)}">
@@ -73,52 +76,52 @@
         ${item.note && item.state !== 'installed' ? `<div class="muted small">${esc(item.note)}</div>` : ''}
         ${busy ? `<div class="progress ${pct !== undefined ? 'determinate' : ''}" style="--p:${pct ?? 0}%"></div>` : ''}
       </div>
-      <div class="side">${button(item)}</div>
+      <div class="side">${button(item, W)}</div>
     </div>`;
   }
 
-  function group(title, items, empty) {
+  function group(title, items, W, empty) {
     const shown = items.filter(matches);
     if (!shown.length && !empty) return '';
     return `<div class="group"><div class="heading"><span>${esc(title)}</span><span>${shown.length || ''}</span></div>
-      ${shown.length ? shown.map(itemHtml).join('') : `<div class="muted small">${esc(empty)}</div>`}</div>`;
+      ${shown.length ? shown.map((i) => itemHtml(i, W)).join('') : `<div class="muted small">${esc(empty)}</div>`}</div>`;
   }
 
   function render() {
     const s = state;
     if (!s) return;
-    const search = `<div class="row" style="margin-top:6px"><input type="search" id="q" placeholder="Search boards and tools" value="${esc(query)}" aria-label="Search boards and tools">
-      <button class="small" data-action="refresh" title="Refresh the board list" aria-label="Refresh">${icon(s.loading ? 'loading' : 'refresh', s.loading ? 'codicon-modifier-spin' : '')}</button></div>`;
+    const W = s.text;
+    const search = `<div class="row" style="margin-top:6px"><input type="search" id="q" placeholder="${esc(W.searchPlaceholder)}" value="${esc(query)}" aria-label="${esc(W.searchPlaceholder)}">
+      <button class="small" data-action="refresh" title="${esc(W.refreshList)}" aria-label="${esc(W.refreshList)}">${icon(s.loading ? 'loading' : 'refresh', s.loading ? 'codicon-modifier-spin' : '')}</button></div>`;
     const error = s.error
-      ? `<div class="banner">${icon('error', 'error')}<span class="grow">${esc(s.error)}</span><button class="link" data-action="showOutput">Output</button></div>`
+      ? `<div class="banner">${icon('error', 'error')}<span class="grow">${esc(s.error)}</span><button class="link" data-action="showOutput">${esc(W.output)}</button></div>`
       : '';
     const available = query
-      ? group('Available', s.available, 'No matches.')
-      : `<div class="group"><div class="heading"><span>Available</span><span>${s.available.length || ''}</span></div>
-          <div class="muted small">${s.engineReady ? `Search to browse ${s.available.length} more board packages.` : 'Install the build engine to browse every board package.'}</div></div>`;
+      ? group(W.available, s.available, W, W.noMatches)
+      : `<div class="group"><div class="heading"><span>${esc(W.available)}</span><span>${s.available.length || ''}</span></div>
+          <div class="muted small">${esc(s.engineReady ? W.browseHint : W.needEngineToBrowse)}</div></div>`;
     const regs = s.registries
       .map(
         (
           r,
         ) => `<div class="row small" title="${esc(r.spec)}">${icon(r.errors.length ? 'warning' : 'database', r.errors.length ? 'warn' : '')}
-        <span class="grow ellipsis">${esc(r.name)}${r.builtin ? ' <span class="muted">(built in)</span>' : ''}</span>
-        ${r.errors.length ? `<button class="link" data-action="showOutput">${r.errors.length} problem${r.errors.length === 1 ? '' : 's'}</button>` : ''}</div>`,
+        <span class="grow ellipsis">${esc(r.name)}${r.builtin ? ` <span class="muted">(${esc(W.builtIn)})</span>` : ''}</span>
+        ${r.errors.length ? `<button class="link" data-action="showOutput">${r.errors.length} ${esc(r.errors.length === 1 ? W.errorSingular : W.errorPlural)}</button>` : ''}</div>`,
       )
       .join('');
     root.innerHTML =
       search +
       error +
-      group(
-        'Recommended for this workspace',
-        s.recommended,
-        query ? '' : 'Nothing to recommend yet. Open a sketch or plug in a board.',
-      ) +
-      group('Installed', s.installed) +
+      group(W.recommended, s.recommended, W, query ? '' : W.noRecommendations) +
+      group(W.installedGroup, s.installed, W) +
       available +
-      group('Coming soon', s.soon) +
-      `<div class="group"><div class="heading"><span>Registries</span></div>${regs}
-        <div class="row" style="margin-top:6px;gap:12px"><button class="link" data-action="addRegistry">${icon('add')} Add registry</button>
-        <button class="link" data-action="editRegistries">Edit list</button><button class="link" data-action="registryHelp">How to build one</button></div></div>`;
+      group(W.comingSoon, s.soon, W) +
+      `<div class="group"><div class="heading"><span>${esc(W.registries)}</span></div>${regs}
+        <div class="row" style="margin-top:6px;gap:12px">
+          <button class="link" data-action="addRegistry">${icon('add')} ${esc(W.addRegistry)}</button>
+          <button class="link" data-action="editRegistries">${esc(W.configure)}</button>
+          <button class="link" data-action="registryHelp">${esc(W.documentation)}</button>
+        </div></div>`;
     const q = document.getElementById('q');
     q.addEventListener('input', () => {
       query = q.value;

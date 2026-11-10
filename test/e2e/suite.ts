@@ -85,7 +85,7 @@ export async function run(): Promise<void> {
   assert.match(yaml, /^default_fqbn: arduino:avr:uno$/m);
   await until('recommendation from sketch board', () =>
     api.tools.state.recommended.find(
-      (i) => i.id === 'arduino:avr' && i.reasons.some((r) => r.includes('Blink builds for')),
+      (i) => i.id === 'arduino:avr' && i.reasons.some((r) => r.includes('Blink targets')),
     ),
   );
   log('sketch.yaml written; arduino:avr recommended for Blink');

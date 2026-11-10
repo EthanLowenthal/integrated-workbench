@@ -1,6 +1,7 @@
 /**
- * Every user-facing string lives here so it's easy to review and edit.
- * Rules: plain English, explain any jargon, always say what to do next.
+ * Diagnosis text. Style: professional and neutral, like VS Code's own messages. Titles are short
+ * statements of fact; details explain the cause in plain English and state the fix.
+ * Buttons use Title Case.
  */
 import type { OsName } from './types.js';
 
@@ -12,118 +13,111 @@ export interface Text {
 const osLabel: Record<OsName, string> = { windows: 'Windows', macos: 'macOS', linux: 'Linux' };
 
 export const labels = {
-  retry: 'Try again',
-  setActivePort: 'Use this port',
-  pickPort: 'Pick a port',
-  copyVidPid: 'Copy device ID',
-  reportDevice: 'Report this device',
-  openDriverPage: (driverName: string) => `Get the ${driverName}`,
+  retry: 'Retry',
+  setActivePort: 'Use This Port',
+  pickPort: 'Select Port...',
+  copyVidPid: 'Copy Device ID',
+  reportDevice: 'Report Device',
+  openDriverPage: (driverName: string) => `Download ${driverName}`,
   windowsUpdate: 'Open Windows Update',
-  rescanDevices: 'Rescan devices (admin)',
-  copyDialoutFix: 'Copy fix command',
-  copyBrlttyDisable: 'Copy command: disable brltty',
-  copyBrlttyRemove: 'Copy command: uninstall brltty',
+  rescanDevices: 'Rescan Devices (Administrator)',
+  copyDialoutFix: 'Copy Command',
+  copyBrlttyDisable: 'Copy Disable Command',
+  copyBrlttyRemove: 'Copy Uninstall Command',
 };
 
 export const messages = {
   noDeviceAfterPlug: (): Text => ({
-    title: "Your computer didn't see anything when you plugged in",
+    title: 'No device detected',
     detail:
-      'No new USB device appeared. The most common cause is a charge-only USB cable: it powers the board ' +
-      "but has no data wires, so the computer can't talk to it. Try a different cable (one you know syncs " +
-      'data, like a phone cable that works for file transfer) or a different USB port, then try again.',
+      'No new USB device appeared after the board was connected. The most common cause is a charge-only ' +
+      'USB cable, which carries power but no data. Use a data cable or a different USB port.',
   }),
 
   driverMissing: (chip: string, os: OsName, driverName: string | undefined): Text => ({
-    title: `This is a ${chip} USB-serial chip and its driver isn't installed`,
+    title: `${chip} driver not installed`,
     detail:
-      `Your board uses a ${chip} chip to talk over USB. ${osLabel[os]} can see the chip, but no driver is ` +
-      `loaded for it, so no serial port was created and you can't upload. ` +
-      (driverName
-        ? `Install the ${driverName} from the vendor's official page, then unplug the board and plug it back in.`
-        : 'Install the driver from the chip vendor, then unplug the board and plug it back in.') +
-      (os === 'windows'
-        ? ' Windows Update sometimes installs it automatically under "Optional updates".'
-        : ''),
+      `The board's ${chip} USB-to-serial chip is detected, but ${osLabel[os]} has no driver loaded for it, so no ` +
+      'serial port is available. ' +
+      (driverName ? `Install the ${driverName} from the vendor, ` : 'Install the vendor driver, ') +
+      'then reconnect the board.' +
+      (os === 'windows' ? ' The driver may also be available in Windows Update under Optional updates.' : ''),
   }),
 
   driverError: (chip: string, code: number | undefined): Text => ({
-    title: `The ${chip} driver is installed but isn't working`,
+    title: `${chip} driver failed to start`,
     detail:
-      `The driver for your ${chip} chip failed to start` +
+      `The ${chip} driver is installed but failed to start` +
       (code !== undefined ? ` (Windows error code ${code})` : '') +
-      '. Unplug the board, plug it into a different USB port, and try again. If it keeps failing, ' +
-      'reinstall the driver from the official page. Code 43 on very cheap boards can also mean a counterfeit chip.',
+      '. Reconnect the board to a different USB port. If the error persists, reinstall the driver. ' +
+      'Error code 43 can also indicate a counterfeit chip.',
   }),
 
   unknownDeviceNoPort: (vid: string, pid: string): Text => ({
-    title: "Something was detected, but it isn't a serial device we recognize",
+    title: 'Unrecognized USB device',
     detail:
-      `A USB device with ID ${vid}:${pid} appeared, but no serial port was created and Integrated Workbench doesn't ` +
-      'know this chip yet. If this is your board, copy the ID and report it so we can add it. ' +
-      'Searching the web for the ID usually tells you which driver it needs.',
+      `A USB device (${vid}:${pid}) was detected but did not create a serial port, and its chip is not in ` +
+      'any installed registry. If this is a development board, it may need a vendor driver.',
   }),
 
   portInUse: (path: string, procName: string, pid: number): Text => ({
-    title: `${path} is being used by ${procName}`,
+    title: `${path} in use by ${procName}`,
     detail:
-      `Only one program can use a serial port at a time, and ${procName} (process ${pid}) has ${path} open. ` +
-      'Close it (or its serial monitor), then try again.',
+      `${procName} (process ${pid}) has the port open. A serial port can only be used by one program at a ` +
+      'time. Close the port in that program and retry.',
   }),
 
   linuxPermission: (path: string, group: string): Text => ({
-    title: "You don't have permission to use this port",
+    title: 'Permission denied',
     detail:
-      `${path} belongs to the "${group}" group and your user isn't in it. Add yourself with the command ` +
-      'below, then log out and back in (group changes only apply to new sessions).',
+      `${path} is owned by the "${group}" group, and the current user is not a member. Add the user to the ` +
+      'group, then log out and back in for the change to take effect.',
   }),
 
   linuxPermissionRelogin: (path: string, group: string): Text => ({
-    title: 'Log out and back in to use this port',
+    title: 'Log out to apply group membership',
     detail:
-      `Your user is in the "${group}" group that owns ${path}, but this login session started before you ` +
-      'were added, so it does not have the permission yet. Log out and back in (or restart), then try again.',
+      `The current user is in the "${group}" group that owns ${path}, but this session started before the ` +
+      'change. Log out and back in, then retry.',
   }),
 
   linuxBrltty: (chip: string): Text => ({
-    title: `A braille-display service (brltty) is grabbing your ${chip} board`,
+    title: `brltty is claiming the ${chip} device`,
     detail:
-      `brltty is a service for braille displays. Some of those displays use the same USB ID as the ${chip} ` +
-      'chip, so brltty claims your board and no serial port appears. If you do not use a braille display, ' +
-      'either disable brltty (reversible) or uninstall it. Then unplug the board and plug it back in.',
+      `brltty, a braille display service, matches the ${chip} USB ID and takes over the device, so no serial ` +
+      'port appears. If no braille display is in use, disable or uninstall brltty, then reconnect the board.',
   }),
 
   nativeUsbBootloader: (board: string): Text => ({
-    title: `${board} is in bootloader mode`,
+    title: `${board} in bootloader mode`,
     detail:
-      'This board talks USB directly (no separate USB-serial chip), so it shows up differently while it is ' +
-      'waiting for an upload. That is normal right after a reset. Uploading now should work; if it does not, ' +
-      'double-tap the reset button, or hold BOOT while plugging it in, then upload within a few seconds.',
+      'The board is waiting for an upload, which is expected right after a reset. If an upload does not ' +
+      'start, double-press reset (or hold BOOT while connecting) and upload within a few seconds.',
   }),
 
   nativeUsbNoPort: (board: string): Text => ({
-    title: `${board} is connected but has no serial port right now`,
+    title: `${board}: no serial port`,
     detail:
-      'This board talks USB directly, so its serial port only exists while the running sketch provides one. ' +
-      'If a previous sketch crashed or turned off USB, put the board in bootloader mode: double-tap reset ' +
-      '(Leonardo, Micro, RP2040) or hold BOOT while plugging it in (ESP32-S2/S3/C3), then upload.',
+      'This board provides its serial port from the running program, so the port disappears if the program ' +
+      'crashes or disables USB. Enter bootloader mode (double-press reset, or hold BOOT while connecting) ' +
+      'and upload again.',
   }),
 
   multipleCandidates: (count: number): Text => ({
-    title: `Found ${count} boards`,
-    detail: 'More than one board is connected. Pick the one you want to use.',
+    title: `${count} boards connected`,
+    detail: 'Select the port to use.',
   }),
 
   noBoards: (): Text => ({
-    title: 'No boards found',
+    title: 'No boards connected',
     detail:
-      'Plug your board in; it shows up here within a couple of seconds. If nothing happens, try a ' +
-      'different USB cable: many cables are charge-only and carry no data.',
+      'Connected boards appear here automatically. If a board does not appear, check that the USB cable ' +
+      'supports data; charge-only cables are a common cause.',
   }),
 
   ok: (board: string, path: string): Text => ({
-    title: `${board} ready on ${path}`,
-    detail: `Your board is connected and ${path} is available.`,
+    title: `${board} on ${path}`,
+    detail: 'Connected and ready.',
   }),
 };
 

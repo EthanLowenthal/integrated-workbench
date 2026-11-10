@@ -151,8 +151,8 @@ Any package can recommend itself:
 
 ```json
 "recommendWhen": [
-  { "usb": ["303a:*"], "reason": "${device} plugged in" },
-  { "fqbn": ["esp32:esp32:*"], "reason": "${sketch} builds for ${board}" },
+  { "usb": ["303a:*"], "reason": "${device} connected" },
+  { "fqbn": ["esp32:esp32:*"], "reason": "${sketch} targets ${board}" },
   { "files": ["**/Cargo.toml"], "reason": "Rust project" }
 ]
 ```
@@ -200,8 +200,8 @@ A registry can point at programs to download and commands to run, so adding one 
 
 - **Fingerprints:** downloads must match their `sha256`. Enforced today.
 - **No shell:** recipes are argument lists, never shell strings. Enforced by the schema today.
-- **Nothing installs or runs without a click.** Coming with the Boards and tools view.
-- **Third-party confirmation:** the first time a package or recipe from a non-built-in registry installs or runs, Integrated Workbench shows where it comes from and what it will do, and asks first. Coming with the Boards and tools view.
+- **Nothing installs or runs without a click.** Enforced.
+- **Third-party confirmation:** the first time a package from a non-built-in registry is installed, Integrated Workbench shows which registry it comes from and asks first, once per registry. Enforced for installs; recipes will follow the same rule once they can run.
 
 One thing happens automatically today: board index URLs (`boardIndex`) from every registry are passed to arduino-cli when it refreshes its board list. That downloads the index (a list of packages), never a package itself.
 

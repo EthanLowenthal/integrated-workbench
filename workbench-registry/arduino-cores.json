@@ -7,16 +7,16 @@
       "id": "arduino:avr",
       "kind": "arduino-core",
       "platform": "arduino:avr",
-      "name": "Arduino AVR boards",
+      "name": "Arduino AVR Boards",
       "boards": ["Uno", "Nano", "Mega 2560", "Leonardo", "Micro"],
       "recommendWhen": [
         {
           "usb": ["2341:0043", "2341:0001", "2341:0042", "2341:8036", "2341:0036", "2341:8037", "2341:0037"],
-          "reason": "${device} plugged in"
+          "reason": "${device} connected"
         },
         {
           "fqbn": ["arduino:avr:*"],
-          "reason": "${sketch} builds for ${board}"
+          "reason": "${sketch} targets ${board}"
         }
       ]
     },
@@ -24,12 +24,12 @@
       "id": "arduino:renesas_uno",
       "kind": "arduino-core",
       "platform": "arduino:renesas_uno",
-      "name": "Arduino UNO R4 boards",
+      "name": "Arduino UNO R4 Boards",
       "boards": ["UNO R4 Minima", "UNO R4 WiFi"],
       "recommendWhen": [
         {
           "fqbn": ["arduino:renesas_uno:*"],
-          "reason": "${sketch} builds for ${board}"
+          "reason": "${sketch} targets ${board}"
         }
       ]
     },
@@ -37,7 +37,7 @@
       "id": "esp32:esp32",
       "kind": "arduino-core",
       "platform": "esp32:esp32",
-      "name": "ESP32 boards",
+      "name": "ESP32 Boards",
       "description": "Espressif's Arduino core.",
       "boards": ["ESP32", "ESP32-S2", "ESP32-S3", "ESP32-C3", "ESP32-C6"],
       "boardIndex": "https://espressif.github.io/arduino-esp32/package_esp32_index.json",
@@ -45,11 +45,11 @@
       "recommendWhen": [
         {
           "usb": ["303a:*"],
-          "reason": "${device} plugged in"
+          "reason": "${device} connected"
         },
         {
           "fqbn": ["esp32:esp32:*"],
-          "reason": "${sketch} builds for ${board}"
+          "reason": "${sketch} targets ${board}"
         }
       ]
     },
@@ -57,7 +57,7 @@
       "id": "rp2040:rp2040",
       "kind": "arduino-core",
       "platform": "rp2040:rp2040",
-      "name": "Raspberry Pi Pico boards",
+      "name": "Raspberry Pi Pico Boards",
       "description": "Earle Philhower's Arduino core for RP2040 and RP2350.",
       "boards": ["Pico", "Pico W", "Pico 2", "Pico 2 W"],
       "boardIndex": "https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json",
@@ -65,11 +65,11 @@
       "recommendWhen": [
         {
           "usb": ["2e8a:000a", "2e8a:0003"],
-          "reason": "${device} plugged in"
+          "reason": "${device} connected"
         },
         {
           "fqbn": ["rp2040:rp2040:*"],
-          "reason": "${sketch} builds for ${board}"
+          "reason": "${sketch} targets ${board}"
         }
       ]
     },
@@ -77,7 +77,7 @@
       "id": "stmicroelectronics:stm32",
       "kind": "arduino-core",
       "platform": "STMicroelectronics:stm32",
-      "name": "STM32 boards",
+      "name": "STM32 Boards",
       "description": "STMicroelectronics official Arduino core (stm32duino). Nucleo and Discovery boards upload by copying to the board drive, with nothing else to install. Other upload methods (SWD, DFU, serial) need ST STM32CubeProgrammer, a separate download from st.com.",
       "boards": [
         "Nucleo-64",
@@ -91,11 +91,11 @@
       "recommendWhen": [
         {
           "usb": ["0483:*"],
-          "reason": "${device} plugged in"
+          "reason": "${device} connected"
         },
         {
           "fqbn": ["STMicroelectronics:stm32:*"],
-          "reason": "${sketch} builds for ${board}"
+          "reason": "${sketch} targets ${board}"
         }
       ]
     }
