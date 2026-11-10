@@ -5,7 +5,7 @@ import { createChipDb, defaultChipDb, type ChipDb } from './core/chips.js';
 import { createDriverDb, defaultDriverDb, type DriverDb } from './core/drivers.js';
 import { nodeRegistryIO } from './registry/io.js';
 import { loadRegistry, mergeRegistries, REGISTRY_FOLDER } from './registry/load.js';
-import type { ArduinoCorePackage, Registry, ToolPackage } from './registry/types.js';
+import type { ArduinoCorePackage, FirmwarePackage, Registry, ToolPackage } from './registry/types.js';
 
 /**
  * Loads the built-in registry (shipped inside the extension) plus the user's extra registries
@@ -66,6 +66,12 @@ export class RegistryService implements vscode.Disposable {
   toolProviding(command: string): ToolPackage | undefined {
     return this.registry.packages.find(
       (p): p is ToolPackage & { origin: never } => p.kind === 'tool' && p.provides.includes(command),
+    );
+  }
+
+  get firmware(): FirmwarePackage[] {
+    return this.registry.packages.filter(
+      (p): p is FirmwarePackage & { origin: never } => p.kind === 'firmware',
     );
   }
 

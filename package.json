@@ -2,7 +2,7 @@
   "name": "integrated-workbench",
   "displayName": "Integrated Workbench",
   "description": "Build, upload, and monitor microcontroller projects. Detects connected boards, manages board packages, and includes a Serial Monitor with a plotter. Supports Arduino sketches for AVR, ESP32, STM32, and Raspberry Pi Pico.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "integrated-workbench",
   "license": "MIT",
   "engines": {
@@ -146,6 +146,11 @@
         "title": "Run on Board",
         "category": "Integrated Workbench",
         "icon": "$(play)"
+      },
+      {
+        "command": "integratedWorkbench.installMicroPython",
+        "title": "Install MicroPython on Board...",
+        "category": "Integrated Workbench"
       }
     ],
     "menus": {
@@ -208,6 +213,11 @@
         {
           "command": "integratedWorkbench.uploadAndMonitor",
           "when": "view == integratedWorkbench.sketch",
+          "group": "overflow"
+        },
+        {
+          "command": "integratedWorkbench.installMicroPython",
+          "when": "view == integratedWorkbench.sketch && integratedWorkbench.projectKind == micropython",
           "group": "overflow"
         }
       ],

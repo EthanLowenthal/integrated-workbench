@@ -1,0 +1,133 @@
+{
+  "$schema": "./schema.json",
+  "schema": 1,
+  "description": "Firmware Integrated Workbench can install on boards. Checksums computed from the files on micropython.org.",
+  "packages": [
+    {
+      "id": "micropython-rpi-pico",
+      "kind": "firmware",
+      "name": "MicroPython for Raspberry Pi Pico",
+      "description": "RP2040, without wireless.",
+      "homepage": "https://micropython.org/download/RPI_PICO/",
+      "license": "MIT",
+      "runtime": "micropython",
+      "version": "1.29.0",
+      "method": "uf2",
+      "uf2BoardIds": ["RPI-RP2"],
+      "bootloaderUsb": ["2e8a:0003"],
+      "file": {
+        "url": "https://micropython.org/resources/firmware/RPI_PICO-20260824-v1.29.0.uf2",
+        "sha256": "e1160e602e277d85920adb5fe741435edccba9ba6ecadc85fdab75252eeff4e9",
+        "size": 680960
+      }
+    },
+    {
+      "id": "micropython-rpi-pico-w",
+      "kind": "firmware",
+      "name": "MicroPython for Raspberry Pi Pico W",
+      "description": "RP2040 with Wi-Fi and Bluetooth.",
+      "homepage": "https://micropython.org/download/RPI_PICO_W/",
+      "license": "MIT",
+      "runtime": "micropython",
+      "version": "1.29.0",
+      "method": "uf2",
+      "uf2BoardIds": ["RPI-RP2"],
+      "bootloaderUsb": ["2e8a:0003"],
+      "file": {
+        "url": "https://micropython.org/resources/firmware/RPI_PICO_W-20260824-v1.29.0.uf2",
+        "sha256": "f918c0a082c6daf53e27998b7f990ba5f065db2e298b21a34024532a20786794",
+        "size": 1811456
+      }
+    },
+    {
+      "id": "micropython-rpi-pico2",
+      "kind": "firmware",
+      "name": "MicroPython for Raspberry Pi Pico 2",
+      "description": "RP2350, without wireless.",
+      "homepage": "https://micropython.org/download/RPI_PICO2/",
+      "license": "MIT",
+      "runtime": "micropython",
+      "version": "1.29.0",
+      "method": "uf2",
+      "uf2BoardIds": ["RP2350"],
+      "bootloaderUsb": ["2e8a:000f"],
+      "file": {
+        "url": "https://micropython.org/resources/firmware/RPI_PICO2-20260824-v1.29.0.uf2",
+        "sha256": "6bfc5d110f293870f60150468dfeec8aec5323b57415a0b9a86e6c334e876e93",
+        "size": 661504
+      }
+    },
+    {
+      "id": "micropython-rpi-pico2-w",
+      "kind": "firmware",
+      "name": "MicroPython for Raspberry Pi Pico 2 W",
+      "description": "RP2350 with Wi-Fi and Bluetooth.",
+      "homepage": "https://micropython.org/download/RPI_PICO2_W/",
+      "license": "MIT",
+      "runtime": "micropython",
+      "version": "1.29.0",
+      "method": "uf2",
+      "uf2BoardIds": ["RP2350"],
+      "bootloaderUsb": ["2e8a:000f"],
+      "file": {
+        "url": "https://micropython.org/resources/firmware/RPI_PICO2_W-20260824-v1.29.0.uf2",
+        "sha256": "c49c7ed93eb7eeaaa78436b17bd4329e5d4ccbaebc1e79503ad75e0a29c4530e",
+        "size": 1774080
+      }
+    },
+    {
+      "id": "micropython-esp32",
+      "kind": "firmware",
+      "name": "MicroPython for ESP32",
+      "description": "Generic ESP32 boards (ESP32-WROOM, ESP32 DevKitC).",
+      "homepage": "https://micropython.org/download/ESP32_GENERIC/",
+      "license": "MIT",
+      "runtime": "micropython",
+      "version": "1.29.0",
+      "method": "esptool",
+      "chip": "esp32",
+      "address": "0x1000",
+      "file": {
+        "url": "https://micropython.org/resources/firmware/ESP32_GENERIC-20260824-v1.29.0.bin",
+        "sha256": "e67ad6015a0a504c1fec9aa9bbf589d0432ed28e62546f4f8dd8a147f8bd95f6",
+        "size": 1790544
+      }
+    },
+    {
+      "id": "micropython-esp32s3",
+      "kind": "firmware",
+      "name": "MicroPython for ESP32-S3",
+      "description": "Generic ESP32-S3 boards.",
+      "homepage": "https://micropython.org/download/ESP32_GENERIC_S3/",
+      "license": "MIT",
+      "runtime": "micropython",
+      "version": "1.29.0",
+      "method": "esptool",
+      "chip": "esp32s3",
+      "address": "0x0",
+      "file": {
+        "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_S3-20260824-v1.29.0.bin",
+        "sha256": "1dd9dcd27ba2d6a1cb7f7b49a063f46d3d807d68b0151161233920228285e300",
+        "size": 1783296
+      }
+    },
+    {
+      "id": "micropython-esp32c3",
+      "kind": "firmware",
+      "name": "MicroPython for ESP32-C3",
+      "description": "Generic ESP32-C3 boards.",
+      "homepage": "https://micropython.org/download/ESP32_GENERIC_C3/",
+      "license": "MIT",
+      "runtime": "micropython",
+      "version": "1.29.0",
+      "method": "esptool",
+      "chip": "esp32c3",
+      "address": "0x0",
+      "file": {
+        "url": "https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20260824-v1.29.0.bin",
+        "sha256": "bf72ed9eb88ad3a8f49d02c3d371f9ea34c90a8a303aeb9e324d8efd4a2a655a",
+        "size": 1754736
+      }
+    }
+  ]
+}

@@ -138,6 +138,54 @@
           "bin": "serial-monitor_windows_386/serial-monitor.exe"
         }
       }
+    },
+    {
+      "id": "esptool",
+      "kind": "tool",
+      "name": "esptool",
+      "description": "Espressif's esptool. Erases and writes firmware on ESP32 boards; used to install MicroPython.",
+      "homepage": "https://github.com/espressif/esptool",
+      "license": "GPL-2.0",
+      "version": "5.6.0",
+      "provides": ["esptool"],
+      "downloads": {
+        "darwin-arm64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v5.6.0/esptool-v5.6.0-macos-arm64.tar.gz",
+          "sha256": "08a58829a3f14bb08f2e39f4cad48dcb14b7000384268e7f06689836332d6e25",
+          "size": 62934161,
+          "bin": "esptool-macos-arm64/esptool"
+        },
+        "darwin-x64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v5.6.0/esptool-v5.6.0-macos-amd64.tar.gz",
+          "sha256": "23921776a7df75f2e6f3ca10a604d74db4661e1b8a0ebb89bdddcd2d26f37055",
+          "size": 62220422,
+          "bin": "esptool-macos-amd64/esptool"
+        },
+        "linux-x64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v5.6.0/esptool-v5.6.0-linux-amd64.tar.gz",
+          "sha256": "1590723cfa9675983f49d0bf2895b8507f8d2879082e51bb7ef02a8bca88d354",
+          "size": 78380843,
+          "bin": "esptool-linux-amd64/esptool"
+        },
+        "linux-arm64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v5.6.0/esptool-v5.6.0-linux-aarch64.tar.gz",
+          "sha256": "7723120429394b4d6d974d694e5cf378e00259381a7f8856c2c88492041b9f59",
+          "size": 71469509,
+          "bin": "esptool-linux-aarch64/esptool"
+        },
+        "linux-arm": {
+          "url": "https://github.com/espressif/esptool/releases/download/v5.6.0/esptool-v5.6.0-linux-armv7.tar.gz",
+          "sha256": "65e2f91fba2e79a75243454ded44da57532c74e242e17f9890aa7fe6cd588ee4",
+          "size": 62182237,
+          "bin": "esptool-linux-armv7/esptool"
+        },
+        "win32-x64": {
+          "url": "https://github.com/espressif/esptool/releases/download/v5.6.0/esptool-v5.6.0-windows-amd64.zip",
+          "sha256": "d55a96fbeb97fd4cb05bd93f201e5c8f6518b7bfcde2fc6966fd0190fd891629",
+          "size": 64810332,
+          "bin": "esptool-windows-amd64/esptool.exe"
+        }
+      }
     }
   ]
 }

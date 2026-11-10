@@ -31,7 +31,7 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 ## UI
 
 - Sidebar (Activity Bar container `integratedWorkbench`): webview views `integratedWorkbench.sketch` (src/views/sketchView.ts + media/sketch.js) and `integratedWorkbench.tools` (src/views/toolsView.ts + media/tools.js), shared media/sidebar.css using only VS Code theme variables, codicons copied into dist/ by esbuild.mjs.
-- No notification toasts for normal flow: progress/results live in the sidebar (Runs in src/runs.ts, ToolsModel in src/toolsModel.ts) plus one status bar item. Only modals kept: third-party registry trust, run-as-admin, deleting a file from a MicroPython board.
+- No notification toasts for normal flow: progress/results live in the sidebar (Runs in src/runs.ts, ToolsModel in src/toolsModel.ts) plus one status bar item. Only modals kept: third-party registry trust, run-as-admin, deleting a file from a MicroPython board, installing firmware.
 - Board (with options) stored in the `integratedWorkbench.boards` workspace setting (.vscode/settings.json), keyed by sketch folder relative to the workspace folder (`src/boardSettings.ts`). An existing sketch.yaml is only a starting point when there is no setting, and is never written. Port per machine in globalState.
 - `npm run test:e2e` runs test/e2e/suite.ts inside the installed VS Code with a throwaway profile.
 
@@ -78,4 +78,5 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - `src/toolchains/micropython/`: `rawRepl.ts` (raw REPL protocol + board-side snippets), `board.ts` (info, list, read, remove, sync by SHA-256, run), `index.ts` (project detection: `boot.py` or the `integratedWorkbench.micropython.projects` setting; project files; traceback mapping). No vscode, no Python on the host.
 - Board access goes through `MonitorController.exclusive(port, work)`: it borrows the Serial Monitor's connection (or opens one) so Run/Upload and the REPL never fight over the port. `Runs.run()` / upload branch on `session.kind`; `src/boardFiles.ts` backs "Files on Board".
 - Session picks the toolchain per project (`Session.kind`, context key `integratedWorkbench.projectKind`). Upload never deletes board files.
-- Tests: `test/fixtures/micropython/fakeBoard.ts` speaks raw REPL framing. Not yet: firmware install, stubs.
+- Firmware: registry packages of kind `firmware` (`workbench-registry/firmware.json`, checksums computed from micropython.org files). `src/firmwareInstaller.ts` runs it through `Runs.task`: uf2 (wait for BOOTSEL drive, `uf2Fits` family check, copy) or esptool (tool `esptool`, erase then write, monitor paused). Pure parts: `micropython/uf2.ts`, `micropython/esptool.ts`. Erasing asks first (modal).
+- Tests: `test/fixtures/micropython/fakeBoard.ts` speaks raw REPL framing; `*-head.real.uf2` are the first blocks of real firmware. Not yet: type stubs.

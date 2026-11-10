@@ -4,7 +4,7 @@ import { basename, extname, sep } from 'node:path';
 import type { BuildLog } from './buildLog.js';
 import { MicroPythonBoard } from './toolchains/micropython/board.js';
 import { projectFiles, tracebackLocation } from './toolchains/micropython/index.js';
-import { ProgramError, type ByteLink } from './toolchains/micropython/rawRepl.js';
+import { ProgramError, ReplError, type ByteLink } from './toolchains/micropython/rawRepl.js';
 import type { BoardDoctor } from './doctor.js';
 import type { Session } from './session.js';
 import { text } from './text.js';
@@ -26,6 +26,8 @@ export interface LastRun {
   hint?: string;
   /** Flash and RAM use from the compile. */
   memory?: MemoryUsage;
+  /** MicroPython: the board didn't answer as MicroPython (offer to install it). */
+  notMicroPython?: boolean;
 }
 
 export interface RunState {
@@ -137,6 +139,53 @@ export class Runs implements vscode.Disposable {
     for (const [file, list] of byFile) this.problems.set(vscode.Uri.file(file), list);
   }
 
+  /**
+   * Runs a long task (e.g. installing firmware) with the sidebar's progress, Cancel, Build tab output
+   * and result line. `work` returns the success summary; a thrown error becomes the failure hint.
+   */
+  async task(
+    title: string,
+    work: (
+      signal: AbortSignal,
+      log: (text: string) => void,
+      setTitle: (t: string) => void,
+    ) => Promise<string>,
+    failSummary: string,
+  ): Promise<boolean> {
+    if (this.state.running) return false;
+    this.log.start('upload', title);
+    const started = Date.now();
+    let ok = true;
+    let summary = failSummary;
+    let hint: string | undefined;
+    await this.track('upload', title, async (signal) => {
+      try {
+        summary = await work(
+          signal,
+          (t) => this.log.append(t),
+          (t) => this.set({ running: { kind: 'upload', title: t } }),
+        );
+      } catch (err) {
+        ok = false;
+        hint = signal.aborted ? text.cancelled : err instanceof Error ? err.message : String(err);
+        this.log.append(`${hint}\n`);
+      }
+    });
+    this.log.finish(ok, summary);
+    this.set({
+      last: {
+        kind: 'upload',
+        ok,
+        durationMs: Date.now() - started,
+        sketch: this.session.project?.name ?? '',
+        summary,
+        diagnostics: [],
+        hint,
+      },
+    });
+    return ok;
+  }
+
   /** MicroPython needs the serial tool and a port; there is no board package or build. */
   private async readyMicroPython(): Promise<string | undefined> {
     const s = this.session;
@@ -183,6 +232,7 @@ export class Runs implements vscode.Disposable {
     await mp.showMonitor();
     const started = Date.now();
     let ok = true;
+    let notMicroPython = false;
     let summary = text.runDone(name);
     const diagnostics: BuildDiagnostic[] = [];
     await this.track('run', title, async (signal) => {
@@ -204,13 +254,22 @@ export class Runs implements vscode.Disposable {
           if (loc) diagnostics.push({ file, line: loc.line, severity: 'error', message: loc.message });
         } else {
           ok = false;
+          notMicroPython = err instanceof ReplError;
           summary = text.runFailed(name, err instanceof Error ? err.message : String(err));
         }
       }
     });
     this.publish(diagnostics);
     this.set({
-      last: { kind: 'run', ok, durationMs: Date.now() - started, sketch: project.name, summary, diagnostics },
+      last: {
+        kind: 'run',
+        ok,
+        durationMs: Date.now() - started,
+        sketch: project.name,
+        summary,
+        diagnostics,
+        notMicroPython,
+      },
     });
     return ok;
   }
@@ -228,6 +287,7 @@ export class Runs implements vscode.Disposable {
     let ok = true;
     let summary: string;
     let hint: string | undefined;
+    let notMicroPython = false;
     try {
       const files = await projectFiles(project.root);
       const res = await this.track('upload', title, () =>
@@ -246,6 +306,7 @@ export class Runs implements vscode.Disposable {
       summary = res.uploaded.length ? text.filesUploaded(res.uploaded.length, port) : text.noChanges;
     } catch (err) {
       ok = false;
+      notMicroPython = err instanceof ReplError;
       hint = err instanceof Error ? err.message : String(err);
       this.log.append(`${hint}\n`);
       summary = text.uploadFailed(port);
@@ -260,6 +321,7 @@ export class Runs implements vscode.Disposable {
         summary,
         diagnostics: [],
         hint,
+        notMicroPython,
       },
     });
     return ok;

@@ -39,6 +39,7 @@ describe('built-in registry', () => {
       'usb.json',
       'drivers.json',
       'recipes.json',
+      'firmware.json',
     ]);
     const reg = mergeRegistries([loaded]);
     expect(reg.warnings).toEqual([]);
@@ -52,6 +53,18 @@ describe('built-in registry', () => {
       expect(cli.downloads[k]?.sha256).toMatch(/^[0-9a-f]{64}$/);
     }
     expect(cli.downloads['win32-x64']?.bin).toBe('arduino-cli.exe');
+  });
+
+  it('MicroPython firmware: a sha256 per file, uf2 entries name their drive, esptool entries their chip', async () => {
+    const loaded = await loadRegistry(root, nodeRegistryIO, { builtin: true });
+    const fw = loaded.files.flatMap((f) => f.data.packages ?? []).filter((p) => p.kind === 'firmware');
+    expect(fw.length).toBeGreaterThanOrEqual(7);
+    for (const p of fw) {
+      if (p.kind !== 'firmware') continue;
+      expect(p.file.sha256).toMatch(/^[0-9a-f]{64}$/);
+      if (p.method === 'uf2') expect(p.uf2BoardIds?.length).toBeGreaterThan(0);
+      else expect(p.chip && p.address).toBeTruthy();
+    }
   });
 
   it('every usb entry that names a driver points at a real driver entry', () => {

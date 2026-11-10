@@ -46,7 +46,24 @@ export interface ArduinoCorePackage extends PackageBase {
   boards?: string[];
 }
 
-export type Package = ToolPackage | ArduinoCorePackage;
+/** Firmware to put on a board (e.g. MicroPython), copied or flashed by the extension. */
+export interface FirmwarePackage extends PackageBase {
+  kind: 'firmware';
+  runtime: 'micropython';
+  version: string;
+  /** "uf2": copy to the bootloader drive (RP2040/RP2350). "esptool": erase and write over serial. */
+  method: 'uf2' | 'esptool';
+  /** uf2: Board-ID values in the drive's INFO_UF2.TXT this firmware fits ("RPI-RP2", "RP2350"). */
+  uf2BoardIds?: string[];
+  /** esptool: --chip value ("esp32", "esp32s3") and flash offset ("0x1000"). */
+  chip?: string;
+  address?: string;
+  /** USB IDs ("vid:pid") of the board's bootloader, to offer this firmware first. */
+  bootloaderUsb?: string[];
+  file: { url: string; sha256: string; size?: number };
+}
+
+export type Package = ToolPackage | ArduinoCorePackage | FirmwarePackage;
 
 export interface Command {
   run: string[];

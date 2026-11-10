@@ -23,6 +23,14 @@ export const TIMEOUTS = {
   compileDbMs: 3 * 60_000,
   /** Uploading. */
   uploadMs: 5 * 60_000,
+  /** Waiting for a board to appear in BOOTSEL mode (the user is holding a button). */
+  bootselWaitMs: 60_000,
+  /** Waiting for a board to come back as MicroPython after installing firmware. */
+  firmwareRebootMs: 20_000,
+  /** esptool erase-flash (whole chip; up to ~30 s on 16 MB parts). */
+  flashEraseMs: 2 * 60_000,
+  /** esptool write-flash. */
+  flashWriteMs: 5 * 60_000,
   /** Installing a board package (toolchains can be hundreds of MB). */
   coreInstallMs: 30 * 60_000,
   coreUninstallMs: 2 * 60_000,

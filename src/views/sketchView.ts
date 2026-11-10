@@ -302,6 +302,31 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         ],
       });
     }
+    // MicroPython firmware: a Pico waiting in BOOTSEL mode, or a board that didn't answer as MicroPython.
+    const install = {
+      label: text.installMicroPython,
+      run: () => vscode.commands.executeCommand('integratedWorkbench.installMicroPython'),
+    };
+    const usb = new Set((this.doctor.state.snapshot?.usb ?? []).map((d) => `${d.vid}:${d.pid}`));
+    const bootsel = this.registry.firmware.some((f) => (f.bootloaderUsb ?? []).some((id) => usb.has(id)));
+    // Arduino projects for RP2040 boards use BOOTSEL to upload, so only offer this outside them.
+    if (bootsel && (!s.project || s.kind === 'micropython') && !this.runs.state.running) {
+      out.push({
+        id: 'bootsel',
+        severity: 'info',
+        title: text.bootselNotice,
+        detail: text.bootselNoticeDetail,
+        actions: [install],
+      });
+    } else if (s.kind === 'micropython' && this.runs.state.last?.notMicroPython) {
+      out.push({
+        id: 'notMicroPython',
+        severity: 'warning',
+        title: text.notMicroPythonNotice,
+        detail: text.notMicroPythonDetail,
+        actions: [install],
+      });
+    }
     // Updates: informational, dismissible, not counted on the badge.
     const coreUpdates = tools.installed.filter((i) => i.state === 'update');
     if (coreUpdates.length) {

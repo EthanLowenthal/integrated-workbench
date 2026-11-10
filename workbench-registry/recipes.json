@@ -10,9 +10,7 @@
       "detect": {
         "sketchFolder": ".ino"
       },
-      "needs": [
-        "arduino-cli"
-      ],
+      "needs": ["arduino-cli"],
       "monitor": {
         "baud": 115200
       }
@@ -22,13 +20,9 @@
       "name": "MicroPython project",
       "adapter": "micropython",
       "detect": {
-        "files": [
-          "boot.py"
-        ]
+        "files": ["boot.py"]
       },
-      "needs": [
-        "serial-monitor"
-      ],
+      "needs": ["serial-monitor"],
       "monitor": {
         "baud": 115200
       }

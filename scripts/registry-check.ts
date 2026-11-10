@@ -64,8 +64,14 @@ for (const spec of targets) {
 
   if (checkDownloads) {
     for (const p of mine(reg.packages)) {
-      if (p.kind === 'tool') {
-        for (const [key, dl] of Object.entries(p.downloads)) {
+      const files =
+        p.kind === 'tool'
+          ? Object.entries(p.downloads)
+          : p.kind === 'firmware'
+            ? [['firmware', p.file] as const]
+            : [];
+      if (files.length) {
+        for (const [key, dl] of files) {
           try {
             const res = await fetch(dl.url);
             const bytes = Buffer.from(await res.arrayBuffer());
@@ -80,7 +86,7 @@ for (const spec of targets) {
             failed = true;
           }
         }
-      } else if (p.boardIndex) {
+      } else if (p.kind === 'arduino-core' && p.boardIndex) {
         const res = await fetch(p.boardIndex).catch(() => undefined);
         say(`  ${res?.ok ? 'ok     ' : 'FAILED '}  ${p.id} board index`);
         if (!res?.ok) failed = true;

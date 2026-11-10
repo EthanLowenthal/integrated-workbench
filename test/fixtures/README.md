@@ -41,3 +41,6 @@ To capture a real Linux sysfs fixture, run `readLinuxSysfs(nodeHost)` from `src/
 - `micropython/fakeBoard.ts` (synthesized): a pretend board that speaks the real raw REPL framing
   (Ctrl-A, Ctrl-D, "OK", `\x04` separators, `>`, Ctrl-B, Ctrl-C) in small random chunks, with an
   in-memory filesystem. It recognizes the snippets the extension sends; it does not run Python.
+- `micropython/rpi-pico-head.real.uf2`, `micropython/rpi-pico2-head.real.uf2` (captured): the first
+  two 512-byte UF2 blocks of MicroPython 1.29.0 for Raspberry Pi Pico and Pico 2, from micropython.org
+  (MIT). Used for the family-ID checks.

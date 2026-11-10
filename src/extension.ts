@@ -15,6 +15,7 @@ import { toolBinPath } from './tools.js';
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { BoardFiles } from './boardFiles.js';
+import { FirmwareInstaller } from './firmwareInstaller.js';
 import { CPPTOOLS_ID, IntelliSense } from './intellisense.js';
 import { MonitorController } from './monitor/controller.js';
 import type { BuildTarget } from './toolchains/types.js';
@@ -159,6 +160,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     print: (t) => monitor.print(t),
   };
   const boardFiles = new BoardFiles(session, runs);
+  const firmware = new FirmwareInstaller(
+    registry,
+    session,
+    runs,
+    doctor,
+    tools,
+    toolsDir,
+    vscode.Uri.joinPath(context.globalStorageUri, 'firmware').fsPath,
+    nodeHost,
+  );
   sketchView.boardFiles = boardFiles;
   runs.uploadHooks = {
     before: (port) => monitor.pauseForUpload(port),
@@ -216,6 +227,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     boardFiles,
     vscode.commands.registerCommand('integratedWorkbench.stop', () => runs.cancel()),
     vscode.commands.registerCommand('integratedWorkbench.run', () => runs.run()),
+    vscode.commands.registerCommand('integratedWorkbench.installMicroPython', async (id?: string) => {
+      await showSketch();
+      return firmware.run(typeof id === 'string' ? id : undefined);
+    }),
     vscode.commands.registerCommand('integratedWorkbench.useAsMicroPython', async (uri?: vscode.Uri) => {
       const file = uri?.fsPath ?? vscode.window.activeTextEditor?.document.uri.fsPath;
       if (!file) return;

@@ -215,6 +215,7 @@ export class ToolsModel implements vscode.Disposable {
   }
 
   private itemFor(p: WithOrigin<Package>, reasons: string[]): ToolItem | undefined {
+    if (p.kind === 'firmware') return undefined; // installed on boards, not on this computer
     const source = p.origin.builtin ? undefined : p.origin.registry;
     if (p.kind === 'tool') {
       const dl = toolDownload(p);

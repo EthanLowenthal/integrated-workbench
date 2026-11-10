@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+- **Install MicroPython on Board...** (Command Palette, or the Sketch view's "..." menu in a MicroPython project) installs MicroPython 1.29.0. Firmware comes from micropython.org, is checked against a SHA-256 in the registry, and is downloaded once.
+  - Raspberry Pi Pico, Pico W, Pico 2 and Pico 2 W: hold BOOTSEL while connecting the board; the firmware is copied to its drive. It is checked against the chip first (RP2040 or RP2350), and the board's new port is selected when it restarts.
+  - ESP32, ESP32-S3 and ESP32-C3: erases the board and writes MicroPython over the selected port with esptool (5.6.0, downloaded once, about 60 MB). It asks first, since erasing can't be undone.
+- Notifications offer the install when a Raspberry Pi board is in BOOTSEL mode (outside Arduino projects) and when a board doesn't answer as MicroPython during Run or Upload.
+- Registries can list firmware (`"kind": "firmware"`); `npm run registry:check -- --downloads` checks firmware files too.
+
 ## 0.4.0
 
 - MicroPython projects. A folder with a `boot.py` is a MicroPython project; any other folder can be marked with **Use Folder as MicroPython Project** (Explorer context menu or Command Palette; saved in `integratedWorkbench.micropython.projects`).
