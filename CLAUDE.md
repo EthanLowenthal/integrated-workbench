@@ -13,6 +13,7 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - Single VS Code extension project. Board detection/diagnosis engine lives in `src/core/` and may be extracted later.
 
 ## Layout
+
 - `src/extension.ts` wires everything up. `session.ts` tracks the open project, plugged-in boards and the selected board/port; `statusBar.ts`, `pickers.ts`, `buildFlow.ts` (Verify/Upload, Problems panel), `doctor.ts` (Board Doctor UI).
 - `src/toolchains/types.ts` is the Toolchain interface; `src/toolchains/arduino/` wraps arduino-cli (parsers in `parse.ts` are pure and tested). `managedCli.ts` downloads SketchDesk's own pinned arduino-cli (version + per-platform SHA-256 baked in; bump both together from the release's checksums file) into extension global storage after a one-time consent prompt. Lookup order: `sketchdesk.arduinoCliPath` setting, managed copy, system install.
 - `src/core/` (no vscode): `probes/*` collect, `parse/*` parse, `diagnose.ts` decides, `watch.ts` diffs snapshots.
@@ -30,4 +31,5 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - Windows: probe uses `Get-CimInstance Win32_PnPEntity` (numeric `ConfigManagerErrorCode`); the parser also accepts `Get-PnpDevice` output.
 
 ## Git
+
 - Personal project: commit as Ethan Lowenthal <ethanmlowenthal@gmail.com> (repo-local config), no Co-Authored-By or AI attribution, no employer content. Remote is a private repo on the personal GitHub account.
