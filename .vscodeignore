@@ -14,4 +14,4 @@ CLAUDE.md
 scripts/**
 dist/e2e/**
 dist/registry-check.mjs
-media/icon-marketplace.svg
+images/**
