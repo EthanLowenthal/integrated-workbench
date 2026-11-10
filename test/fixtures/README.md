@@ -35,3 +35,9 @@ Raw probe output, one file per OS and scenario. Parsers and `diagnose()` are tes
 
 To capture a real Linux sysfs fixture, run `readLinuxSysfs(nodeHost)` from `src/core` and
 `JSON.stringify` the result.
+
+## MicroPython
+
+- `micropython/fakeBoard.ts` (synthesized): a pretend board that speaks the real raw REPL framing
+  (Ctrl-A, Ctrl-D, "OK", `\x04` separators, `>`, Ctrl-B, Ctrl-C) in small random chunks, with an
+  in-memory filesystem. It recognizes the snippets the extension sends; it does not run Python.
