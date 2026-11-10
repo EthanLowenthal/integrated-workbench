@@ -27,7 +27,8 @@ export const text = {
   installAvr: 'Install',
   installingCore: (id: string) => `Installing ${id}...`,
   coreInstalled: (id: string) => `Installed ${id}.`,
-  coreInstallFailed: (id: string) => `Couldn't install ${id}. See the Integrated Workbench output for details.`,
+  coreInstallFailed: (id: string) =>
+    `Couldn't install ${id}. See the Integrated Workbench output for details.`,
 
   // arduino-cli (Integrated Workbench's Arduino build engine)
   cliOffer: (mb: number) =>
@@ -54,7 +55,8 @@ export const text = {
     errors > 0
       ? `Compile failed with ${errors} error${errors === 1 ? '' : 's'}. See the Problems panel.`
       : 'Compile failed. See the Integrated Workbench output for details.',
-  uploadFailed: (port: string) => `Upload to ${port} failed. See the Integrated Workbench output for details.`,
+  uploadFailed: (port: string) =>
+    `Upload to ${port} failed. See the Integrated Workbench output for details.`,
   showOutput: 'Show output',
   needBoard: 'Pick a board first.',
   needPort: 'Plug in your board, then pick its port.',

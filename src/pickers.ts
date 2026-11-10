@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { lookupChip } from './core/index.js';
+import { lookupChip, type ChipDb } from './core/index.js';
 import type { Session } from './session.js';
 import { shortPort } from './statusBar.js';
 import { text } from './text.js';
@@ -57,11 +57,11 @@ export async function pickBoard(
 type PortItem = vscode.QuickPickItem & { port?: string; doctor?: boolean };
 
 /** Port picker: plugged-in boards with their name (or chip, for clones arduino-cli can't name). */
-export async function pickPort(session: Session): Promise<string | undefined> {
+export async function pickPort(session: Session, chips: ChipDb): Promise<string | undefined> {
   await session.refreshBoards();
   const items: PortItem[] = session.boards.map((b) => ({
     label: `$(plug) ${b.port}`,
-    description: b.target?.name ?? lookupChip(b.vid, b.pid).chip?.name ?? text.unknownBoard,
+    description: b.target?.name ?? lookupChip(b.vid, b.pid, chips).chip?.name ?? text.unknownBoard,
     port: b.port,
   }));
   if (items.length === 0) items.push({ label: text.noPortsFound, alwaysShow: true });

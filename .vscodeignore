@@ -11,3 +11,4 @@ eslint.config.mjs
 .prettier*
 .github/**
 CLAUDE.md
+scripts/**

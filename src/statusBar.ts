@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { lookupChip } from './core/index.js';
+import { lookupChip, type ChipDb } from './core/index.js';
 import type { BoardDoctor } from './doctor.js';
 import type { Session } from './session.js';
 import { text } from './text.js';
@@ -36,6 +36,7 @@ export class StatusBar implements vscode.Disposable {
   constructor(
     private readonly session: Session,
     private readonly doctor: BoardDoctor,
+    private readonly chips: () => ChipDb,
   ) {
     this.board.name = 'Integrated Workbench Board';
     this.board.command = 'integratedWorkbench.selectBoard';
@@ -65,7 +66,7 @@ export class StatusBar implements vscode.Disposable {
     const problem = this.doctor.problems[0];
     if (sel.port && this.session.selectedBoard) {
       const b = this.session.selectedBoard;
-      const chip = b.target ? undefined : lookupChip(b.vid, b.pid).chip?.name;
+      const chip = b.target ? undefined : lookupChip(b.vid, b.pid, this.chips()).chip?.name;
       this.port.text = `$(plug) ${shortPort(sel.port)}${chip ? ` (${chip})` : ''}`;
       this.port.tooltip = text.portTooltip;
       this.port.command = 'integratedWorkbench.selectPort';

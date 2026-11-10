@@ -23,8 +23,8 @@ import {
   parseMissingPlatform,
   parseVersion,
 } from './parse.js';
-import { EXTRA_BOARD_INDEXES } from './boardIndexes.js';
-import { assetFor, installManagedCli, managedCliPath, type CliAsset } from './managedCli.js';
+import type { Download, ToolPackage } from '../../registry/types.js';
+import { installTool, toolBinPath, toolDownload } from '../../tools.js';
 
 export interface ArduinoOptions {
   host: ProbeHost;
@@ -34,8 +34,12 @@ export interface ArduinoOptions {
   cliPath?: () => string | undefined;
   stream?: StreamRunner;
   platform?: NodeJS.Platform;
-  /** Where Integrated Workbench keeps its own arduino-cli (extension global storage). */
-  managedDir?: string;
+  /** Where Integrated Workbench keeps downloaded tools (extension global storage). */
+  toolsDir?: string;
+  /** The registry's `arduino-cli` tool package, if any. */
+  cliPackage?: () => ToolPackage | undefined;
+  /** Extra board package index URLs from registry `arduino-core` packages. */
+  boardIndexes?: () => string[];
 }
 
 const SKETCH_FILE_EXTS = new Set(['.ino', '.pde', '.cpp', '.c', '.h', '.hpp', '.hh', '.S']);
@@ -117,7 +121,10 @@ export class ArduinoToolchain implements Toolchain {
     if (this.resolved) return { installed: true, ...this.resolved };
     const configured = this.opts.cliPath?.()?.trim();
     // Order: the user's explicit setting, then Integrated Workbench's own pinned copy, then one already installed.
-    const managed = this.opts.managedDir ? [managedCliPath(this.opts.managedDir, this.platform)] : [];
+    const pkg = this.opts.cliPackage?.();
+    const managedPath =
+      this.opts.toolsDir && pkg ? toolBinPath(this.opts.toolsDir, pkg, this.platform) : undefined;
+    const managed = managedPath ? [managedPath] : [];
     const candidates = configured ? [configured] : [...managed, ...cliCandidates(this.platform, homedir())];
     for (const path of candidates) {
       const res = await this.opts.host.run(path, ['version', '--format', 'json'], { timeoutMs: 10_000 });
@@ -133,16 +140,20 @@ export class ArduinoToolchain implements Toolchain {
     };
   }
 
-  /** Can Integrated Workbench download its own arduino-cli on this OS/CPU? Returns the asset (with size) if so. */
-  managedAsset(): CliAsset | undefined {
-    return this.opts.managedDir ? assetFor(this.platform, process.arch) : undefined;
+  /** The registry download for this OS/CPU, if Integrated Workbench can install arduino-cli itself. */
+  managedDownload(): { pkg: ToolPackage; download: Download } | undefined {
+    const pkg = this.opts.cliPackage?.();
+    const download = pkg && this.opts.toolsDir ? toolDownload(pkg, this.platform) : undefined;
+    return pkg && download ? { pkg, download } : undefined;
   }
 
   /** Downloads Integrated Workbench's own arduino-cli. Only call after the user agreed. */
   async installManaged(onProgress?: (fraction: number) => void, signal?: AbortSignal): Promise<ToolStatus> {
-    if (!this.opts.managedDir) throw new Error('No storage folder for arduino-cli.');
-    await installManagedCli({
-      storageDir: this.opts.managedDir,
+    const m = this.managedDownload();
+    if (!m || !this.opts.toolsDir) throw new Error('No arduino-cli download for this computer.');
+    await installTool({
+      storageDir: this.opts.toolsDir,
+      pkg: m.pkg,
       host: this.opts.host,
       platform: this.platform,
       onProgress,
@@ -220,7 +231,7 @@ export class ArduinoToolchain implements Toolchain {
     return { success: res.code === 0 };
   }
 
-  /** Refreshes the board package index (Arduino's plus EXTRA_BOARD_INDEXES). Small download. */
+  /** Refreshes the board package index (Arduino's plus the registries' extra indexes). Small download. */
   async updateIndex(signal?: AbortSignal): Promise<void> {
     const res = await this.stream(await this.cli(), ['core', 'update-index', ...this.urlArgs()], { signal });
     if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not update the board list.');
@@ -251,7 +262,11 @@ export class ArduinoToolchain implements Toolchain {
     return true;
   }
 
-  async uninstallCore(platform: string, onOutput: (t: string) => void, signal?: AbortSignal): Promise<boolean> {
+  async uninstallCore(
+    platform: string,
+    onOutput: (t: string) => void,
+    signal?: AbortSignal,
+  ): Promise<boolean> {
     const args = ['core', 'uninstall', platform];
     onOutput(`$ arduino-cli ${args.join(' ')}\n`);
     const res = await this.stream(await this.cli(), args, { onStdout: onOutput, onStderr: onOutput, signal });
@@ -259,7 +274,8 @@ export class ArduinoToolchain implements Toolchain {
   }
 
   private urlArgs(): string[] {
-    return ['--additional-urls', EXTRA_BOARD_INDEXES.join(',')];
+    const urls = this.opts.boardIndexes?.() ?? [];
+    return urls.length ? ['--additional-urls', urls.join(',')] : [];
   }
 
   private platformFix(output: string, fqbn: string): SuggestedFix | undefined {

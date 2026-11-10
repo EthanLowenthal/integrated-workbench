@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import type { ChipDb } from './core/chips.js';
+import type { DriverDb } from './core/drivers.js';
 import { diagnose, takeSnapshot, type Action, type Diagnosis, type Snapshot } from './core/index.js';
 import { text } from './text.js';
 
@@ -13,6 +15,8 @@ export interface DoctorState {
  * cheaply, without starting arduino-cli every few seconds.
  */
 export class BoardDoctor implements vscode.Disposable {
+  constructor(private readonly dbs: () => { chips: ChipDb; drivers: DriverDb }) {}
+
   private readonly changed = new vscode.EventEmitter<DoctorState>();
   readonly onDidChange = this.changed.event;
   private current: DoctorState = { diagnoses: [] };
@@ -36,7 +40,7 @@ export class BoardDoctor implements vscode.Disposable {
   private async run(): Promise<DoctorState> {
     try {
       const snapshot = await takeSnapshot();
-      this.current = { snapshot, diagnoses: diagnose(snapshot) };
+      this.current = { snapshot, diagnoses: diagnose(snapshot, this.dbs()) };
     } catch (err) {
       this.current = { ...this.current, error: err instanceof Error ? err.message : String(err) };
     }

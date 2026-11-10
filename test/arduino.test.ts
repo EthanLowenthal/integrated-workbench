@@ -167,7 +167,12 @@ describe('ArduinoToolchain', () => {
       return { code: 0, stdout: '', stderr: '' };
     };
     const host = fakeHost({ run: () => version });
-    const tc = new ArduinoToolchain({ host, buildRoot: '/b', stream });
+    const tc = new ArduinoToolchain({
+      host,
+      buildRoot: '/b',
+      stream,
+      boardIndexes: () => ['https://example.test/index.json'],
+    });
     const out: string[] = [];
     const res = await tc.build({
       project: { root: '/s/Blink', name: 'Blink' },

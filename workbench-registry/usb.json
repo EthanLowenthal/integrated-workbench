@@ -1,0 +1,222 @@
+{
+  "$schema": "./schema.json",
+  "schema": 1,
+  "description": "USB IDs of USB-serial chips and native-USB boards.",
+  "usb": [
+    {
+      "vid": "1a86",
+      "name": "WCH",
+      "kind": "bridge",
+      "family": "ch34x",
+      "driver": "wch-ch34x"
+    },
+    {
+      "vid": "10c4",
+      "name": "Silicon Labs",
+      "kind": "bridge",
+      "family": "cp210x",
+      "driver": "silabs-cp210x"
+    },
+    {
+      "vid": "0403",
+      "name": "FTDI",
+      "kind": "bridge",
+      "family": "ftdi",
+      "driver": "ftdi-vcp"
+    },
+    {
+      "vid": "2341",
+      "name": "Arduino",
+      "kind": "native",
+      "family": "arduino"
+    },
+    {
+      "vid": "2a03",
+      "name": "Arduino (arduino.org)",
+      "kind": "native",
+      "family": "arduino",
+      "verified": false
+    },
+    {
+      "vid": "303a",
+      "name": "Espressif",
+      "kind": "native",
+      "family": "espressif"
+    },
+    {
+      "vid": "2e8a",
+      "name": "Raspberry Pi",
+      "kind": "native",
+      "family": "rp2040"
+    },
+    {
+      "vid": "1a86",
+      "pid": "7523",
+      "name": "CH340",
+      "kind": "bridge",
+      "family": "ch34x",
+      "driver": "wch-ch34x"
+    },
+    {
+      "vid": "1a86",
+      "pid": "5523",
+      "name": "CH341 (serial mode)",
+      "kind": "bridge",
+      "family": "ch34x",
+      "driver": "wch-ch34x"
+    },
+    {
+      "vid": "1a86",
+      "pid": "7522",
+      "name": "CH340K",
+      "kind": "bridge",
+      "family": "ch34x",
+      "driver": "wch-ch34x",
+      "verified": false
+    },
+    {
+      "vid": "1a86",
+      "pid": "55d4",
+      "name": "CH9102",
+      "kind": "bridge",
+      "family": "ch34x",
+      "driver": "wch-ch9102"
+    },
+    {
+      "vid": "10c4",
+      "pid": "ea60",
+      "name": "CP210x",
+      "kind": "bridge",
+      "family": "cp210x",
+      "driver": "silabs-cp210x"
+    },
+    {
+      "vid": "10c4",
+      "pid": "ea70",
+      "name": "CP2105",
+      "kind": "bridge",
+      "family": "cp210x",
+      "driver": "silabs-cp210x",
+      "verified": false
+    },
+    {
+      "vid": "0403",
+      "pid": "6001",
+      "name": "FTDI FT232R",
+      "kind": "bridge",
+      "family": "ftdi",
+      "driver": "ftdi-vcp"
+    },
+    {
+      "vid": "0403",
+      "pid": "6015",
+      "name": "FTDI FT-X",
+      "kind": "bridge",
+      "family": "ftdi",
+      "driver": "ftdi-vcp"
+    },
+    {
+      "vid": "0403",
+      "pid": "6010",
+      "name": "FTDI FT2232",
+      "kind": "bridge",
+      "family": "ftdi",
+      "driver": "ftdi-vcp",
+      "verified": false
+    },
+    {
+      "vid": "2341",
+      "pid": "0043",
+      "name": "Uno R3",
+      "kind": "native",
+      "family": "arduino"
+    },
+    {
+      "vid": "2341",
+      "pid": "0001",
+      "name": "Uno",
+      "kind": "native",
+      "family": "arduino",
+      "verified": false
+    },
+    {
+      "vid": "2341",
+      "pid": "0042",
+      "name": "Mega 2560 R3",
+      "kind": "native",
+      "family": "arduino"
+    },
+    {
+      "vid": "2341",
+      "pid": "8036",
+      "name": "Leonardo",
+      "kind": "native",
+      "family": "arduino"
+    },
+    {
+      "vid": "2341",
+      "pid": "0036",
+      "name": "Leonardo (bootloader)",
+      "kind": "native",
+      "family": "arduino",
+      "bootloader": true
+    },
+    {
+      "vid": "2341",
+      "pid": "8037",
+      "name": "Micro",
+      "kind": "native",
+      "family": "arduino",
+      "verified": false
+    },
+    {
+      "vid": "2341",
+      "pid": "0037",
+      "name": "Micro (bootloader)",
+      "kind": "native",
+      "family": "arduino",
+      "bootloader": true,
+      "verified": false
+    },
+    {
+      "vid": "303a",
+      "pid": "1001",
+      "name": "ESP32-S3 / C3 (USB-Serial-JTAG)",
+      "kind": "native",
+      "family": "espressif"
+    },
+    {
+      "vid": "303a",
+      "pid": "0002",
+      "name": "ESP32-S2 (download mode)",
+      "kind": "native",
+      "family": "espressif",
+      "bootloader": true,
+      "verified": false
+    },
+    {
+      "vid": "2e8a",
+      "pid": "0005",
+      "name": "RP2040 (MicroPython)",
+      "kind": "native",
+      "family": "rp2040"
+    },
+    {
+      "vid": "2e8a",
+      "pid": "000a",
+      "name": "RP2040 (Pico SDK / Arduino core)",
+      "kind": "native",
+      "family": "rp2040",
+      "verified": false
+    },
+    {
+      "vid": "2e8a",
+      "pid": "0003",
+      "name": "RP2040 (BOOTSEL bootloader)",
+      "kind": "native",
+      "family": "rp2040",
+      "bootloader": true,
+      "noSerialPort": true
+    }
+  ]
+}

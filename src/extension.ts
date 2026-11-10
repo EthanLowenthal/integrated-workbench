@@ -6,6 +6,7 @@ import { pickBoard, pickPort } from './pickers.js';
 import { Session } from './session.js';
 import { StatusBar } from './statusBar.js';
 import { text } from './text.js';
+import { RegistryService } from './registryService.js';
 import { ArduinoToolchain } from './toolchains/arduino/index.js';
 
 const config = () => vscode.workspace.getConfiguration('integratedWorkbench');
@@ -13,17 +14,21 @@ const config = () => vscode.workspace.getConfiguration('integratedWorkbench');
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const output = vscode.window.createOutputChannel('Integrated Workbench');
   const problems = vscode.languages.createDiagnosticCollection('integratedWorkbench');
+  const registry = new RegistryService(context.extensionPath, output);
+  await registry.reload();
   const arduino = new ArduinoToolchain({
     host: nodeHost,
     buildRoot: vscode.Uri.joinPath(context.globalStorageUri, 'build').fsPath,
     cliPath: () => config().get<string>('arduinoCliPath'),
-    managedDir: context.globalStorageUri.fsPath,
+    toolsDir: context.globalStorageUri.fsPath,
+    cliPackage: () => registry.toolProviding('arduino-cli'),
+    boardIndexes: () => registry.boardIndexes,
   });
-  const doctor = new BoardDoctor();
+  const doctor = new BoardDoctor(() => ({ chips: registry.chips, drivers: registry.drivers }));
   const session = new Session(arduino, doctor, context.workspaceState, () =>
     config().get<number>('pollIntervalMs', 2000),
   );
-  const statusBar = new StatusBar(session, doctor);
+  const statusBar = new StatusBar(session, doctor, () => registry.chips);
 
   const installCore = async (platform: string) => {
     output.show(true);
@@ -82,22 +87,28 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     ).finally(() => (downloading = undefined)));
 
   const promptInstallCli = async () => {
-    const asset = arduino.managedAsset();
+    const asset = arduino.managedDownload()?.download;
     if (!asset) {
       const choice = await vscode.window.showWarningMessage(text.cliMissing, text.cliGuide, text.cliSetPath);
       if (choice === text.cliGuide) await vscode.env.openExternal(vscode.Uri.parse(text.cliGuideUrl));
       else if (choice === text.cliSetPath)
-        await vscode.commands.executeCommand('workbench.action.openSettings', 'integratedWorkbench.arduinoCliPath');
+        await vscode.commands.executeCommand(
+          'workbench.action.openSettings',
+          'integratedWorkbench.arduinoCliPath',
+        );
       return;
     }
     const choice = await vscode.window.showInformationMessage(
-      text.cliOffer(Math.round(asset.size / 1_000_000)),
+      text.cliOffer(Math.round((asset.size ?? 0) / 1_000_000)),
       text.cliDownload,
       text.cliUseOwn,
     );
     if (choice === text.cliDownload) await downloadCli();
     else if (choice === text.cliUseOwn)
-      await vscode.commands.executeCommand('workbench.action.openSettings', 'integratedWorkbench.arduinoCliPath');
+      await vscode.commands.executeCommand(
+        'workbench.action.openSettings',
+        'integratedWorkbench.arduinoCliPath',
+      );
   };
   session.onToolMissing = () => void promptInstallCli();
 
@@ -108,7 +119,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     output,
     problems,
     chooseBoard,
-    chooseSerialPort: () => pickPort(session),
+    chooseSerialPort: () => pickPort(session, registry.chips),
     promptInstallCli,
   };
   const selectPort = async (path: string) => {
@@ -131,11 +142,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
     vscode.commands.registerCommand('integratedWorkbench.selectPort', async () => {
       if (!(await arduino.checkInstalled()).installed) return promptInstallCli();
-      const port = await pickPort(session);
+      const port = await pickPort(session, registry.chips);
       if (port) await selectPort(port);
     }),
-    vscode.commands.registerCommand('integratedWorkbench.boardDoctor', () => showBoardDoctor(doctor, selectPort)),
+    vscode.commands.registerCommand('integratedWorkbench.boardDoctor', () =>
+      showBoardDoctor(doctor, selectPort),
+    ),
+    registry,
+    vscode.commands.registerCommand('integratedWorkbench.reloadRegistries', async () => {
+      await registry.reload();
+      arduino.resetCli();
+      await session.recheckTool();
+    }),
     vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('integratedWorkbench.registries')) {
+        void vscode.commands.executeCommand('integratedWorkbench.reloadRegistries');
+      }
       if (e.affectsConfiguration('integratedWorkbench.arduinoCliPath')) {
         arduino.resetCli();
         void session.recheckTool();

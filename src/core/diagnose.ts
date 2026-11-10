@@ -1,5 +1,5 @@
-import { lookupChip, type ChipMatch } from './chips.js';
-import { DRIVER_LINKS, ISSUE_URL } from './drivers.js';
+import { defaultChipDb, lookupChip, type ChipDb, type ChipMatch } from './chips.js';
+import { defaultDriverDb, ISSUE_URL, type DriverDb } from './drivers.js';
 import { commands, labels, messages, urls, type Text } from './messages.js';
 import type { Action, Diagnosis, DiagnosisCode, Severity, SerialPort, Snapshot, UsbDevice } from './types.js';
 import { deviceKey, type SnapshotDiff } from './watch.js';
@@ -7,6 +7,9 @@ import { deviceKey, type SnapshotDiff } from './watch.js';
 export interface DiagnoseOptions {
   /** Result of a plug-in watch. Enables NO_DEVICE_AFTER_PLUG and UNKNOWN_DEVICE_NO_PORT. */
   watch?: SnapshotDiff;
+  /** USB IDs and driver pages from the merged registries. Defaults to the bundled registry. */
+  chips?: ChipDb;
+  drivers?: DriverDb;
 }
 
 const SEVERITY_RANK: Record<Severity, number> = { error: 0, warning: 1, info: 2, ok: 3 };
@@ -41,13 +44,12 @@ function portsFor(device: UsbDevice, ports: SerialPort[]): SerialPort[] {
   );
 }
 
-function driverActions(snapshot: Snapshot, match: ChipMatch): Action[] {
+function driverActions(snapshot: Snapshot, match: ChipMatch, drivers: DriverDb): Action[] {
   const key = match.chip?.driver ?? match.vendor?.driver;
   const actions: Action[] = [];
-  if (key && snapshot.os !== 'linux') {
-    const link = DRIVER_LINKS[key];
-    actions.push({ kind: 'openUrl', label: labels.openDriverPage(link.name), url: link[snapshot.os] });
-  }
+  const link = key ? drivers.get(key) : undefined;
+  const url = link?.urls[snapshot.os];
+  if (link && url) actions.push({ kind: 'openUrl', label: labels.openDriverPage(link.name), url });
   if (snapshot.os === 'windows') {
     actions.push({ kind: 'openUrl', label: labels.windowsUpdate, url: urls.windowsUpdate });
     actions.push({
@@ -136,6 +138,7 @@ function diagnoseNoPort(
   device: UsbDevice,
   match: ChipMatch,
   isNew: boolean,
+  drivers: DriverDb,
 ): Diagnosis[] {
   const { chip, vendor } = match;
   const kind = chip?.kind ?? vendor?.kind;
@@ -174,8 +177,8 @@ function diagnoseNoPort(
     const text =
       device.driverStatus === 'error'
         ? messages.driverError(name, device.osErrorCode)
-        : messages.driverMissing(name, snapshot.os, key ? DRIVER_LINKS[key].name : undefined);
-    return [diag('DRIVER_MISSING', 'error', text, driverActions(snapshot, match), { device })];
+        : messages.driverMissing(name, snapshot.os, key ? drivers.get(key)?.name : undefined);
+    return [diag('DRIVER_MISSING', 'error', text, driverActions(snapshot, match, drivers), { device })];
   }
 
   if (kind === 'native') {
@@ -188,7 +191,7 @@ function diagnoseNoPort(
           'DRIVER_MISSING',
           'error',
           messages.driverMissing(match.label, snapshot.os, undefined),
-          driverActions(snapshot, match),
+          driverActions(snapshot, match, drivers),
           { device },
         ),
       ];
@@ -227,6 +230,8 @@ function diagnoseNoPort(
  * One device can produce several diagnoses.
  */
 export function diagnose(snapshot: Snapshot, opts: DiagnoseOptions = {}): Diagnosis[] {
+  const chips = opts.chips ?? defaultChipDb;
+  const drivers = opts.drivers ?? defaultDriverDb;
   const out: Diagnosis[] = [];
   const watch = opts.watch;
   const newKeys = new Set(watch?.addedDevices.map(deviceKey) ?? []);
@@ -241,14 +246,14 @@ export function diagnose(snapshot: Snapshot, opts: DiagnoseOptions = {}): Diagno
 
   const claimed = new Set<string>();
   for (const device of snapshot.usb) {
-    const match = lookupChip(device.vid, device.pid);
+    const match = lookupChip(device.vid, device.pid, chips);
     const ports = portsFor(device, snapshot.ports);
     const isNew = newKeys.has(deviceKey(device));
     // Ignore keyboards, hubs, etc. unless they have a serial port or just appeared in a watch.
     if (!match.vendor && ports.length === 0 && !isNew) continue;
 
     if (ports.length === 0) {
-      out.push(...diagnoseNoPort(snapshot, device, match, isNew));
+      out.push(...diagnoseNoPort(snapshot, device, match, isNew, drivers));
       continue;
     }
     for (const port of ports) {
@@ -261,7 +266,7 @@ export function diagnose(snapshot: Snapshot, opts: DiagnoseOptions = {}): Diagno
   for (const port of snapshot.ports) {
     if (claimed.has(port.path)) continue;
     if (!port.vid && !USB_PORT_NAME.test(port.path)) continue; // COM1 on the motherboard, Bluetooth, etc.
-    out.push(...diagnosePort(snapshot, port, lookupChip(port.vid, port.pid)));
+    out.push(...diagnosePort(snapshot, port, lookupChip(port.vid, port.pid, chips)));
   }
 
   const usable = out.filter((d) => d.port && (d.code === 'OK' || d.code === 'NATIVE_USB_BOOTLOADER'));

@@ -1,0 +1,47 @@
+{
+  "$schema": "./schema.json",
+  "schema": 1,
+  "description": "Official vendor driver pages for USB-serial chips.",
+  "drivers": [
+    {
+      "id": "wch-ch34x",
+      "vendor": "WCH",
+      "name": "WCH CH340/CH341 driver",
+      "urls": {
+        "windows": "https://www.wch-ic.com/downloads/CH341SER_EXE.html",
+        "macos": "https://www.wch-ic.com/downloads/CH34XSER_MAC_ZIP.html"
+      },
+      "verified": false
+    },
+    {
+      "id": "wch-ch9102",
+      "vendor": "WCH",
+      "name": "WCH CH343/CH9102 driver",
+      "urls": {
+        "windows": "https://www.wch-ic.com/downloads/CH343SER_EXE.html",
+        "macos": "https://www.wch-ic.com/downloads/CH34XSER_MAC_ZIP.html"
+      },
+      "verified": false
+    },
+    {
+      "id": "silabs-cp210x",
+      "vendor": "Silicon Labs",
+      "name": "Silicon Labs CP210x VCP driver",
+      "urls": {
+        "windows": "https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers",
+        "macos": "https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers"
+      },
+      "verified": false
+    },
+    {
+      "id": "ftdi-vcp",
+      "vendor": "FTDI",
+      "name": "FTDI VCP driver",
+      "urls": {
+        "windows": "https://ftdichip.com/drivers/vcp-drivers/",
+        "macos": "https://ftdichip.com/drivers/vcp-drivers/"
+      },
+      "verified": false
+    }
+  ]
+}

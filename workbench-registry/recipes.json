@@ -1,0 +1,15 @@
+{
+  "$schema": "./schema.json",
+  "schema": 1,
+  "description": "Kinds of projects Integrated Workbench can build and flash.",
+  "recipes": [
+    {
+      "id": "arduino",
+      "name": "Arduino sketch",
+      "adapter": "arduino",
+      "detect": { "sketchFolder": ".ino" },
+      "needs": ["arduino-cli"],
+      "monitor": { "baud": 115200 }
+    }
+  ]
+}

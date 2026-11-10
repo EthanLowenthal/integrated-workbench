@@ -14,5 +14,5 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["src", "test", "esbuild.mjs", "vitest.config.ts"]
+  "include": ["src", "test", "scripts", "esbuild.mjs", "vitest.config.ts"]
 }

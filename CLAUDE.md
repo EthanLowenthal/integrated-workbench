@@ -21,6 +21,13 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - Test kit: `~/Downloads/integrated-workbench-test` (README with numbered checks + sample sketches + `IntegratedWorkbench-dev.vsix`). Refresh the VSIX there with `npm run package` after changes.
 - Run the extension: F5 ("Run Integrated Workbench" in `.vscode/launch.json`).
 
+## Registry
+
+- All knowledge is data in registries, not code: tools to download (with per-platform sha256), Arduino board packages, USB IDs, driver pages, recipes, recommendation rules. Built-in one: `workbench-registry/` (format: `schema.json`; author guide: `docs/REGISTRY.md`).
+- Loader `src/registry/load.ts` (no vscode): parses specs (`owner/repo[@ref]`, https URL, local path), validates with ajv, merges (first registry wins on duplicate ids). `src/registryService.ts` loads built-in + `integratedWorkbench.registries` setting.
+- `src/core` defaults to the bundled `usb.json` / `drivers.json` so it still works standalone; the extension passes merged dbs.
+- Unverified entries carry `"verified": false` (replaces `// TODO verify` for data). `npm run registry:check [-- spec] [--downloads]` validates and lists them.
+
 ## Commands
 
 - `npm test`, `npm run typecheck`, `npm run lint`, `npm run build` (esbuild -> dist/extension.js), `npm run package` (dev .vsix), `npm run format`

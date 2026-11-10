@@ -53,6 +53,11 @@
         "command": "integratedWorkbench.boardDoctor",
         "title": "Board Doctor",
         "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.reloadRegistries",
+        "title": "Reload Registries",
+        "category": "Integrated Workbench"
       }
     ],
     "menus": {
@@ -106,6 +111,14 @@
           "default": 2000,
           "minimum": 500,
           "description": "How often to check for boards being plugged in or unplugged while a sketch is open and VS Code is focused."
+        },
+        "integratedWorkbench.registries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Extra registries of boards, tools and recipes, added after the built-in one. Each entry is a GitHub repo (`owner/repo` or `owner/repo@branch`, read from its `workbench-registry/index.json`), an `https://` URL to an `index.json`, or an absolute path to a local registry folder. See [Building a registry](https://github.com/EthanLowenthal/sketchdesk/blob/main/docs/REGISTRY.md)."
         }
       }
     },
@@ -116,6 +129,16 @@
           ".ino",
           ".pde"
         ]
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": [
+          "workbench-registry/*.json",
+          "workbench-registry/**/*.json",
+          "!**/workbench-registry/schema.json"
+        ],
+        "url": "./workbench-registry/schema.json"
       }
     ]
   },
@@ -128,7 +151,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "package": "node esbuild.mjs --production && vsce package --no-dependencies"
+    "package": "node esbuild.mjs --production && vsce package --no-dependencies",
+    "registry:check": "esbuild scripts/registry-check.ts --bundle --platform=node --format=esm --outfile=dist/registry-check.mjs --log-level=warning && node dist/registry-check.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
@@ -144,5 +168,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/EthanLowenthal/sketchdesk.git"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0"
   }
 }

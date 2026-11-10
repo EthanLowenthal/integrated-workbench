@@ -1,0 +1,241 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/EthanLowenthal/sketchdesk/workbench-registry/schema.json",
+  "title": "Integrated Workbench registry file",
+  "description": "One file of an Integrated Workbench registry. A registry is an index.json plus any files it includes; every file uses this same format and may contain any of the sections. See docs/REGISTRY.md.",
+  "type": "object",
+  "required": ["schema"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": 1, "description": "Format version. Always 1 for now." },
+    "name": { "type": "string", "description": "Registry name shown in the UI. Only read from index.json." },
+    "description": { "type": "string" },
+    "homepage": { "$ref": "#/definitions/url" },
+    "include": {
+      "type": "array",
+      "description": "Other files of this registry, relative to index.json (no globs and no .., so a registry can be served from any static host and can't reach outside its folder).",
+      "items": { "type": "string", "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._/-]+\\.json$" }
+    },
+    "packages": { "type": "array", "items": { "$ref": "#/definitions/package" } },
+    "usb": { "type": "array", "items": { "$ref": "#/definitions/usbEntry" } },
+    "drivers": { "type": "array", "items": { "$ref": "#/definitions/driver" } },
+    "recipes": { "type": "array", "items": { "$ref": "#/definitions/recipe" } }
+  },
+  "definitions": {
+    "url": { "type": "string", "pattern": "^https://" },
+    "hex4": { "type": "string", "pattern": "^[0-9a-f]{4}$", "description": "Lowercase 4-digit hex." },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]*$" },
+    "verified": {
+      "type": "boolean",
+      "description": "Set false when an entry hasn't been checked against a primary source yet. Shown in the UI and listed by registry:check."
+    },
+    "rule": {
+      "type": "object",
+      "description": "When this matches, the package is recommended. All present conditions must match; a package recommends itself if any of its rules match.",
+      "additionalProperties": false,
+      "required": ["reason"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "description": "Glob patterns; matches if any file in the workspace matches any of them.",
+          "items": { "type": "string" }
+        },
+        "usb": {
+          "type": "array",
+          "description": "\"vid:pid\" in lowercase hex, pid may be *. Matches if any plugged-in device matches.",
+          "items": { "type": "string", "pattern": "^[0-9a-f]{4}:([0-9a-f]{4}|\\*)$" }
+        },
+        "fqbn": {
+          "type": "array",
+          "description": "Arduino board IDs a sketch builds for; * wildcards allowed, e.g. \"arduino:avr:*\".",
+          "items": { "type": "string" }
+        },
+        "reason": {
+          "type": "string",
+          "description": "Plain-English reason shown next to the recommendation. ${device} is replaced with the matched device name, ${sketch} and ${board} with the sketch and board."
+        }
+      }
+    },
+    "download": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "sha256", "bin"],
+      "properties": {
+        "url": { "$ref": "#/definitions/url" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "size": { "type": "integer", "minimum": 0, "description": "Bytes; shown before downloading." },
+        "bin": {
+          "type": "string",
+          "description": "Path of the executable inside the archive (or the file name for a bare binary).",
+          "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._/-]+$"
+        }
+      }
+    },
+    "package": {
+      "type": "object",
+      "required": ["id", "kind", "name"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "kind": { "enum": ["tool", "arduino-core"] },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "homepage": { "$ref": "#/definitions/url" },
+        "license": { "type": "string" },
+        "verified": { "$ref": "#/definitions/verified" },
+        "recommendWhen": { "type": "array", "items": { "$ref": "#/definitions/rule" } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "tool" } } },
+          "then": {
+            "required": ["version", "downloads", "provides"],
+            "properties": {
+              "version": { "type": "string" },
+              "provides": {
+                "type": "array",
+                "description": "Command names this tool provides; recipes list them in needs.",
+                "items": { "type": "string" },
+                "minItems": 1
+              },
+              "downloads": {
+                "type": "object",
+                "description": "Keyed by \"<os>-<arch>\" using Node's names: darwin-arm64, darwin-x64, linux-x64, linux-arm64, linux-arm, win32-x64, win32-ia32, win32-arm64.",
+                "propertyNames": { "pattern": "^(darwin|linux|win32)-(arm64|x64|arm|ia32)$" },
+                "additionalProperties": { "$ref": "#/definitions/download" },
+                "minProperties": 1
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "arduino-core" } } },
+          "then": {
+            "required": ["platform"],
+            "properties": {
+              "platform": { "type": "string", "pattern": "^[A-Za-z0-9._-]+:[A-Za-z0-9._-]+$" },
+              "boardIndex": {
+                "$ref": "#/definitions/url",
+                "description": "Board package index URL, if the platform isn't in Arduino's default index."
+              },
+              "boards": {
+                "type": "array",
+                "description": "A few headline board names for the UI.",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "usbEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vid", "name", "kind"],
+      "description": "A USB vendor (no pid) or a specific device (vid + pid). Devices are matched first, then vendors.",
+      "properties": {
+        "vid": { "$ref": "#/definitions/hex4" },
+        "pid": { "$ref": "#/definitions/hex4" },
+        "name": { "type": "string", "description": "Plain-English name, e.g. \"CH340\" or \"Uno R3\"." },
+        "kind": {
+          "enum": ["bridge", "native"],
+          "description": "bridge: USB-to-serial chip next to the microcontroller (may need a vendor driver). native: the microcontroller itself speaks USB."
+        },
+        "family": {
+          "type": "string",
+          "description": "Chip family used by Board Doctor rules, e.g. ch34x, cp210x, ftdi."
+        },
+        "driver": {
+          "type": "string",
+          "description": "id of a drivers entry to offer when this chip has no driver."
+        },
+        "bootloader": { "type": "boolean", "description": "This VID:PID is the bootloader / download mode." },
+        "noSerialPort": {
+          "type": "boolean",
+          "description": "In this mode the device never creates a serial port."
+        },
+        "verified": { "$ref": "#/definitions/verified" }
+      }
+    },
+    "driver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "vendor", "name", "urls"],
+      "description": "Official vendor driver download pages. Registries link to drivers; they never redistribute them.",
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "vendor": { "type": "string" },
+        "name": { "type": "string" },
+        "urls": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "windows": { "$ref": "#/definitions/url" },
+            "macos": { "$ref": "#/definitions/url" },
+            "linux": { "$ref": "#/definitions/url" }
+          }
+        },
+        "verified": { "$ref": "#/definitions/verified" }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run"],
+      "properties": {
+        "run": {
+          "type": "array",
+          "description": "Program and arguments. Never run through a shell. Placeholders: ${port}, ${project}, ${artifact}, ${board}.",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "errors": {
+          "enum": ["gcc", "rustc", "python"],
+          "description": "How to read errors from the output into the Problems panel."
+        }
+      }
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "detect"],
+      "description": "How a kind of project is detected, built, flashed and monitored.",
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "adapter": {
+          "type": "string",
+          "description": "A built-in adapter that implements this recipe in code (e.g. \"arduino\"). Without one, build/flash/monitor below are used."
+        },
+        "detect": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Project marker files (globs) in the project folder."
+            },
+            "sketchFolder": {
+              "type": "string",
+              "description": "Arduino rule: folder contains <folder name><extension>, e.g. \".ino\"."
+            }
+          }
+        },
+        "needs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Commands (from tool packages' provides) this recipe needs."
+        },
+        "build": { "$ref": "#/definitions/command" },
+        "flash": { "$ref": "#/definitions/command" },
+        "monitor": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "baud": { "type": "integer", "minimum": 50 } }
+        },
+        "verified": { "$ref": "#/definitions/verified" }
+      }
+    }
+  }
+}
