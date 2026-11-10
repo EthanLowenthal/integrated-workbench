@@ -1,4 +1,4 @@
-// Boards and Tools view: recommended / installed / search, install / update / uninstall, registries.
+// Boards and Tools view: recommended / installed / search, install / update / uninstall, settings.
 // Renders state posted by the extension; every button posts a message back. All text comes from
 // the extension (src/text.ts), so this file holds no user-facing strings.
 (function () {
@@ -6,6 +6,7 @@
   const root = document.getElementById('root');
   const saved = vscode.getState() || {};
   let query = saved.query || '';
+  let settingsOpen = !!saved.settingsOpen;
   let state;
   let focusId;
 
@@ -32,7 +33,6 @@
       const pct = busy.fraction !== undefined ? Math.round(busy.fraction * 100) : undefined;
       return `<span class="muted small">${esc(busy.label)}${pct !== undefined ? ` ${pct}%` : ''}</span>`;
     }
-    if (item.kind === 'soon') return '';
     const id = esc(item.id);
     if (item.state === 'available')
       return `<button class="small ${item.reasons.length ? 'primary' : ''}" data-action="install" data-id="${id}">${esc(W.install)}</button>`;
@@ -46,7 +46,6 @@
   }
 
   function version(item) {
-    if (item.kind === 'soon') return '';
     if (item.state === 'update') return `${esc(item.installedVersion)} → ${esc(item.latestVersion)}`;
     if (item.installedVersion) return esc(item.installedVersion);
     const parts = [];
@@ -58,22 +57,18 @@
   function itemHtml(item, W) {
     const busy = state.busy[item.id];
     const pct = busy && busy.fraction !== undefined ? Math.round(busy.fraction * 100) : undefined;
-    const badges = [
-      item.source
-        ? `<span class="badge" title="${esc(W.sourceTip)}: ${esc(item.source)}">${esc(item.source)}</span>`
-        : '',
-      item.unverified
-        ? `<span class="badge" title="${esc(W.unverifiedTip)}">${esc(W.unverifiedBadge)}</span>`
-        : '',
-    ].join(' ');
-    return `<div class="item ${focusId === item.id ? 'focus' : ''}" id="item-${esc(item.id)}">
+    const badge = item.source
+      ? `<span class="badge" title="${esc(W.sourceTip)}: ${esc(item.source)}">${esc(item.source)}</span>`
+      : '';
+    // Descriptions, reasons and notes show on hover instead of as extra lines.
+    const tip = [...item.reasons, item.detail, item.state !== 'installed' ? item.note : '']
+      .filter(Boolean)
+      .join('\n');
+    return `<div class="item ${focusId === item.id ? 'focus' : ''}" id="item-${esc(item.id)}" title="${esc(tip)}">
       <div class="icon">${icon(item.icon)}</div>
       <div class="grow">
-        <div class="row"><span class="name ellipsis">${esc(item.name)}</span>${badges}</div>
+        <div class="row"><span class="name ellipsis">${esc(item.name)}</span>${badge}${tip ? `<span class="info-tip">${icon('info')}</span>` : ''}</div>
         <div class="muted small">${version(item)}</div>
-        ${item.detail ? `<div class="muted small">${esc(item.detail)}</div>` : ''}
-        ${item.reasons.map((r) => `<div class="why">${esc(r)}</div>`).join('')}
-        ${item.note && item.state !== 'installed' ? `<div class="muted small">${esc(item.note)}</div>` : ''}
         ${busy ? `<div class="progress ${pct !== undefined ? 'determinate' : ''}" style="--p:${pct ?? 0}%"></div>` : ''}
       </div>
       <div class="side">${button(item, W)}</div>
@@ -93,13 +88,7 @@
     const W = s.text;
     const search = `<div class="row" style="margin-top:6px"><input type="search" id="q" placeholder="${esc(W.searchPlaceholder)}" value="${esc(query)}" aria-label="${esc(W.searchPlaceholder)}">
       <button class="small" data-action="refresh" title="${esc(W.refreshList)}" aria-label="${esc(W.refreshList)}">${icon(s.loading ? 'loading' : 'refresh', s.loading ? 'codicon-modifier-spin' : '')}</button></div>`;
-    const error = s.error
-      ? `<div class="banner">${icon('error', 'error')}<span class="grow">${esc(s.error)}</span><button class="link" data-action="showOutput">${esc(W.output)}</button></div>`
-      : '';
-    const available = query
-      ? group(W.available, s.available, W, W.noMatches)
-      : `<div class="group"><div class="heading"><span>${esc(W.available)}</span><span>${s.available.length || ''}</span></div>
-          <div class="muted small">${esc(s.engineReady ? W.browseHint : W.needEngineToBrowse)}</div></div>`;
+    const available = query ? group(W.available, s.available, W, W.noMatches) : '';
     const regs = s.registries
       .map(
         (
@@ -109,23 +98,34 @@
         ${r.errors.length ? `<button class="link" data-action="showOutput">${r.errors.length} ${esc(r.errors.length === 1 ? W.errorSingular : W.errorPlural)}</button>` : ''}</div>`,
       )
       .join('');
-    root.innerHTML =
-      search +
-      error +
-      group(W.recommended, s.recommended, W, query ? '' : W.noRecommendations) +
-      group(W.installedGroup, s.installed, W) +
-      available +
-      group(W.comingSoon, s.soon, W) +
-      `<div class="group"><div class="heading"><span>${esc(W.registries)}</span></div>${regs}
-        <div class="row" style="margin-top:6px;gap:12px">
+    // Settings sit collapsed at the bottom; problems with registries show in Notifications.
+    const settings = `<details class="group settings" ${settingsOpen ? 'open' : ''}>
+      <summary class="heading">${icon('chevron-right')} ${esc(W.settings)}</summary>
+      <div class="settings-body">
+        <button class="link" data-action="openSketchSettings">${icon('settings-gear')} ${esc(W.sketchSettings)}</button>
+        <button class="link" data-action="openExtensionSettings">${icon('settings')} ${esc(W.extensionSettings)}</button>
+        <div class="heading" style="margin-top:8px">${esc(W.registries)}</div>${regs}
+        <div class="row" style="margin-top:4px;gap:4px 12px;flex-wrap:wrap">
           <button class="link" data-action="addRegistry">${icon('add')} ${esc(W.addRegistry)}</button>
           <button class="link" data-action="editRegistries">${esc(W.configure)}</button>
           <button class="link" data-action="registryHelp">${esc(W.documentation)}</button>
-        </div></div>`;
+        </div>
+      </div></details>`;
+    root.innerHTML =
+      search +
+      group(W.recommended, s.recommended, W) +
+      group(W.installedGroup, s.installed, W) +
+      available +
+      (query ? '' : `<div class="muted small" style="margin-top:8px">${esc(W.searchToBrowse)}</div>`) +
+      settings;
+    root.querySelector('details.settings').addEventListener('toggle', (e) => {
+      settingsOpen = e.target.open;
+      vscode.setState({ query, settingsOpen });
+    });
     const q = document.getElementById('q');
     q.addEventListener('input', () => {
       query = q.value;
-      vscode.setState({ query });
+      vscode.setState({ query, settingsOpen });
       const pos = q.selectionStart;
       render();
       const again = document.getElementById('q');

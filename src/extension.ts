@@ -116,6 +116,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   const intellisense = new IntelliSense(context.extension.id, session, arduino, output);
   sketchView.intellisense = intellisense;
   const libraries = new LibrariesModel(arduino, session, output, () => void intellisense.refresh());
+  sketchView.libraries = libraries;
   const librariesView = new LibrariesView(context.extensionUri, libraries, output);
   const settingsPage = new SettingsPage(context.extensionUri, session, monitor, intellisense, registry);
   // The monitor gives the port back for uploads and takes it again once the board is back.
@@ -187,6 +188,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
       if (port) await session.setPort(port);
     }),
     vscode.commands.registerCommand('integratedWorkbench.showSketch', showSketch),
+    vscode.commands.registerCommand('integratedWorkbench.showOutput', () => output.show(true)),
     vscode.commands.registerCommand('integratedWorkbench.showTools', (id?: string) =>
       toolsView.focus(id === 'engine' ? engineId() : id),
     ),

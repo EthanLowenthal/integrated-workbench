@@ -1,4 +1,4 @@
-// Sketch view: board, port, Verify/Upload/Monitor, last result, diagnostics.
+// Sketch view: notifications, board, port, Verify/Upload/Monitor, last result.
 // Renders state posted by the extension; every button posts a message back. All text comes from
 // the extension (src/text.ts), so this file holds no user-facing strings.
 (function () {
@@ -29,13 +29,24 @@
     return `<div class="section"><p>${esc(T.openSketch)}</p>${list}</div>`;
   }
 
-  function banner(s, T) {
-    const b = (ic, cls, msg, btn, primary, focus) =>
-      `<div class="banner">${icon(ic, cls)}<span class="grow">${esc(msg)}</span><button class="small ${primary ? 'primary' : ''}" data-action="showTools" ${focus ? `data-focus="${focus}"` : ''}>${esc(btn)}</button></div>`;
-    if (!s.engineReady) return b('warning', 'warn', T.engineMissing, T.install, true, 'engine');
-    if (s.board && !s.boardInstalled) return b('warning', 'warn', T.boardPackageMissing, T.install, true);
-    if (s.missingRecommended > 0) return b('info', '', T.recommendedMissing, T.view, false);
-    return '';
+  // The one place for warnings, errors and detection results. Details show on hover.
+  function notices(s, T) {
+    const sev = { error: icon('error', 'error'), warning: icon('warning', 'warn'), info: icon('info') };
+    const rows = s.notices.map(
+      (n) => `<div class="notice" title="${esc(n.detail || n.title)}">${sev[n.severity] || ''}
+        <span class="grow">${esc(n.title)}</span>
+        ${n.actions.map((a, ai) => `<button class="small ${ai === 0 && n.severity !== 'info' ? 'primary' : ''}" data-action="notice" data-id="${esc(n.id)}" data-a="${ai}">${esc(a)}</button>`).join('')}
+        ${n.dismissible ? `<button class="icon-btn" data-action="dismiss" data-id="${esc(n.id)}" title="${esc(T.dismiss)}" aria-label="${esc(T.dismiss)}">${icon('close')}</button>` : ''}</div>`,
+    );
+    const det = s.detect;
+    if (det && det.phase === 'waiting') {
+      rows.unshift(`<div class="notice" title="${esc(T.detectWaitingDetail)}">${icon('loading', 'codicon-modifier-spin')}
+        <span class="grow">${esc(T.detectWaiting)} <span class="muted"><span data-ends="${det.endsAt}"></span>${esc(T.detectSecondsLeft)}</span></span>
+        <button class="small" data-action="cancelDetect">${esc(T.cancel)}</button></div>`);
+    }
+    return rows.length
+      ? `<div class="notices" aria-label="${esc(T.notifications)}">${rows.join('')}</div>`
+      : '';
   }
 
   function pickers(s, T, W) {
@@ -59,26 +70,19 @@
         ${missingSaved}${opts}
       </select>
       <button class="small" data-action="refreshPorts" title="${esc(T.refreshPorts)}" aria-label="${esc(T.refreshPorts)}">${icon('refresh')}</button></div>`;
-    const where = s.board
-      ? `<div class="muted small" style="margin:4px 0 0 52px">${esc(T.boardSaved)}</div>`
-      : '';
-    return `<div class="section">${board}${where}${options(s, W)}${port}</div>`;
-  }
-
-  function options(s, W) {
-    if (!s.board) return '';
-    const n = (s.options || []).length;
-    const changed = (s.options || []).filter((o) => o.changed).length;
-    const summary = n
-      ? `${n} ${esc(n === 1 ? W.optionOne : W.optionMany)}${changed ? `, ${changed} ${esc(W.modified)}` : ''}`
-      : '';
-    return `<div class="muted small" style="margin:2px 0 0 52px">${summary}${summary ? ' · ' : ''}<button class="link" data-action="openSettings">${esc(W.configure)}</button></div>`;
+    // Board not showing up: one quiet link instead of a card.
+    const detect =
+      s.noBoards && !s.detect
+        ? `<div class="small" style="margin:4px 0 0 52px"><button class="link" data-action="detectBoard">${esc(T.detectBoard)}</button></div>`
+        : '';
+    return `<div class="section">${board}${port}${detect}</div>`;
   }
 
   function actions(s, T, W) {
     const r = s.run.running;
     if (r) {
       return `<div class="section"><div class="row"><span class="grow ellipsis">${icon('loading', 'codicon-modifier-spin')} ${esc(r.title)}</span>
+        <button class="icon-btn" data-action="showOutput" title="${esc(T.showOutput)}" aria-label="${esc(T.showOutput)}">${icon('output')}</button>
         ${r.kind === 'fix' ? '' : `<button class="small" data-action="cancel">${esc(T.cancel)}</button>`}</div><div class="progress"></div></div>`;
     }
     const blocked = s.run.blocked
@@ -88,21 +92,7 @@
       <button data-action="build" title="${esc(W.verifyTip)} (${esc(s.keys.build)})">${icon('check')} ${esc(W.verify)}</button>
       <button class="primary" data-action="upload" title="${esc(W.uploadTip)} (${esc(s.keys.upload)})">${icon('arrow-right')} ${esc(W.upload)}</button>
       <button data-action="monitor" title="${esc(T.openMonitor)} (${esc(s.keys.monitor)})">${icon('terminal')} ${esc(W.monitor)}</button>
-    </div>${blocked}${intellisenseHint(s, W)}</div>`;
-  }
-
-  function intellisenseHint(s, W) {
-    const i = s.intellisense;
-    if (!i || !i.message) return '';
-    const ic =
-      i.status === 'updating'
-        ? icon('loading', 'codicon-modifier-spin')
-        : icon(i.status === 'error' ? 'warning' : 'info', i.status === 'error' ? 'warn' : '');
-    const btn =
-      i.status === 'needsExtension'
-        ? `<button class="link" data-action="installCpp">${esc(W.install)}</button>`
-        : '';
-    return `<div class="row muted small" style="margin-top:8px">${ic}<span class="grow">${esc(i.message)}</span>${btn}</div>`;
+    </div>${blocked}</div>`;
   }
 
   function lastRun(s, T, W) {
@@ -127,44 +117,8 @@
       ? `<div class="card"><div>${esc(l.fix.message)}</div><div class="buttons"><button class="primary small" data-action="applyFix">${esc(l.fix.label)}</button></div></div>`
       : '';
     const hint = l.hint ? `<div class="warn small" style="margin:4px 0 0 20px">${esc(l.hint)}</div>` : '';
-    return `<div class="section">${head}${diags}${more}${hint}${fix}
-      <div style="margin:6px 0 0 20px"><button class="link" data-action="showOutput">${esc(T.showOutput)}</button></div></div>`;
-  }
-
-  function card(d, i, action) {
-    const sev = {
-      error: icon('error', 'error'),
-      warning: icon('warning', 'warn'),
-      info: icon('info'),
-      ok: icon('pass', 'ok'),
-    };
-    return `<div class="card"><div class="row" style="align-items:flex-start">${sev[d.severity] || ''}<span class="grow" style="font-weight:600">${esc(d.title)}</span></div>
-      <div class="muted small" style="margin:2px 0 0 20px">${esc(d.detail)}</div>
-      <div class="buttons" style="margin-left:20px">${d.actions
-        .map(
-          (a, ai) =>
-            `<button class="small" data-action="${action}" data-d="${i}" data-a="${ai}">${esc(a.label)}</button>`,
-        )
-        .join('')}</div></div>`;
-  }
-
-  function doctor(s, T) {
-    const det = s.detect;
-    if (det && det.phase === 'waiting') {
-      return `<div class="section"><div class="heading">${esc(T.boardCheck)}</div>
-        <div class="card"><div class="row">${icon('loading', 'codicon-modifier-spin')}<span class="grow" style="font-weight:600">${esc(T.detectWaiting)}</span>
-          <span class="muted small"><span data-ends="${det.endsAt}"></span>${esc(T.detectSecondsLeft)}</span></div>
-          <div class="muted small" style="margin:2px 0 0 20px">${esc(T.detectWaitingDetail)}</div>
-          <div class="buttons" style="margin-left:20px"><button class="small" data-action="cancelDetect">${esc(T.cancel)}</button></div></div></div>`;
-    }
-    if (det && det.phase === 'done') {
-      return `<div class="section"><div class="heading">${esc(T.detectResult)}</div>${det.result.map((d, i) => card(d, i, 'detectAction')).join('')}
-        <div style="margin-left:20px"><button class="small" data-action="clearDetect">${esc(T.detectDone)}</button></div></div>`;
-    }
-    const cards = s.doctor.map((d, i) => card(d, i, 'doctorAction')).join('');
-    const detect = `<div style="margin:4px 0 0 20px"><button class="link" data-action="detectBoard">${icon('debug-disconnect')} ${esc(T.detectBoard)}</button></div>`;
-    if (!s.doctor.length && s.ports.length) return '';
-    return `<div class="section"><div class="heading">${esc(T.boardCheck)}</div>${cards}${detect}</div>`;
+    const output = `<div style="margin:6px 0 0 20px"><button class="link" data-action="showOutput">${icon('output')} ${esc(T.showOutput)}</button></div>`;
+    return `<div class="section">${head}${diags}${more}${hint}${fix}${output}</div>`;
   }
 
   function render() {
@@ -172,13 +126,14 @@
     if (!s) return;
     const T = s.text;
     const W = s.text.webview;
-    root.innerHTML = s.project
-      ? `<div class="section" style="padding-top:6px"><div class="row">${icon('folder')}<span style="font-weight:600" class="ellipsis">${esc(s.project.name)}</span><span class="muted small">${esc(T.sketchKind)}</span></div>${banner(s, T)}</div>` +
-        pickers(s, T, W) +
-        actions(s, T, W) +
-        lastRun(s, T, W) +
-        doctor(s, T)
-      : noProject(s, T) + doctor(s, T);
+    root.innerHTML =
+      notices(s, T) +
+      (s.project
+        ? `<div class="section" style="padding-top:6px"><div class="row">${icon('folder')}<span style="font-weight:600" class="ellipsis">${esc(s.project.name)}</span></div></div>` +
+          pickers(s, T, W) +
+          actions(s, T, W) +
+          lastRun(s, T, W)
+        : noProject(s, T));
   }
 
   root.addEventListener('click', (e) => {
@@ -188,10 +143,9 @@
     if (a === 'openFile') {
       const d = state.run.last.diagnostics[Number(el.dataset.i)];
       vscode.postMessage({ type: a, file: d.file, line: d.line, column: d.column });
-    } else if (a === 'doctorAction')
-      vscode.postMessage({ type: a, d: Number(el.dataset.d), a: Number(el.dataset.a) });
+    } else if (a === 'notice') vscode.postMessage({ type: a, id: el.dataset.id, a: Number(el.dataset.a) });
+    else if (a === 'dismiss') vscode.postMessage({ type: a, id: el.dataset.id });
     else if (a === 'openSketch') vscode.postMessage({ type: a, path: el.dataset.path });
-    else if (a === 'showTools') vscode.postMessage({ type: a, focus: el.dataset.focus });
     else vscode.postMessage({ type: a });
   });
   root.addEventListener('change', (e) => {
@@ -199,8 +153,6 @@
     if (!el) return;
     if (el.dataset.action === 'selectPort' && el.value)
       vscode.postMessage({ type: 'selectPort', path: el.value });
-    if (el.dataset.action === 'setOption')
-      vscode.postMessage({ type: 'setOption', id: el.dataset.id, value: el.value });
   });
 
   window.addEventListener('message', (e) => {

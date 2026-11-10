@@ -9,10 +9,11 @@
     );
   const icon = (name, cls = '') => `<i class="codicon codicon-${name} ${cls}" aria-hidden="true"></i>`;
 
+  const tip = (t) => (t ? ` <span class="info-tip" title="${esc(t)}">${icon('info')}</span>` : '');
+  // Descriptions show on hover (info icon) rather than as text under every setting.
   const setting = (title, description, control, modified) => `
     <div class="setting ${modified ? 'modified' : ''}">
-      ${title ? `<div class="setting-title">${esc(title)}</div>` : ''}
-      ${description ? `<div class="setting-desc">${esc(description)}</div>` : ''}
+      ${title ? `<div class="setting-title">${esc(title)}${tip(description)}</div>` : ''}
       <div class="setting-control">${control}</div>
     </div>`;
   const select = (attrs, options, value) =>
@@ -32,7 +33,7 @@
 
     const board = setting(
       '',
-      T.boardDescription,
+      '',
       `<div class="row"><span class="value">${s.board ? `${esc(s.board.name)} <span class="muted">${esc(s.board.base)}</span>` : `<span class="muted">${esc(T.noBoard)}</span>`}</span>
         <button class="small" data-action="selectBoard">${esc(s.board ? T.changeBoard : T.selectBoard)}</button></div>`,
     );
@@ -59,8 +60,7 @@
             )
             .join('')
         : `<div class="muted">${esc(T.noOptions)}</div>`;
-      options = `<h2>${esc(T.options)}${changed ? ` <span class="badge">${changed} ${esc(T.modified)}</span>` : ''}</h2>
-        <div class="setting-desc">${esc(T.optionsDescription)}</div>
+      options = `<h2>${esc(T.options)}${tip(T.optionsDescription)}${changed ? ` <span class="badge">${changed} ${esc(T.modified)}</span>` : ''}</h2>
         ${changed ? `<div style="margin:6px 0 4px"><button class="small" data-action="resetOptions">${esc(T.resetOptions)}</button></div>` : ''}
         ${rows}`;
     }
@@ -71,7 +71,7 @@
     if (!portOptions.length) portOptions.push({ id: '', label: T.noPorts });
     const port = setting(
       '',
-      T.portDescription,
+      '',
       `<div class="row">${select('data-action="selectPort" aria-label="Port"', portOptions, s.port || '')}<button class="small" data-action="refreshPorts">${icon('refresh')} ${esc(T.refresh)}</button></div>`,
     );
 
@@ -101,23 +101,23 @@
     const i = s.intellisense;
     const status = T.intellisenseStatus[i.status] || '';
     const intellisense = setting(
-      T.intellisense,
-      T.intellisenseDescription,
+      '',
+      '',
       `<div class="row">${i.status === 'updating' ? icon('loading', 'codicon-modifier-spin') : i.status === 'ready' ? icon('pass', 'ok') : i.status === 'error' ? icon('warning', 'warn') : icon('info')}
         <span class="grow">${esc(status)}${i.status === 'error' && i.message ? ` <span class="muted">${esc(i.message)}</span>` : ''}</span>
         ${i.status === 'needsExtension' ? `<button class="small primary" data-action="installCpp">${esc(T.installCpp)}</button>` : `<button class="small" data-action="refreshIntellisense">${esc(T.refreshIntellisense)}</button>`}</div>
-      <div class="setting-desc" style="margin-top:8px">${esc(T.clangdHint)} <button class="link" data-action="writeCompileCommands">${esc(T.writeCompileCommands)}</button></div>`,
+      <div style="margin-top:8px"><button class="link" data-action="writeCompileCommands" title="${esc(T.clangdHint)}">${esc(T.writeCompileCommands)}</button></div>`,
     );
 
     root.innerHTML = `<div class="page">
       <h1>${esc(s.project.name)}</h1>
-      <div class="setting-desc">${esc(T.storedIn)} <button class="link" data-action="openYaml">${esc(T.openYaml)}</button></div>
+      <div><button class="link" data-action="openYaml" title="${esc(T.storedIn)}">${esc(T.openYaml)}</button></div>
       ${banner}
-      <h2>${esc(T.board)}</h2>${board}
+      <h2>${esc(T.board)}${tip(T.boardDescription)}</h2>${board}
       ${options}
-      <h2>${esc(T.port)}</h2>${port}
+      <h2>${esc(T.port)}${tip(T.portDescription)}</h2>${port}
       <h2>${esc(T.monitor)}</h2>${monitor}
-      <h2>${esc(T.intellisense)}</h2>${intellisense}
+      <h2>${esc(T.intellisense)}${tip(T.intellisenseDescription)}</h2>${intellisense}
     </div>`;
   }
 

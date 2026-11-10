@@ -116,7 +116,10 @@
     const s = state;
     const status = s.status;
     document.querySelector('.mon-status').className = `mon-status ${status}`;
-    document.querySelector('.status-text').textContent = `${s.port || T.noPort} · ${T.status[status]}`;
+    // Status line carries pause/reconnect/error messages; the full text is on hover.
+    const statusText = document.querySelector('.status-text');
+    statusText.textContent = `${s.port || T.noPort} · ${status === 'error' && s.message ? s.message : T.status[status]}`;
+    document.querySelector('.mon-status').title = s.message || '';
     const live =
       status === 'connected' || status === 'connecting' || status === 'reconnecting' || status === 'paused';
     $('conn').textContent = live ? T.disconnect : T.connect;
@@ -132,9 +135,6 @@
     const banner = $('banner');
     if (!s.engineReady) {
       banner.innerHTML = `${icon('warning', 'warn')}<span class="grow">${esc(T.engineMissing)}</span><button class="small primary" id="install">${esc(T.install)}</button>`;
-      banner.style.display = 'flex';
-    } else if (s.message && (status === 'error' || status === 'reconnecting' || status === 'paused')) {
-      banner.innerHTML = `${icon(status === 'error' ? 'error' : 'info', status === 'error' ? 'error' : '')}<span class="grow">${esc(s.message)}</span>`;
       banner.style.display = 'flex';
     } else banner.style.display = 'none';
     $('msg').disabled = status !== 'connected';

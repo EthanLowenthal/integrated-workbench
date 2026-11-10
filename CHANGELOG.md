@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2
+
+- Notifications: warnings and errors from every view (build engine or board package missing, board problems, Detect Board results, registry and library errors, missing libraries, IntelliSense) are listed in one place at the top of the Sketch view. The Integrated Workbench icon in the Activity Bar shows how many need attention.
+- Less text in the sidebar: descriptions, reasons and notes show on hover (info icon) instead of as extra lines. The Sketch Settings page shows setting descriptions on hover.
+- Settings moved to a collapsed **Settings** section at the bottom of Boards and Tools: Sketch Settings, Extension Settings, and registries. Sketch Settings is also in the Sketch view's "..." menu.
+- Build output is easier to reach: an Output button while compiling or uploading, **Show Output** under every result, and a **Show Build Output** button in the Sketch view title bar.
+- Boards and Tools and Libraries start collapsed. The "Coming Soon" entries were removed.
+- Serial Monitor: pause, reconnect and error messages show in the status line (full text on hover) instead of a banner.
+
 ## 0.2.1
 
 - The board and board options for each sketch are saved in the workspace settings (`integratedWorkbench.boards` in `.vscode/settings.json`) instead of a `sketch.yaml` in the sketch folder. A `sketch.yaml` from Arduino IDE 2 is used as the starting point when a sketch has no saved board, and is never changed.

@@ -8,6 +8,7 @@ import type { Session } from '../session.js';
 import { text } from '../text.js';
 import type { ToolsModel } from '../toolsModel.js';
 import type { IntelliSense } from '../intellisense.js';
+import type { LibrariesModel } from '../librariesModel.js';
 import { webviewHtml, webviewOptions } from './webview.js';
 import { findFilesLimited } from '../findFiles.js';
 
@@ -35,13 +36,30 @@ type Msg =
   | { type: 'installCpp' }
   | { type: 'openSettings' }
   | { type: 'detectBoard' | 'cancelDetect' | 'clearDetect' }
-  | { type: 'detectAction'; d: number; a: number }
   | { type: 'openFile'; file: string; line: number; column?: number }
   | { type: 'showTools'; focus?: string }
-  | { type: 'doctorAction'; d: number; a: number }
+  | { type: 'notice'; id: string; a: number }
+  | { type: 'dismiss'; id: string }
   | { type: 'openSketch'; path: string };
 
-/** The "Sketch" section of the sidebar: board, port, Verify/Upload, last result, board check. */
+type Severity = 'error' | 'warning' | 'info';
+interface NoticeAction {
+  label: string;
+  run: () => unknown;
+}
+/** One entry in the Notifications list: every warning from every view is shown here. */
+interface Notice {
+  id: string;
+  severity: Severity;
+  title: string;
+  /** Longer explanation, shown on hover. */
+  detail?: string;
+  actions: NoticeAction[];
+  /** Info notices can be dismissed until the window reloads. */
+  dismissible?: boolean;
+}
+
+/** The "Sketch" section of the sidebar: notifications, board, port, Verify/Upload, last result. */
 export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable {
   private view?: vscode.WebviewView;
   /** Set after construction; its status shows as a hint row. */
@@ -50,6 +68,14 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
     this.subs.push(i.onDidChange(() => void this.post()));
   }
   private intelli?: IntelliSense;
+  /** Set after construction; its errors and missing libraries show as notifications. */
+  set libraries(l: LibrariesModel) {
+    this.libs = l;
+    this.subs.push(l.onDidChange(() => void this.post()));
+  }
+  private libs?: LibrariesModel;
+  private notices: Notice[] = [];
+  private readonly dismissed = new Set<string>();
   private sketches: { name: string; path: string }[] = [];
   private sketchesLoaded = false;
   /** Last state sent, so the 2-second board poll doesn't redraw (and close dropdowns) when nothing changed. */
@@ -105,6 +131,8 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
   }
 
   private async post(): Promise<void> {
+    this.notices = this.collectNotices().filter((n) => !this.dismissed.has(n.id));
+    this.updateBadge();
     if (!this.view?.visible) return;
     const s = this.session;
     if (!s.project && !this.sketchesLoaded) {
@@ -112,32 +140,10 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
       await this.findSketches();
     }
     const last = this.runs.state.last;
-    const doctor = this.shownDiagnoses();
-    const missing = this.tools.state.missingRecommended.length;
     const state = {
       project: s.project && { name: s.project.name, root: s.project.root },
       sketches: this.sketches,
-      intellisense: this.intelli && {
-        status: this.intelli.status,
-        message:
-          this.intelli.status === 'needsExtension'
-            ? text.intellisense.needsExtension
-            : this.intelli.status === 'error'
-              ? text.intellisense.failed
-              : this.intelli.status === 'updating'
-                ? text.intellisense.updating
-                : undefined,
-      },
       board: s.target,
-      options: s.boardOptions.map((o) => ({
-        id: o.id,
-        label: o.label,
-        value: s.optionValues[o.id] ?? o.defaultValue,
-        changed: o.id in s.optionValues && s.optionValues[o.id] !== o.defaultValue,
-        values: o.values,
-      })),
-      boardInstalled: s.targetInstalled,
-      engineReady: s.toolReady,
       port: s.port,
       ports: s.boards.map((b) => ({
         path: b.port,
@@ -148,27 +154,19 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         blocked: this.runs.state.blocked,
         last: last && { ...last, fix: last.fix && { label: last.fix.label, message: last.fix.message } },
       },
-      missingRecommended: missing,
+      notices: this.notices.map((n) => ({
+        id: n.id,
+        severity: n.severity,
+        title: n.title,
+        detail: n.detail,
+        dismissible: n.dismissible,
+        actions: n.actions.map((a) => a.label),
+      })),
       detect:
         this.doctor.state.detect?.phase === 'waiting'
           ? { phase: 'waiting', endsAt: this.doctor.state.detect.endsAt }
-          : this.doctor.state.detect?.phase === 'done'
-            ? {
-                phase: 'done',
-                result: this.doctor.state.detect.result.map((d) => ({
-                  title: d.title,
-                  detail: d.detail,
-                  severity: d.severity,
-                  actions: d.actions.map((a) => ({ label: a.label })),
-                })),
-              }
-            : undefined,
-      doctor: doctor.map((d) => ({
-        title: d.title,
-        detail: d.detail,
-        severity: d.severity,
-        actions: d.actions.map((a) => ({ label: a.label })),
-      })),
+          : undefined,
+      noBoards: !s.boards.length,
       keys: {
         build: this.keyLabel('Cmd+Alt+R', 'Ctrl+Alt+R'),
         upload: this.keyLabel('Cmd+Alt+U', 'Ctrl+Alt+U'),
@@ -178,22 +176,14 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         openSketch: text.openSketch,
         sketchesHeading: text.sketchesHeading,
         noSketches: text.noSketches,
-        sketchKind: text.sketchKind,
         selectBoard: text.selectBoard,
         noBoardsPlugged: text.noBoardsPlugged,
-        boardSaved: text.boardSaved,
-        engineMissing: text.engineMissing,
-        boardPackageMissing: text.boardPackageMissing,
-        recommendedMissing: text.recommendedMissing(missing),
-        install: text.install,
-        view: text.view,
-        boardCheck: text.boardCheck,
+        notifications: text.notifications,
+        dismiss: text.dismiss,
         openMonitor: text.openMonitor,
         refreshPorts: text.refreshPorts,
         showOutput: text.showOutput,
         cancel: text.cancel,
-        detectDone: text.detectDone,
-        detectResult: text.detectResult,
         detectSecondsLeft: text.detectSecondsLeft,
         detectWaitingDetail: text.detectWaitingDetail,
         detectWaiting: text.detectWaiting,
@@ -207,11 +197,121 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
     void this.view.webview.postMessage({ type: 'state', state });
   }
 
-  /** Board Doctor findings to show: problems, or "no boards" when nothing is plugged in. */
-  private shownDiagnoses() {
-    const problems = this.doctor.problems;
-    if (this.session.boards.length && !problems.length) return [];
-    return problems.length ? problems : this.doctor.state.diagnoses.filter((d) => d.code === 'NO_BOARDS');
+  /** Everything that needs attention, most important first. */
+  private collectNotices(): Notice[] {
+    const s = this.session;
+    const out: Notice[] = [];
+    const showOutput = { label: text.showOutput, run: () => this.output.show() };
+    const showTools = (focus?: string) => ({
+      label: text.install,
+      run: () => vscode.commands.executeCommand('integratedWorkbench.showTools', focus),
+    });
+    if (!s.toolReady) {
+      out.push({
+        id: 'engine',
+        severity: 'warning',
+        title: text.engineMissing,
+        detail: text.engineMissingDetail,
+        actions: [showTools('engine')],
+      });
+    } else if (s.target && !s.targetInstalled) {
+      out.push({
+        id: 'boardPackage',
+        severity: 'warning',
+        title: text.boardPackageMissing,
+        detail: text.boardPackageMissingDetail(s.target.name),
+        actions: [showTools()],
+      });
+    }
+    const runDoctor = (d: (typeof this.doctor.problems)[number]) =>
+      d.actions.map((a) => ({
+        label: a.label,
+        run: () =>
+          runDoctorAction(a, this.doctor, async (path) => {
+            await s.setPort(path);
+            await s.refreshBoards();
+          }),
+      }));
+    const det = this.doctor.state.detect;
+    if (det?.phase === 'done') {
+      det.result.forEach((d, i) =>
+        out.push({
+          id: `detect:${i}`,
+          severity: d.severity === 'error' || d.severity === 'warning' ? d.severity : 'info',
+          title: d.title,
+          detail: d.detail,
+          actions: [...runDoctor(d), { label: text.detectDone, run: () => this.doctor.cancelDetect() }],
+        }),
+      );
+    }
+    for (const d of this.doctor.problems) {
+      out.push({
+        id: `doctor:${d.code}:${d.title}`,
+        severity: d.severity === 'error' ? 'error' : 'warning',
+        title: d.title,
+        detail: d.detail,
+        actions: runDoctor(d),
+      });
+    }
+    const tools = this.tools.state;
+    if (tools.error) out.push({ id: 'tools', severity: 'error', title: tools.error, actions: [showOutput] });
+    for (const r of tools.registries.filter((x) => x.errors.length)) {
+      out.push({
+        id: `registry:${r.spec}`,
+        severity: 'warning',
+        title: text.registryErrors(r.name, r.errors.length),
+        detail: r.errors.join('\n'),
+        actions: [showOutput],
+      });
+    }
+    const libs = this.libs?.state;
+    if (libs?.error)
+      out.push({ id: 'libraries', severity: 'error', title: libs.error, actions: [showOutput] });
+    const required = libs?.required.filter((r) => r.library) ?? [];
+    if (required.length) {
+      out.push({
+        id: 'requiredLibraries',
+        severity: 'warning',
+        title: text.librariesRequired(required.length),
+        detail: required.map((r) => `#include <${r.header}>: ${r.library!.name}`).join('\n'),
+        actions: [
+          {
+            label: text.view,
+            run: () => vscode.commands.executeCommand('integratedWorkbench.showLibraries'),
+          },
+        ],
+      });
+    }
+    const intelli = this.intelli?.status;
+    if (s.project && intelli === 'needsExtension') {
+      out.push({
+        id: 'cpptools',
+        severity: 'info',
+        title: text.intellisense.needsExtension,
+        actions: [
+          {
+            label: text.install,
+            run: () => vscode.commands.executeCommand('integratedWorkbench.installCppExtension'),
+          },
+        ],
+        dismissible: true,
+      });
+    } else if (s.project && intelli === 'error') {
+      out.push({
+        id: 'intellisense',
+        severity: 'warning',
+        title: text.intellisense.failed,
+        actions: [showOutput],
+      });
+    }
+    return out;
+  }
+
+  /** Count of warnings and errors on the sidebar icon, so they're visible from anywhere. */
+  private updateBadge(): void {
+    if (!this.view) return;
+    const n = this.notices.filter((x) => x.severity !== 'info').length;
+    this.view.badge = n ? { value: n, tooltip: text.notificationsBadge(n) } : undefined;
   }
 
   private async onMessage(m: Msg): Promise<void> {
@@ -242,17 +342,13 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
       case 'cancelDetect':
       case 'clearDetect':
         return this.doctor.cancelDetect();
-      case 'detectAction': {
-        const det = this.doctor.state.detect;
-        const action = det?.phase === 'done' ? det.result[m.d]?.actions[m.a] : undefined;
-        if (action) {
-          await runDoctorAction(action, this.doctor, async (path) => {
-            await this.session.setPort(path);
-            await this.session.refreshBoards();
-          });
-        }
+      case 'notice': {
+        await this.notices.find((n) => n.id === m.id)?.actions[m.a]?.run();
         return;
       }
+      case 'dismiss':
+        this.dismissed.add(m.id);
+        return this.post();
       case 'openSettings':
         await vscode.commands.executeCommand('integratedWorkbench.openSketchSettings');
         return;
@@ -279,16 +375,6 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
       case 'openSketch':
         await vscode.window.showTextDocument(vscode.Uri.file(m.path));
         return;
-      case 'doctorAction': {
-        const action = this.shownDiagnoses()[m.d]?.actions[m.a];
-        if (action) {
-          await runDoctorAction(action, this.doctor, async (path) => {
-            await this.session.setPort(path);
-            await this.session.refreshBoards();
-          });
-        }
-        return;
-      }
     }
   }
 

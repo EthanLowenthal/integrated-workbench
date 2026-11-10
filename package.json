@@ -2,7 +2,7 @@
   "name": "integrated-workbench",
   "displayName": "Integrated Workbench",
   "description": "Build, upload, and monitor microcontroller projects. Detects connected boards, manages board packages, and includes a Serial Monitor with a plotter. Supports Arduino sketches for AVR, ESP32, STM32, and Raspberry Pi Pico.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "publisher": "integrated-workbench",
   "license": "MIT",
   "engines": {
@@ -118,6 +118,12 @@
         "command": "integratedWorkbench.detectBoard",
         "title": "Detect Board...",
         "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.showOutput",
+        "title": "Show Build Output",
+        "category": "Integrated Workbench",
+        "icon": "$(output)"
       }
     ],
     "menus": {
@@ -150,6 +156,11 @@
       ],
       "view/title": [
         {
+          "command": "integratedWorkbench.showOutput",
+          "when": "view == integratedWorkbench.sketch",
+          "group": "navigation@1"
+        },
+        {
           "command": "integratedWorkbench.reloadRegistries",
           "when": "view == integratedWorkbench.tools",
           "group": "overflow"
@@ -157,7 +168,7 @@
         {
           "command": "integratedWorkbench.openSketchSettings",
           "when": "view == integratedWorkbench.sketch",
-          "group": "navigation"
+          "group": "overflow"
         },
         {
           "command": "integratedWorkbench.newSketch",
@@ -264,12 +275,14 @@
         {
           "type": "webview",
           "id": "integratedWorkbench.tools",
-          "name": "Boards and Tools"
+          "name": "Boards and Tools",
+          "visibility": "collapsed"
         },
         {
           "type": "webview",
           "id": "integratedWorkbench.libraries",
-          "name": "Libraries"
+          "name": "Libraries",
+          "visibility": "collapsed"
         }
       ],
       "integratedWorkbenchMonitor": [

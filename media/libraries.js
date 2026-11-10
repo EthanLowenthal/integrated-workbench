@@ -27,18 +27,20 @@
     return `${update}<button class="small" data-action="uninstall" data-name="${n}">${esc(T.uninstall)}</button>`;
   }
 
-  function itemHtml(item, T, extra = '') {
+  function itemHtml(item, T, extraTip = '') {
     const version =
       item.state === 'update'
         ? `${esc(item.installedVersion)} → ${esc(item.latestVersion)}`
         : esc(item.installedVersion || item.latestVersion || '');
-    return `<div class="item">
+    // Description and author show on hover.
+    const tip = [extraTip, item.sentence, item.author ? `${T.by} ${item.author}` : '']
+      .filter(Boolean)
+      .join('\n');
+    return `<div class="item" title="${esc(tip)}">
       <div class="icon">${icon('library')}</div>
       <div class="grow">
-        <div class="row"><span class="name ellipsis">${esc(item.name)}</span><span class="muted small">${version}</span></div>
-        ${item.sentence ? `<div class="muted small">${esc(item.sentence)}</div>` : ''}
-        ${item.author ? `<div class="muted small ellipsis">${esc(T.by)} ${esc(item.author)}</div>` : ''}
-        ${extra}
+        <div class="row"><span class="name ellipsis">${esc(item.name)}</span>${tip ? `<span class="info-tip">${icon('info')}</span>` : ''}</div>
+        <div class="muted small">${version}</div>
       </div>
       <div class="side">${button(item, T)}</div>
     </div>`;
@@ -54,17 +56,13 @@
     }
     const search = `<div class="row" style="margin-top:6px"><input type="search" id="q" placeholder="${esc(T.searchPlaceholder)}" value="${esc(query)}" aria-label="${esc(T.searchPlaceholder)}">
       <button class="small" data-action="refresh" title="${esc(T.refresh)}" aria-label="${esc(T.refresh)}">${icon(s.loading || s.searching ? 'loading' : 'refresh', s.loading || s.searching ? 'codicon-modifier-spin' : '')}</button></div>`;
-    const error = s.error
-      ? `<div class="banner">${icon('error', 'error')}<span class="grow">${esc(s.error)}</span><button class="link" data-action="showOutput">${esc(T.output)}</button></div>`
-      : '';
     const required = s.required.length
       ? `<div class="group"><div class="heading"><span>${esc(T.required)}</span><span>${s.required.length}</span></div>
-          <div class="muted small">${esc(T.requiredHint)}</div>
           ${s.required
             .map((r) =>
               r.library
-                ? itemHtml(r.library, T, `<div class="why">#include &lt;${esc(r.header)}&gt;</div>`)
-                : `<div class="item"><div class="icon">${icon('warning', 'warn')}</div><div class="grow"><div class="name">${esc(r.header)}</div><div class="muted small">${esc(T.noLibraryFor)}</div></div></div>`,
+                ? itemHtml(r.library, T, `#include <${r.header}>`)
+                : `<div class="item" title="${esc(T.noLibraryFor)}"><div class="icon">${icon('warning', 'warn')}</div><div class="grow"><div class="name">${esc(r.header)}</div></div></div>`,
             )
             .join('')}</div>`
       : '';
@@ -72,10 +70,10 @@
       query.trim().length >= 2
         ? `<div class="group"><div class="heading"><span>${esc(T.results)}</span><span>${s.results.length || ''}</span></div>
           ${s.results.length ? s.results.map((i) => itemHtml(i, T)).join('') : s.searching ? '' : `<div class="muted small">${esc(T.noResults)}</div>`}</div>`
-        : `<div class="muted small" style="margin-top:8px">${esc(T.searchHint)}</div>`;
+        : '';
     const installed = `<div class="group"><div class="heading"><span>${esc(T.installed)}</span><span>${s.installed.length || ''}</span></div>
       ${s.installed.length ? s.installed.map((i) => itemHtml(i, T)).join('') : `<div class="muted small">${esc(T.noneInstalled)}</div>`}</div>`;
-    root.innerHTML = search + error + required + results + installed;
+    root.innerHTML = search + required + results + installed;
 
     const q = document.getElementById('q');
     q.addEventListener('input', () => {

@@ -7,7 +7,17 @@ import { webviewHtml, webviewOptions } from './webview.js';
 export const TOOLS_VIEW = 'integratedWorkbench.tools';
 
 type Msg =
-  | { type: 'ready' | 'refresh' | 'addRegistry' | 'editRegistries' | 'registryHelp' | 'showOutput' }
+  | {
+      type:
+        | 'ready'
+        | 'refresh'
+        | 'addRegistry'
+        | 'editRegistries'
+        | 'registryHelp'
+        | 'showOutput'
+        | 'openSketchSettings'
+        | 'openExtensionSettings';
+    }
   | { type: 'install' | 'uninstall'; id: string };
 
 /** The "Boards and Tools" section of the sidebar. */
@@ -75,6 +85,15 @@ export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable 
         return this.model.uninstall(m.id);
       case 'showOutput':
         return this.output.show();
+      case 'openSketchSettings':
+        await vscode.commands.executeCommand('integratedWorkbench.openSketchSettings');
+        return;
+      case 'openExtensionSettings':
+        await vscode.commands.executeCommand(
+          'workbench.action.openSettings',
+          '@ext:integrated-workbench.integrated-workbench',
+        );
+        return;
       case 'registryHelp':
         await vscode.env.openExternal(vscode.Uri.parse(text.registryHelpUrl));
         return;

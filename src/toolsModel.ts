@@ -19,7 +19,7 @@ export type ItemState = 'installed' | 'update' | 'available' | 'unavailable';
 /** One row in the Boards and tools view. */
 export interface ToolItem {
   id: string;
-  kind: 'tool' | 'arduino-core' | 'soon';
+  kind: 'tool' | 'arduino-core';
   icon: string;
   name: string;
   detail: string;
@@ -42,36 +42,13 @@ export interface ToolsState {
   recommended: ToolItem[];
   installed: ToolItem[];
   available: ToolItem[];
-  soon: ToolItem[];
   busy: Record<string, { label: string; fraction?: number }>;
   registries: { name: string; spec: string; builtin: boolean; errors: string[] }[];
-  /** Ids of recommended items that aren't installed (for the Sketch view's banner). */
+  /** Ids of recommended items that aren't installed. */
   missingRecommended: string[];
 }
 
 const TRUSTED_KEY = 'integratedWorkbench.trustedRegistries';
-
-/** Placeholders until those toolchains land, so the roadmap is visible where people look for it. */
-const SOON: ToolItem[] = [
-  {
-    id: 'soon:micropython',
-    kind: 'soon',
-    icon: 'symbol-namespace',
-    name: 'MicroPython Tools',
-    detail: 'Firmware flashing, REPL, and package management for MicroPython and CircuitPython.',
-    state: 'unavailable',
-    reasons: [],
-  },
-  {
-    id: 'soon:rust',
-    kind: 'soon',
-    icon: 'gear',
-    name: 'Embedded Rust Tools',
-    detail: 'Build and flash with cargo, espflash, and probe-rs.',
-    state: 'unavailable',
-    reasons: [],
-  },
-];
 
 export class ToolsModel implements vscode.Disposable {
   private readonly changed = new vscode.EventEmitter<ToolsState>();
@@ -226,7 +203,6 @@ export class ToolsModel implements vscode.Disposable {
       recommended,
       installed: rest.filter((i) => i.state === 'installed' || i.state === 'update'),
       available: rest.filter((i) => i.state === 'available' || i.state === 'unavailable'),
-      soon: SOON,
       busy: this.busy,
       registries: reg.sources.map((s) => ({
         name: s.name,
