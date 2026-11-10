@@ -1,6 +1,7 @@
 import { parseWindowsPnp } from '../parse/windows.js';
 import type { Snapshot } from '../types.js';
 import type { ProbeHost } from './host.js';
+import { TIMEOUTS } from '../timeouts.js';
 
 /**
  * Fixed script (no interpolated data). Win32_PnPEntity lists present devices only and gives
@@ -17,14 +18,11 @@ export const WINDOWS_PNP_SCRIPT = [
 ].join('\n');
 
 export async function probeWindows(host: ProbeHost): Promise<Snapshot> {
-  const res = await host.run('powershell.exe', [
-    '-NoProfile',
-    '-NonInteractive',
-    '-ExecutionPolicy',
-    'Bypass',
-    '-Command',
-    WINDOWS_PNP_SCRIPT,
-  ]);
+  const res = await host.run(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', WINDOWS_PNP_SCRIPT],
+    { timeoutMs: TIMEOUTS.windowsProbeMs },
+  );
   if (res.code !== 0) {
     throw new Error(`PowerShell device query failed (exit ${res.code}): ${res.stderr.trim().slice(0, 500)}`);
   }

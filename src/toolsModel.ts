@@ -12,6 +12,7 @@ import { text } from './text.js';
 import type { ArduinoToolchain } from './toolchains/arduino/index.js';
 import type { CoreInfo } from './toolchains/arduino/parse.js';
 import { installTool, toolBinPath, toolDownload } from './tools.js';
+import { findFilesLimited } from './findFiles.js';
 
 export type ItemState = 'installed' | 'update' | 'available' | 'unavailable';
 
@@ -126,7 +127,26 @@ export class ToolsModel implements vscode.Disposable {
   }
 
   /** Re-reads engine status, installed board packages, and workspace files for recommendations. */
-  async refresh(opts: { updateIndex?: boolean } = {}): Promise<void> {
+  private inFlight?: Promise<void>;
+  private again = false;
+
+  /** Overlapping calls share one run; one more run follows if something asked during it. */
+  refresh(opts: { updateIndex?: boolean } = {}): Promise<void> {
+    if (this.inFlight) {
+      this.again = true;
+      return this.inFlight;
+    }
+    this.inFlight = this.doRefresh(opts).finally(() => {
+      this.inFlight = undefined;
+      if (this.again) {
+        this.again = false;
+        void this.refresh();
+      }
+    });
+    return this.inFlight;
+  }
+
+  private async doRefresh(opts: { updateIndex?: boolean }): Promise<void> {
     this.loading = true;
     this.error = undefined;
     this.emit();
@@ -141,7 +161,7 @@ export class ToolsModel implements vscode.Disposable {
         (
           await Promise.all(
             globsToCheck(this.registry.registry.packages).map(async (g) =>
-              (await vscode.workspace.findFiles(g, '**/node_modules/**', 1)).length ? g : undefined,
+              (await findFilesLimited(g, 1)).length ? g : undefined,
             ),
           )
         ).filter((g): g is string => !!g),

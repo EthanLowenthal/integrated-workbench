@@ -25,8 +25,12 @@ export async function run(): Promise<void> {
 
   const ext = vscode.extensions.getExtension<TestApi>('integrated-workbench.integrated-workbench');
   assert.ok(ext, 'extension found');
+  const t0 = Date.now();
   const api = await ext.activate();
-  log('activated');
+  const ms = Date.now() - t0;
+  log(`activated in ${ms} ms`);
+  // Activation must not wait on arduino-cli or the network.
+  assert.ok(ms < 3000, `activation took ${ms} ms`);
 
   // Registry: built-in one loaded cleanly.
   const src = api.registry.registry.sources[0];

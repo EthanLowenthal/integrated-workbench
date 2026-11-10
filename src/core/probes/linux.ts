@@ -10,6 +10,7 @@ import {
 import type { Snapshot } from '../types.js';
 import type { ProbeHost } from './host.js';
 import { whoHolds } from './macos.js';
+import { TIMEOUTS } from '../timeouts.js';
 
 const USB_DEVICES = '/sys/bus/usb/devices';
 const TTY_CLASS = '/sys/class/tty';
@@ -45,7 +46,7 @@ export async function readLinuxSysfs(host: ProbeHost): Promise<LinuxSysfsRaw> {
 async function inUse(host: ProbeHost, path: string) {
   const viaLsof = await whoHolds(host, path);
   if (viaLsof !== undefined) return viaLsof;
-  const fuser = await host.run('fuser', [path], { timeoutMs: 5_000 });
+  const fuser = await host.run('fuser', [path], { timeoutMs: TIMEOUTS.probeMs });
   if (fuser.code === null) return undefined;
   const pid = parseFuserPids(fuser.stdout)[0];
   if (pid === undefined) return null;
@@ -57,7 +58,7 @@ export async function probeLinux(host: ProbeHost): Promise<Snapshot> {
   const raw = await readLinuxSysfs(host);
   let { usb, ports } = parseLinuxSysfs(raw);
   if (usb.length === 0) {
-    const lsusb = await host.run('lsusb', []);
+    const lsusb = await host.run('lsusb', [], { timeoutMs: TIMEOUTS.probeMs });
     if (lsusb.code === 0) usb = parseLsusb(lsusb.stdout);
   }
 
@@ -74,11 +75,13 @@ export async function probeLinux(host: ProbeHost): Promise<Snapshot> {
     }),
   );
 
-  const id = await host.run('id', ['-nG']);
-  const brltty = await host.run('systemctl', ['is-active', 'brltty-udev.service', 'brltty.service']);
+  const id = await host.run('id', ['-nG'], { timeoutMs: TIMEOUTS.probeMs });
+  const brltty = await host.run('systemctl', ['is-active', 'brltty-udev.service', 'brltty.service'], {
+    timeoutMs: TIMEOUTS.probeMs,
+  });
   let brlttyActive = brltty.code !== null && parseSystemctlIsActive(brltty.stdout);
   if (brltty.code === null) {
-    const pgrep = await host.run('pgrep', ['-x', 'brltty']);
+    const pgrep = await host.run('pgrep', ['-x', 'brltty'], { timeoutMs: TIMEOUTS.probeMs });
     brlttyActive = pgrep.code === 0;
   }
 

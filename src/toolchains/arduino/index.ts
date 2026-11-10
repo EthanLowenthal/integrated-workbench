@@ -25,6 +25,7 @@ import {
 } from './parse.js';
 import type { Download, ToolPackage } from '../../registry/types.js';
 import { installTool, toolBinPath, toolDownload } from '../../tools.js';
+import { describeTimeout, TIMEOUTS } from '../../core/timeouts.js';
 
 export interface ArduinoOptions {
   host: ProbeHost;
@@ -127,7 +128,9 @@ export class ArduinoToolchain implements Toolchain {
     const managed = managedPath ? [managedPath] : [];
     const candidates = configured ? [configured] : [...managed, ...cliCandidates(this.platform, homedir())];
     for (const path of candidates) {
-      const res = await this.opts.host.run(path, ['version', '--format', 'json'], { timeoutMs: 10_000 });
+      const res = await this.opts.host.run(path, ['version', '--format', 'json'], {
+        timeoutMs: TIMEOUTS.cliVersionMs,
+      });
       const version = res.code === 0 ? parseVersion(res.stdout) : undefined;
       if (version) {
         this.resolved = { path, version };
@@ -171,7 +174,7 @@ export class ArduinoToolchain implements Toolchain {
 
   async listBoards(): Promise<DetectedBoard[]> {
     const res = await this.opts.host.run(await this.cli(), ['board', 'list', '--format', 'json'], {
-      timeoutMs: 20_000,
+      timeoutMs: TIMEOUTS.cliListMs,
     });
     if (res.code !== 0) throw new Error(res.stderr.trim() || `arduino-cli board list failed (${res.code})`);
     return parseBoardList(res.stdout);
@@ -179,7 +182,7 @@ export class ArduinoToolchain implements Toolchain {
 
   async listTargets(): Promise<BuildTarget[]> {
     const res = await this.opts.host.run(await this.cli(), ['board', 'listall', '--format', 'json'], {
-      timeoutMs: 30_000,
+      timeoutMs: TIMEOUTS.cliListMs,
     });
     if (res.code !== 0)
       throw new Error(res.stderr.trim() || `arduino-cli board listall failed (${res.code})`);
@@ -200,12 +203,14 @@ export class ArduinoToolchain implements Toolchain {
       onStdout: ctx.onOutput,
       onStderr: ctx.onOutput,
       signal: ctx.signal,
+      timeoutMs: TIMEOUTS.compileMs,
     });
     const all = `${res.stdout}\n${res.stderr}`;
     return {
       success: res.code === 0,
       diagnostics: parseCompilerDiagnostics(all, { buildPath, sketchRoot: ctx.project.root }),
       fix: res.code === 0 ? undefined : this.platformFix(all, ctx.target.id),
+      error: res.timedOut ? `Stopped after ${describeTimeout(TIMEOUTS.compileMs)} (time limit).` : undefined,
     };
   }
 
@@ -227,13 +232,20 @@ export class ArduinoToolchain implements Toolchain {
       onStdout: ctx.onOutput,
       onStderr: ctx.onOutput,
       signal: ctx.signal,
+      timeoutMs: TIMEOUTS.uploadMs,
     });
-    return { success: res.code === 0 };
+    return {
+      success: res.code === 0,
+      error: res.timedOut ? `Stopped after ${describeTimeout(TIMEOUTS.uploadMs)} (time limit).` : undefined,
+    };
   }
 
   /** Refreshes the board package index (Arduino's plus the registries' extra indexes). Small download. */
   async updateIndex(signal?: AbortSignal): Promise<void> {
-    const res = await this.stream(await this.cli(), ['core', 'update-index', ...this.urlArgs()], { signal });
+    const res = await this.stream(await this.cli(), ['core', 'update-index', ...this.urlArgs()], {
+      signal,
+      timeoutMs: TIMEOUTS.updateIndexMs,
+    });
     if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not update the board list.');
   }
 
@@ -242,7 +254,7 @@ export class ArduinoToolchain implements Toolchain {
     const res = await this.opts.host.run(
       await this.cli(),
       ['core', 'search', '--format', 'json', ...this.urlArgs()],
-      { timeoutMs: 60_000 },
+      { timeoutMs: TIMEOUTS.cliSearchMs },
     );
     if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not read the board list.');
     return parseCoreSearch(res.stdout);
@@ -256,7 +268,8 @@ export class ArduinoToolchain implements Toolchain {
       ['core', 'install', platform, ...this.urlArgs()],
     ]) {
       onOutput(`$ arduino-cli ${args.join(' ')}\n`);
-      const res = await this.stream(cli, args, { onStdout: onOutput, onStderr: onOutput, signal });
+      const timeoutMs = args[1] === 'install' ? TIMEOUTS.coreInstallMs : TIMEOUTS.updateIndexMs;
+      const res = await this.stream(cli, args, { onStdout: onOutput, onStderr: onOutput, signal, timeoutMs });
       if (res.code !== 0) return false;
     }
     return true;
@@ -269,7 +282,12 @@ export class ArduinoToolchain implements Toolchain {
   ): Promise<boolean> {
     const args = ['core', 'uninstall', platform];
     onOutput(`$ arduino-cli ${args.join(' ')}\n`);
-    const res = await this.stream(await this.cli(), args, { onStdout: onOutput, onStderr: onOutput, signal });
+    const res = await this.stream(await this.cli(), args, {
+      onStdout: onOutput,
+      onStderr: onOutput,
+      signal,
+      timeoutMs: TIMEOUTS.coreUninstallMs,
+    });
     return res.code === 0;
   }
 

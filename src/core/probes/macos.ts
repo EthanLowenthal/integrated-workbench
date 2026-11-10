@@ -2,17 +2,22 @@ import { parseLsofF } from '../parse/common.js';
 import { parseDevListing, parseIoregUsb, parseSystemProfilerUsb } from '../parse/macos.js';
 import type { SerialPort, Snapshot, UsbDevice } from '../types.js';
 import type { ProbeHost } from './host.js';
+import { TIMEOUTS } from '../timeouts.js';
 
 export async function probeMacos(host: ProbeHost): Promise<Snapshot> {
   let usb: UsbDevice[] = [];
   let ports: SerialPort[] = [];
 
-  const ioreg = await host.run('/usr/sbin/ioreg', ['-r', '-c', 'IOUSBHostDevice', '-l', '-w0']);
+  const ioreg = await host.run('/usr/sbin/ioreg', ['-r', '-c', 'IOUSBHostDevice', '-l', '-w0'], {
+    timeoutMs: TIMEOUTS.probeMs,
+  });
   if (ioreg.code === 0) {
     ({ usb, ports } = parseIoregUsb(ioreg.stdout));
   } else {
     for (const dataType of ['SPUSBHostDataType', 'SPUSBDataType']) {
-      const sp = await host.run('/usr/sbin/system_profiler', [dataType, '-json'], { timeoutMs: 30_000 });
+      const sp = await host.run('/usr/sbin/system_profiler', [dataType, '-json'], {
+        timeoutMs: TIMEOUTS.systemProfilerMs,
+      });
       if (sp.code === 0) {
         usb = parseSystemProfilerUsb(sp.stdout);
         if (usb.length) break;
@@ -34,7 +39,7 @@ export async function whoHolds(
   host: ProbeHost,
   path: string,
 ): Promise<{ pid: number; name: string } | null | undefined> {
-  const res = await host.run('lsof', ['-F', 'pc', '--', path], { timeoutMs: 5_000 });
+  const res = await host.run('lsof', ['-F', 'pc', '--', path], { timeoutMs: TIMEOUTS.probeMs });
   if (res.code === null) return undefined; // lsof not available
   return parseLsofF(res.stdout)[0] ?? null;
 }

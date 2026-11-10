@@ -3,6 +3,7 @@ import { promises as fsp } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ProbeHost } from './core/probes/host.js';
 import type { Download, ToolPackage } from './registry/types.js';
+import { describeTimeout, TIMEOUTS } from './core/timeouts.js';
 
 /**
  * Installs `tool` packages from a registry: download, SHA-256 check against the registry entry,
@@ -51,6 +52,9 @@ export interface InstallOptions {
   /** 0..1 */
   onProgress?: (fraction: number) => void;
   signal?: AbortSignal;
+  /** Overrides for tests. */
+  stallMs?: number;
+  totalMs?: number;
 }
 
 const ARCHIVE = /\.(tar\.gz|tgz|tar\.xz|tar\.bz2|zip)$/i;
@@ -67,21 +71,44 @@ export async function installTool(opts: InstallOptions): Promise<string> {
   await fsp.rm(staging, { recursive: true, force: true });
   await fsp.mkdir(staging, { recursive: true });
 
+  // Give up if the server stops sending (stall) or the whole download runs too long.
+  const ac = new AbortController();
+  let reason: string | undefined;
+  const abortWith = (why: string) => {
+    reason = why;
+    ac.abort();
+  };
+  const onUserAbort = () => abortWith('Cancelled.');
+  opts.signal?.addEventListener('abort', onUserAbort);
+  const stallMs = opts.stallMs ?? TIMEOUTS.downloadStallMs;
+  const totalMs = opts.totalMs ?? TIMEOUTS.downloadTotalMs;
+  let stall = setTimeout(() => abortWith(`No data received for ${describeTimeout(stallMs)}.`), stallMs);
+  const total = setTimeout(
+    () => abortWith(`Download took longer than ${describeTimeout(totalMs)}.`),
+    totalMs,
+  );
+
   try {
-    const res = await (opts.fetch ?? fetch)(dl.url, { signal: opts.signal });
+    const res = await (opts.fetch ?? fetch)(dl.url, { signal: ac.signal });
     if (!res.ok || !res.body) throw new Error(`Download failed (HTTP ${res.status}).`);
-    const total = Number(res.headers.get('content-length')) || dl.size || 0;
+    const size = Number(res.headers.get('content-length')) || dl.size || 0;
     const hash = createHash('sha256');
     const chunks: Uint8Array[] = [];
     let received = 0;
     const reader = res.body.getReader();
+    // Reads can hang without the fetch noticing; race each one against the abort.
+    const aborted = new Promise<never>((_, reject) =>
+      ac.signal.addEventListener('abort', () => reject(new Error(reason ?? 'Download stopped.'))),
+    );
     for (;;) {
-      const { done, value } = await reader.read();
+      const { done, value } = await Promise.race([reader.read(), aborted]);
       if (done) break;
+      clearTimeout(stall);
+      stall = setTimeout(() => abortWith(`No data received for ${describeTimeout(stallMs)}.`), stallMs);
       hash.update(value);
       chunks.push(value);
       received += value.length;
-      if (total) opts.onProgress?.(Math.min(1, received / total));
+      if (size) opts.onProgress?.(Math.min(1, received / size));
     }
     const digest = hash.digest('hex');
     if (digest !== dl.sha256) {
@@ -98,7 +125,9 @@ export async function installTool(opts: InstallOptions): Promise<string> {
         platform === 'win32'
           ? join(process.env['SystemRoot'] ?? 'C:\\Windows', 'System32', 'tar.exe')
           : 'tar';
-      const unpack = await opts.host.run(tar, ['-xf', archive, '-C', staging], { timeoutMs: 120_000 });
+      const unpack = await opts.host.run(tar, ['-xf', archive, '-C', staging], {
+        timeoutMs: TIMEOUTS.unpackMs,
+      });
       if (unpack.code !== 0) {
         throw new Error(`Couldn't unpack ${pkg.name}: ${unpack.stderr.trim() || `exit ${unpack.code}`}`);
       }
@@ -121,6 +150,11 @@ export async function installTool(opts: InstallOptions): Promise<string> {
     return join(finalDir, dl.bin);
   } catch (err) {
     await fsp.rm(staging, { recursive: true, force: true });
+    if (reason) throw new Error(`${pkg.name}: ${reason}`);
     throw err;
+  } finally {
+    clearTimeout(stall);
+    clearTimeout(total);
+    opts.signal?.removeEventListener('abort', onUserAbort);
   }
 }

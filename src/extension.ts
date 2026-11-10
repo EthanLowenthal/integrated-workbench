@@ -25,7 +25,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   const output = vscode.window.createOutputChannel('Integrated Workbench');
   const problems = vscode.languages.createDiagnosticCollection('integratedWorkbench');
   const registry = new RegistryService(context.extensionPath, output);
-  await registry.reload();
+  // Only the built-in registry (a local file) is awaited; nothing slow blocks activation.
+  await registry.reload({ waitForExtras: false });
 
   const toolsDir = context.globalStorageUri.fsPath;
   const arduino = new ArduinoToolchain({
@@ -101,10 +102,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
       await showSketch();
       await doctor.refresh();
     }),
-    vscode.commands.registerCommand('integratedWorkbench.reloadRegistries', async () => {
-      await registry.reload();
+    vscode.commands.registerCommand('integratedWorkbench.reloadRegistries', () => registry.reload()),
+    // Registries can change which tools and boards exist: re-check everything that depends on them.
+    registry.onDidChange(() => {
       arduino.resetCli();
-      await session.recheckTool();
+      void session.recheckTool();
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('integratedWorkbench.registries')) {
@@ -118,8 +120,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     }),
   );
 
-  await session.start();
-  await tools.refresh();
+  // Background: these talk to arduino-cli and the network, which can be slow.
+  void session.start();
+  void tools.refresh();
   return { session, tools, registry, runs };
 }
 

@@ -143,6 +143,7 @@ export class Runs implements vscode.Disposable {
           summary: result.success ? text.buildOk : text.buildFailed(errors),
           diagnostics: result.diagnostics,
           fix: result.fix,
+          hint: result.error,
         },
       });
     }
@@ -165,8 +166,8 @@ export class Runs implements vscode.Disposable {
     const res = await this.track('upload', text.uploading(project.name, port), (signal) =>
       s.toolchain.flash({ project, target, port, onOutput: (t) => this.output.append(t), signal }),
     );
-    let hint: string | undefined;
-    if (!res.success) {
+    let hint = res.error;
+    if (!res.success && !hint) {
       // Ask Board Doctor whether it knows why (port held by another app, permissions, ...).
       const st = await this.doctor.refresh();
       hint = st.diagnoses.find(

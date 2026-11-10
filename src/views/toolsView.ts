@@ -15,6 +15,8 @@ export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable 
   private view?: vscode.WebviewView;
   private loadedOnce = false;
   private pendingFocus?: string;
+  /** Last state sent; identical states aren't re-sent (keeps the search box and scroll stable). */
+  private lastPosted = '';
   private readonly sub: vscode.Disposable;
 
   constructor(
@@ -42,7 +44,12 @@ export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable 
 
   private post(): void {
     if (!this.view?.visible) return;
-    void this.view.webview.postMessage({ type: 'state', state: { ...this.model.state, text: text.webview } });
+    const state = { ...this.model.state, text: text.webview };
+    const json = JSON.stringify(state);
+    if (json !== this.lastPosted) {
+      this.lastPosted = json;
+      void this.view.webview.postMessage({ type: 'state', state });
+    }
     if (this.pendingFocus) {
       void this.view.webview.postMessage({ type: 'focus', id: this.pendingFocus });
       this.pendingFocus = undefined;
@@ -52,6 +59,7 @@ export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable 
   private async onMessage(m: Msg): Promise<void> {
     switch (m.type) {
       case 'ready':
+        this.lastPosted = ''; // a new webview instance has nothing yet
         this.post();
         if (!this.loadedOnce) {
           this.loadedOnce = true;

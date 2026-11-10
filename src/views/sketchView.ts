@@ -8,6 +8,7 @@ import type { Session } from '../session.js';
 import { text } from '../text.js';
 import type { ToolsModel } from '../toolsModel.js';
 import { webviewHtml, webviewOptions } from './webview.js';
+import { findFilesLimited } from '../findFiles.js';
 
 export const SKETCH_VIEW = 'integratedWorkbench.sketch';
 
@@ -38,6 +39,9 @@ type Msg =
 export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable {
   private view?: vscode.WebviewView;
   private sketches: { name: string; path: string }[] = [];
+  private sketchesLoaded = false;
+  /** Last state sent, so the 2-second board poll doesn't redraw (and close dropdowns) when nothing changed. */
+  private lastPosted = '';
   private readonly subs: vscode.Disposable[];
 
   constructor(
@@ -50,11 +54,20 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
     private readonly output: vscode.OutputChannel,
   ) {
     const post = () => this.post();
+    // Re-list sketches when .ino files are created or deleted.
+    const inos = vscode.workspace.createFileSystemWatcher('**/*.{ino,pde}', false, true, false);
+    const rescan = () => {
+      this.sketchesLoaded = false;
+      void this.post();
+    };
     this.subs = [
       session.onDidChange(post),
       doctor.onDidChange(post),
       runs.onDidChange(post),
       tools.onDidChange(post),
+      inos,
+      inos.onDidCreate(rescan),
+      inos.onDidDelete(rescan),
     ];
   }
 
@@ -68,7 +81,7 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
 
   /** Arduino sketches in the workspace, for when no sketch file is open. */
   private async findSketches(): Promise<void> {
-    const files = await vscode.workspace.findFiles('**/*.{ino,pde}', '**/node_modules/**', 50);
+    const files = await findFilesLimited('**/*.{ino,pde}', 50);
     this.sketches = files
       .filter((f) => basename(dirname(f.fsPath)) === basename(f.fsPath).replace(/\.(ino|pde)$/, ''))
       .map((f) => ({ name: basename(dirname(f.fsPath)), path: f.fsPath }))
@@ -82,61 +95,65 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
   private async post(): Promise<void> {
     if (!this.view?.visible) return;
     const s = this.session;
-    if (!s.project) await this.findSketches();
+    if (!s.project && !this.sketchesLoaded) {
+      this.sketchesLoaded = true;
+      await this.findSketches();
+    }
     const last = this.runs.state.last;
     const doctor = this.shownDiagnoses();
     const missing = this.tools.state.missingRecommended.length;
-    void this.view.webview.postMessage({
-      type: 'state',
-      state: {
-        project: s.project && { name: s.project.name, root: s.project.root },
-        sketches: this.sketches,
-        board: s.target,
-        boardInstalled: s.targetInstalled,
-        engineReady: s.toolReady,
-        port: s.port,
-        ports: s.boards.map((b) => ({
-          path: b.port,
-          label: `${shortPort(b.port)} · ${b.target?.name ?? lookupChip(b.vid, b.pid, this.registry.chips).chip?.name ?? text.unknownBoard}`,
-        })),
-        run: {
-          running: this.runs.state.running,
-          blocked: this.runs.state.blocked,
-          last: last && { ...last, fix: last.fix && { label: last.fix.label, message: last.fix.message } },
-        },
-        missingRecommended: missing,
-        doctor: doctor.map((d) => ({
-          title: d.title,
-          detail: d.detail,
-          severity: d.severity,
-          actions: d.actions.map((a) => ({ label: a.label })),
-        })),
-        keys: {
-          build: this.keyLabel('Cmd+Alt+R', 'Ctrl+Alt+R'),
-          upload: this.keyLabel('Cmd+Alt+U', 'Ctrl+Alt+U'),
-        },
-        text: {
-          openSketch: text.openSketch,
-          sketchesHeading: text.sketchesHeading,
-          noSketches: text.noSketches,
-          sketchKind: text.sketchKind,
-          selectBoard: text.selectBoard,
-          noBoardsPlugged: text.noBoardsPlugged,
-          boardSaved: text.boardSaved,
-          engineMissing: text.engineMissing,
-          boardPackageMissing: text.boardPackageMissing,
-          recommendedMissing: text.recommendedMissing(missing),
-          install: text.install,
-          view: text.view,
-          boardCheck: text.boardCheck,
-          monitorSoon: text.monitorSoon,
-          refreshPorts: text.refreshPorts,
-          showOutput: text.showOutput,
-          cancel: text.cancel,
-          webview: text.webview,
-        },
+    const state = {
+      project: s.project && { name: s.project.name, root: s.project.root },
+      sketches: this.sketches,
+      board: s.target,
+      boardInstalled: s.targetInstalled,
+      engineReady: s.toolReady,
+      port: s.port,
+      ports: s.boards.map((b) => ({
+        path: b.port,
+        label: `${shortPort(b.port)} · ${b.target?.name ?? lookupChip(b.vid, b.pid, this.registry.chips).chip?.name ?? text.unknownBoard}`,
+      })),
+      run: {
+        running: this.runs.state.running,
+        blocked: this.runs.state.blocked,
+        last: last && { ...last, fix: last.fix && { label: last.fix.label, message: last.fix.message } },
       },
-    });
+      missingRecommended: missing,
+      doctor: doctor.map((d) => ({
+        title: d.title,
+        detail: d.detail,
+        severity: d.severity,
+        actions: d.actions.map((a) => ({ label: a.label })),
+      })),
+      keys: {
+        build: this.keyLabel('Cmd+Alt+R', 'Ctrl+Alt+R'),
+        upload: this.keyLabel('Cmd+Alt+U', 'Ctrl+Alt+U'),
+      },
+      text: {
+        openSketch: text.openSketch,
+        sketchesHeading: text.sketchesHeading,
+        noSketches: text.noSketches,
+        sketchKind: text.sketchKind,
+        selectBoard: text.selectBoard,
+        noBoardsPlugged: text.noBoardsPlugged,
+        boardSaved: text.boardSaved,
+        engineMissing: text.engineMissing,
+        boardPackageMissing: text.boardPackageMissing,
+        recommendedMissing: text.recommendedMissing(missing),
+        install: text.install,
+        view: text.view,
+        boardCheck: text.boardCheck,
+        monitorSoon: text.monitorSoon,
+        refreshPorts: text.refreshPorts,
+        showOutput: text.showOutput,
+        cancel: text.cancel,
+        webview: text.webview,
+      },
+    };
+    const json = JSON.stringify(state);
+    if (json === this.lastPosted) return;
+    this.lastPosted = json;
+    void this.view.webview.postMessage({ type: 'state', state });
   }
 
   /** Board Doctor findings to show: problems, or "no boards" when nothing is plugged in. */
@@ -149,6 +166,7 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
   private async onMessage(m: Msg): Promise<void> {
     switch (m.type) {
       case 'ready':
+        this.lastPosted = ''; // a new webview instance has nothing yet
         return this.post();
       case 'build':
         await this.runs.build();

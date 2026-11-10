@@ -35,6 +35,12 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - Board stored in the sketch's sketch.yaml (`default_fqbn`); port per machine in globalState.
 - `npm run test:e2e` runs test/e2e/suite.ts inside the installed VS Code with a throwaway profile.
 
+## Timeouts and responsiveness
+
+- Every external call has a limit from `src/core/timeouts.ts` (probes, arduino-cli, downloads with stall + total limits, registry fetches, workspace searches). `runWithTimeout` in `src/core/probes/host.ts` always settles: SIGTERM, then SIGKILL after a grace period, resolving immediately with `timedOut: true`. `StreamOptions.timeoutMs` is required so new long-running calls can't forget one.
+- `activate()` awaits only the built-in registry (local file). Session start, tools refresh and extra registries run in the background.
+- Sidebar views skip posting identical state (the 2 s board poll would otherwise redraw and close dropdowns). Session and ToolsModel drop stale or overlapping refreshes.
+
 ## Commands
 
 - `npm test`, `npm run typecheck`, `npm run lint`, `npm run build` (esbuild -> dist/extension.js), `npm run package` (dev .vsix), `npm run format`

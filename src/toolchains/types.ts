@@ -54,10 +54,14 @@ export interface BuildResult {
   diagnostics: BuildDiagnostic[];
   /** A known, fixable cause, e.g. the board's core isn't installed. */
   fix?: SuggestedFix;
+  /** Why it stopped, when it isn't a compiler error (e.g. hit its time limit). */
+  error?: string;
 }
 
 export interface FlashResult {
   success: boolean;
+  /** Why it stopped, when known (e.g. hit its time limit). */
+  error?: string;
   fix?: SuggestedFix;
 }
 

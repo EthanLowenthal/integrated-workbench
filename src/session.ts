@@ -26,6 +26,8 @@ export class Session implements vscode.Disposable {
   fqbn?: string;
 
   private lastPortKey: string | undefined;
+  /** Bumped on every project update; slower, older updates check it and stop. */
+  private generation = 0;
   private pollTimer?: NodeJS.Timeout;
   private readonly disposables: vscode.Disposable[] = [];
 
@@ -138,10 +140,13 @@ export class Session implements vscode.Disposable {
   }
 
   private async updateProject(force = false): Promise<void> {
+    const gen = ++this.generation;
+    const stale = () => gen !== this.generation;
     const doc = vscode.window.activeTextEditor?.document;
     // Keep the last project when focus moves to output panels, settings, etc.
     if (doc?.uri.scheme === 'file') {
       const next = await this.toolchain.findProject(doc.uri.fsPath);
+      if (stale()) return;
       if (!force && next && next.root === this.project?.root) return;
       this.project = next;
     } else if (!force) {
@@ -150,9 +155,12 @@ export class Session implements vscode.Disposable {
     void vscode.commands.executeCommand('setContext', 'integratedWorkbench.inProject', !!this.project);
     await this.readFqbn();
     this.changed.fire();
-    this.toolReady = (await this.toolchain.checkInstalled()).installed;
+    const ready = (await this.toolchain.checkInstalled()).installed;
+    if (stale()) return;
+    this.toolReady = ready;
     if (this.project) {
       await this.refreshTargets();
+      if (stale()) return;
       void this.doctor.refresh();
       await this.refreshBoards();
     }
