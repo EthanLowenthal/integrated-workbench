@@ -7,9 +7,31 @@
       "id": "arduino",
       "name": "Arduino sketch",
       "adapter": "arduino",
-      "detect": { "sketchFolder": ".ino" },
-      "needs": ["arduino-cli"],
-      "monitor": { "baud": 115200 }
+      "detect": {
+        "sketchFolder": ".ino"
+      },
+      "needs": [
+        "arduino-cli"
+      ],
+      "monitor": {
+        "baud": 115200
+      }
+    },
+    {
+      "id": "micropython",
+      "name": "MicroPython project",
+      "adapter": "micropython",
+      "detect": {
+        "files": [
+          "boot.py"
+        ]
+      },
+      "needs": [
+        "serial-monitor"
+      ],
+      "monitor": {
+        "baud": 115200
+      }
     }
   ]
 }

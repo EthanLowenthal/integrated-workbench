@@ -6,6 +6,7 @@ import type { Session } from '../session.js';
 import { text } from '../text.js';
 import { toolBinPath } from '../tools.js';
 import { openPluggableMonitor, type MonitorConnection } from './pluggableMonitor.js';
+import type { ByteLink } from '../toolchains/micropython/rawRepl.js';
 
 export type MonitorStatus = 'idle' | 'connecting' | 'connected' | 'paused' | 'reconnecting' | 'error';
 export type LineEnding = 'none' | 'lf' | 'cr' | 'crlf';
@@ -20,6 +21,8 @@ export interface MonitorState {
   message?: string;
   /** Is the Serial Monitor Engine (serial-monitor tool) installed? */
   engineReady: boolean;
+  /** The port runs a MicroPython REPL (show Ctrl-C / Ctrl-D, send lines with CR). */
+  repl: boolean;
 }
 
 const BAUD_KEY = 'integratedWorkbench.monitor.baud';
@@ -63,6 +66,9 @@ export class MonitorController implements vscode.Disposable {
   private reconnectTimer?: NodeJS.Timeout;
   private log = '';
   private readonly decoder = new TextDecoder();
+  /** While Run/Upload use the port, incoming bytes go to them instead of the panel. */
+  private divert?: Set<(d: Uint8Array) => void>;
+  private readonly sessionSub: vscode.Disposable;
   state: MonitorState;
 
   constructor(
@@ -78,11 +84,21 @@ export class MonitorController implements vscode.Disposable {
       bauds: DEFAULT_BAUDS,
       lineEnding: memento.get<LineEnding>(ENDING_KEY, 'lf'),
       engineReady: !!this.bin(),
+      repl: session.kind === 'micropython',
     };
+    // Project changes switch between REPL and plain serial controls.
+    this.sessionSub = session.onDidChange(() => {
+      if (this.state.repl !== (session.kind === 'micropython')) this.set({});
+    });
   }
 
   private set(patch: Partial<MonitorState>): void {
-    this.state = { ...this.state, ...patch, engineReady: !!this.bin() };
+    this.state = {
+      ...this.state,
+      ...patch,
+      engineReady: !!this.bin(),
+      repl: this.session.kind === 'micropython',
+    };
     this.changed.fire(this.state);
   }
 
@@ -104,7 +120,7 @@ export class MonitorController implements vscode.Disposable {
   private savedBaud(): string {
     const root = this.session.project?.root;
     const saved = root ? this.memento.get<Record<string, string>>(BAUD_KEY, {})[root] : undefined;
-    const recipe = this.registry.registry.recipes.find((r) => r.id === 'arduino')?.monitor?.baud;
+    const recipe = this.registry.registry.recipes.find((r) => r.id === this.session.kind)?.monitor?.baud;
     return saved ?? String(recipe ?? 9600);
   }
 
@@ -156,14 +172,68 @@ export class MonitorController implements vscode.Disposable {
   }
 
   private receive(d: Buffer): void {
+    if (this.divert) {
+      for (const cb of this.divert) cb(d);
+      return;
+    }
+    this.show(d);
+  }
+
+  private show(d: Buffer): void {
     this.log += this.decoder.decode(d, { stream: true });
     if (this.log.length > MAX_LOG) this.log = this.log.slice(-MAX_LOG / 2);
     this.dataEmitter.fire(d);
   }
 
+  /** Shows text in the panel as if it came from the board (program output during Run). */
+  print(textToShow: string): void {
+    this.show(Buffer.from(textToShow));
+  }
+
+  /** Sends raw bytes, e.g. Ctrl-C (\x03) or Ctrl-D (\x04) for the MicroPython REPL. */
+  sendRaw(data: string): void {
+    this.conn?.write(data);
+  }
+
+  /**
+   * Gives `work` exclusive use of `port` (MicroPython Run, Upload, board files). Uses the panel's
+   * connection when it's on that port, otherwise opens one just for this. Only one at a time.
+   */
+  async exclusive<T>(port: string, work: (link: ByteLink) => Promise<T>): Promise<T> {
+    if (this.divert) throw new Error(text.monitor.portBusy);
+    const listeners = new Set<(d: Uint8Array) => void>();
+    const linkFor = (conn: MonitorConnection): ByteLink => ({
+      write: (d) => conn.write(d),
+      onData: (cb) => {
+        listeners.add(cb);
+        return () => listeners.delete(cb);
+      },
+    });
+    this.divert = listeners;
+    try {
+      if (this.conn && this.state.port === port && this.state.status === 'connected')
+        return await work(linkFor(this.conn));
+      const bin = this.bin();
+      if (!bin) throw new Error(text.monitor.engineMissing);
+      const conn = await openPluggableMonitor(bin, port, { settings: { baudrate: '115200' } });
+      conn.onData((d) => listeners.forEach((cb) => cb(d)));
+      try {
+        return await work(linkFor(conn));
+      } finally {
+        await conn.close();
+      }
+    } finally {
+      this.divert = undefined;
+    }
+  }
+
+  get busy(): boolean {
+    return !!this.divert;
+  }
+
   send(textToSend: string): void {
     if (!this.conn) return;
-    this.conn.write(textToSend + ENDINGS[this.state.lineEnding]);
+    this.conn.write(textToSend + (this.state.repl ? '\r' : ENDINGS[this.state.lineEnding]));
   }
 
   async setBaud(baud: string): Promise<void> {
@@ -245,6 +315,7 @@ export class MonitorController implements vscode.Disposable {
   }
 
   dispose(): void {
+    this.sessionSub.dispose();
     this.wanted = false;
     clearTimeout(this.reconnectTimer);
     void this.closeConn();

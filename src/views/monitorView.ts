@@ -8,6 +8,7 @@ export const MONITOR_VIEW = 'integratedWorkbench.monitor';
 type Msg =
   | { type: 'ready' | 'connect' | 'disconnect' | 'clear' | 'save' | 'installEngine' }
   | { type: 'send'; text: string }
+  | { type: 'raw'; data: '\x03' | '\x04' }
   | { type: 'baud'; baud: string }
   | { type: 'lineEnding'; ending: LineEnding };
 
@@ -72,6 +73,8 @@ export class MonitorView implements vscode.WebviewViewProvider, vscode.Disposabl
         return this.monitor.connect();
       case 'disconnect':
         return this.monitor.disconnect();
+      case 'raw':
+        return this.monitor.sendRaw(m.data);
       case 'send':
         return this.monitor.send(m.text);
       case 'baud':

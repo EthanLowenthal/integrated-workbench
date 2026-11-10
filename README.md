@@ -2,7 +2,7 @@
 
 Build, upload, and monitor microcontroller projects in VS Code, with a sidebar that knows which board is connected.
 
-Integrated Workbench compiles and uploads Arduino sketches (`.ino`, `.cpp`, `.h`) for AVR, ESP32, STM32, Raspberry Pi Pico, and any other board package in the Arduino ecosystem. It sets up its own tools, explains why a board is not detected, and includes a Serial Monitor with a live plotter.
+Integrated Workbench compiles and uploads Arduino sketches (`.ino`, `.cpp`, `.h`) for AVR, ESP32, STM32, Raspberry Pi Pico, and any other board package in the Arduino ecosystem, and runs MicroPython projects on boards that have MicroPython installed. It sets up its own tools, explains why a board is not detected, and includes a Serial Monitor with a live plotter.
 
 ## Features
 
@@ -15,6 +15,7 @@ Integrated Workbench compiles and uploads Arduino sketches (`.ino`, `.cpp`, `.h`
 - **Sketch Settings.** Board, board options (flash size, CPU speed, upload method, and others), port, and Serial Monitor defaults in one page. The board and its options are stored in the workspace settings (`.vscode/settings.json`). A sketch from Arduino IDE 2 opens with the board from its `sketch.yaml`, which is never changed.
 - **IntelliSense.** With the C/C++ extension installed, autocomplete and error squiggles use the selected board's compiler, defines, include paths, and libraries. clangd users can write a `compile_commands.json`.
 - **Diagnostics.** **Detect Board** watches USB while you connect a board and reports what it saw. When a board does not appear, the Sketch view explains why: a charge-only cable, a missing CH340 or CP210x driver, a port held by another program, or Linux permissions. Fixes come with links to vendor driver pages or commands to copy.
+- **MicroPython.** A folder with `boot.py` (or one you mark) is a MicroPython project. **Run** runs the open file on the board without saving it; **Upload** copies changed files and restarts the board; the Serial Monitor is the REPL; **Files on Board** lists, opens and deletes files. No Python installation is needed.
 - **Registries.** Everything Integrated Workbench knows about boards, tools, and USB IDs comes from registries. Add your own in `integratedWorkbench.registries`.
 
 ## Getting started
@@ -61,7 +62,7 @@ Integrated Workbench collects no telemetry. It connects to the network only to d
 
 ## Known limitations
 
-- Arduino sketches are supported today. MicroPython and embedded Rust are planned.
+- Arduino sketches and MicroPython projects are supported today. Embedded Rust is planned. Installing MicroPython firmware on a board is not built in yet.
 - IntelliSense for `.ino` files includes generated function prototypes, except for functions whose signatures use types defined in the sketch; calling one of those before its definition can show an error in the editor even though it compiles.
 - Uploads to STM32 boards other than Nucleo and Discovery (for example over SWD or DFU) need STMicroelectronics' STM32CubeProgrammer, which is installed separately.
 

@@ -150,9 +150,21 @@ describe('ArduinoToolchain', () => {
       },
     });
     const tc = new ArduinoToolchain({ host, buildRoot: '/b' });
-    expect(await tc.findProject('/s/Blink/Blink.ino')).toEqual({ root: '/s/Blink', name: 'Blink' });
-    expect(await tc.findProject('/s/Blink/helper.cpp')).toEqual({ root: '/s/Blink', name: 'Blink' });
-    expect(await tc.findProject('/s/Blink/src/lib.cpp')).toEqual({ root: '/s/Blink', name: 'Blink' });
+    expect(await tc.findProject('/s/Blink/Blink.ino')).toEqual({
+      root: '/s/Blink',
+      name: 'Blink',
+      kind: 'arduino',
+    });
+    expect(await tc.findProject('/s/Blink/helper.cpp')).toEqual({
+      root: '/s/Blink',
+      name: 'Blink',
+      kind: 'arduino',
+    });
+    expect(await tc.findProject('/s/Blink/src/lib.cpp')).toEqual({
+      root: '/s/Blink',
+      name: 'Blink',
+      kind: 'arduino',
+    });
     expect(await tc.findProject('/s/notasketch/main.cpp')).toBeUndefined();
     expect(await tc.findProject('/s/Blink/README.md')).toBeUndefined();
   });
@@ -185,7 +197,7 @@ describe('ArduinoToolchain', () => {
     });
     const out: string[] = [];
     const res = await tc.build({
-      project: { root: '/s/Blink', name: 'Blink' },
+      project: { root: '/s/Blink', name: 'Blink', kind: 'arduino' },
       target: { id: 'esp32:esp32:esp32s3', name: 'ESP32S3 Dev Module' },
       onOutput: (t) => out.push(t),
     });
@@ -216,7 +228,7 @@ describe('ArduinoToolchain', () => {
     const calls: string[][] = [];
     const stream: StreamRunner = async (_f, args) => (calls.push(args), { code: 0, stdout: '', stderr: '' });
     const tc = new ArduinoToolchain({ host: fakeHost({ run: () => version }), buildRoot: '/b', stream });
-    const project = { root: '/s/Blink', name: 'Blink' };
+    const project = { root: '/s/Blink', name: 'Blink', kind: 'arduino' as const };
     await tc.flash({
       project,
       target: { id: 'arduino:avr:uno', name: 'Uno' },

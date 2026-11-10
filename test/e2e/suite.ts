@@ -5,6 +5,8 @@
 import * as assert from 'node:assert/strict';
 import * as vscode from 'vscode';
 import type { TestApi } from '../../src/extension.js';
+import { text } from '../../src/text.js';
+import { MicroPythonBoard } from '../../src/toolchains/micropython/board.js';
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -220,6 +222,51 @@ export async function run(): Promise<void> {
   await detecting;
   assert.equal(api.doctor.state.detect, undefined);
   log('detect board: waited, cancelled cleanly');
+
+  // MicroPython: boot.py makes a project; a plain main.py doesn't until marked.
+  await vscode.window.showTextDocument(vscode.Uri.joinPath(folder.uri, 'Pico', 'main.py'));
+  await until('Pico project', () => (api.session.project?.kind === 'micropython' ? true : undefined));
+  assert.equal(api.session.project?.name, 'Pico');
+  assert.equal(api.session.target?.name, 'MicroPython');
+  assert.equal(api.session.fqbn, undefined, 'no Arduino board for MicroPython');
+  // Without a board, Run asks for a port (a quick pick); close it as a user would.
+  const running = api.runs.run();
+  await until('Run blocked', () => api.runs.state.blocked);
+  await new Promise((r) => setTimeout(r, 300));
+  await vscode.commands.executeCommand('workbench.action.closeQuickOpen');
+  assert.equal(await running, false);
+  assert.ok(
+    api.runs.state.blocked === text.needPort || api.runs.state.blocked === text.needSerialEngine,
+    `Run without a board is blocked: ${api.runs.state.blocked}`,
+  );
+  log(`micropython: Pico detected (boot.py), Run without a board -> "${api.runs.state.blocked}"`);
+  await vscode.window.showTextDocument(vscode.Uri.joinPath(folder.uri, 'PlainPython', 'main.py'));
+  await new Promise((r) => setTimeout(r, 500));
+  assert.notEqual(api.session.project?.name, 'PlainPython', 'a plain main.py is not a project');
+  await vscode.commands.executeCommand('integratedWorkbench.useAsMicroPython');
+  await until('marked project', () => (api.session.project?.name === 'PlainPython' ? true : undefined));
+  const marked = vscode.workspace
+    .getConfiguration('integratedWorkbench', folder.uri)
+    .get<string[]>('micropython.projects');
+  assert.deepEqual(marked, ['PlainPython']);
+  log('micropython: plain main.py ignored; Use Folder as MicroPython Project marks it (saved to settings)');
+  if (process.platform === 'darwin' && api.monitor.state.engineReady) {
+    // Real serial tool, a port with no MicroPython behind it: fails within the limit, port released.
+    const started = Date.now();
+    const err = await api.monitor
+      .exclusive('/dev/cu.Bluetooth-Incoming-Port', async (link) => {
+        const board = new MicroPythonBoard(link, 1500);
+        try {
+          return await board.info();
+        } finally {
+          board.close();
+        }
+      })
+      .catch((e: Error) => e);
+    assert.ok(err instanceof Error && /raw REPL/.test(err.message), String(err));
+    assert.equal(api.monitor.busy, false, 'port released');
+    log(`micropython: non-MicroPython port -> "${err.message}" after ${Date.now() - started} ms`);
+  }
 
   if (process.env.E2E_CLI) {
     // Libraries: a sketch that includes <Servo.h> lists Servo as required; installing it makes it compile.

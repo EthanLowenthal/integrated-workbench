@@ -21,6 +21,27 @@ export const text = {
   notificationsBadge: (n: number) => `${n} item${n === 1 ? '' : 's'} need${n === 1 ? 's' : ''} attention`,
   dismiss: 'Dismiss',
   engineMissing: 'Build engine not installed.',
+  serialEngineDetail:
+    'MicroPython projects talk to the board through the Serial Monitor Engine (serial-monitor). About 2 MB, installed once. Python is not needed.',
+  deleteFromBoard: (path: string) => `Delete ${path} from the board?`,
+  deleteFromBoardDetail: 'The file is removed from the board. This cannot be undone.',
+  delete: 'Delete',
+  micropythonUi: {
+    run: 'Run',
+    runTip: 'Run the open .py file (or main.py) on the board without saving it there',
+    stop: 'Stop',
+    uploadTip: 'Copy changed files to the board, then restart it to run main.py',
+    repl: 'REPL',
+    replTip: 'Open the Serial Monitor (MicroPython REPL)',
+    board: 'Board',
+    filesOnBoard: 'Files on Board',
+    list: 'List Files',
+    listTip: 'Stops the running program to read the board',
+    refresh: 'Refresh',
+    noFiles: 'No files on the board.',
+    open: 'Open a read-only copy',
+    deleteTip: 'Delete from the board',
+  },
   engineMissingDetail:
     'The build engine (arduino-cli) compiles and uploads sketches and manages board packages. About 17 MB, installed once.',
   boardPackageMissing: 'Board package not installed.',
@@ -97,6 +118,18 @@ export const text = {
   buildFailed: (errors: number) =>
     errors > 0 ? `Compilation failed: ${errors} error${errors === 1 ? '' : 's'}` : 'Compilation failed',
   uploadFailed: (port: string) => `Upload to ${port} failed`,
+
+  // MicroPython
+  needSerialEngine: 'Serial Monitor Engine required. Install it from Boards and Tools.',
+  noMainPy: 'No main.py in this project. Open the .py file to run.',
+  running: (file: string, port: string) => `Running ${file} on ${port}`,
+  runDone: (file: string) => `${file} finished`,
+  runStopped: (file: string) => `${file} stopped`,
+  runFailed: (file: string, message: string) => `${file}: ${message}`,
+  filesUploaded: (n: number, port: string) => `Uploaded ${n} file${n === 1 ? '' : 's'} to ${port}`,
+  noChanges: 'Board is up to date',
+  syncSummary: (uploaded: number, unchanged: number) =>
+    `${uploaded} uploaded, ${unchanged} unchanged. Nothing on the board was deleted.`,
 
   // Diagnostics actions
   copied: (cmd: string) => `Copied to clipboard: ${cmd}`,
@@ -213,6 +246,7 @@ export const text = {
     noPort: 'No port selected. Connect a board and select its port in the Sketch view.',
     engineMissing: 'Serial Monitor Engine not installed.',
     pausedForUpload: 'Paused for upload',
+    portBusy: 'The port is in use by another Run or Upload.',
     waitingForPort: 'Waiting for the port to reconnect...',
     portGone: (port: string) => `${port} did not reconnect.`,
     logFiles: 'Log files',
@@ -235,6 +269,8 @@ export const text = {
       autoscroll: 'Autoscroll',
       filter: 'Filter',
       clear: 'Clear Output',
+      interrupt: 'Interrupt (Ctrl-C)',
+      softReset: 'Soft Reset (Ctrl-D)',
       save: 'Save Output...',
       monitorTab: 'Monitor',
       plotTab: 'Plot',

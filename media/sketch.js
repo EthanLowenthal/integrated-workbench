@@ -29,6 +29,34 @@
     return `<div class="section"><p>${esc(T.openSketch)}</p>${list}</div>`;
   }
 
+  // Files on a MicroPython board: listed on request (listing stops the running program).
+  function boardFiles(s, T) {
+    const f = s.boardFiles;
+    if (!f) return '';
+    const M = T.mp;
+    const kb = (n) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(1)} KB`);
+    const busy = f.loading ? icon('loading', 'codicon-modifier-spin') : '';
+    const list = !f.files
+      ? `<button class="link" data-action="listBoardFiles" title="${esc(M.listTip)}">${icon('list-tree')} ${esc(M.list)}</button>`
+      : f.files.length
+        ? f.files
+            .map((x) => {
+              const depth = x.path.split('/').length - 2;
+              const name = x.path.split('/').pop();
+              return x.dir
+                ? `<div class="diag" style="padding-left:${depth * 12}px">${icon('folder')}<span class="ellipsis">${esc(name)}</span></div>`
+                : `<div class="diag" style="padding-left:${depth * 12}px" data-action="openBoardFile" data-path="${esc(x.path)}" title="${esc(M.open)}">${icon('file')}<span class="grow ellipsis">${esc(name)}</span><span class="muted small">${kb(x.size)}</span>
+                  <button class="icon-btn" data-action="deleteBoardFile" data-path="${esc(x.path)}" title="${esc(M.deleteTip)}" aria-label="${esc(M.deleteTip)}">${icon('trash')}</button></div>`;
+            })
+            .join('')
+        : `<div class="muted small">${esc(M.noFiles)}</div>`;
+    const refresh = f.files
+      ? `<button class="icon-btn" data-action="listBoardFiles" title="${esc(M.refresh)}" aria-label="${esc(M.refresh)}">${icon('refresh')}</button>`
+      : '';
+    const error = f.error ? `<div class="error small">${esc(f.error)}</div>` : '';
+    return `<div class="section"><div class="heading row"><span class="grow">${esc(M.filesOnBoard)}</span>${busy}${refresh}</div>${error}${list}</div>`;
+  }
+
   // The one place for warnings, errors and detection results. Details show on hover.
   function notices(s, T) {
     const sev = { error: icon('error', 'error'), warning: icon('warning', 'warn'), info: icon('info') };
@@ -50,7 +78,12 @@
   }
 
   function pickers(s, T, W) {
-    const board = `<div class="row"><span class="label">${esc(W.board)}</span>
+    // MicroPython: no board to pick; the firmware on the board decides. Show what it reported.
+    const mpInfo = s.boardFiles && s.boardFiles.info;
+    const board =
+      s.kind === 'micropython'
+        ? `<div class="row"><span class="label">${esc(W.board)}</span><span class="value ellipsis" title="${esc(mpInfo || '')}">${esc(mpInfo || 'MicroPython')}</span></div>`
+        : `<div class="row"><span class="label">${esc(W.board)}</span>
       <button class="picker" data-action="selectBoard" title="${esc(s.board ? s.board.id : '')}">
         <span class="value ${s.board ? '' : 'muted'}">${esc(s.board ? s.board.name : T.selectBoard)}</span>${icon('chevron-down')}
       </button></div>`;
@@ -82,12 +115,24 @@
     const r = s.run.running;
     if (r) {
       return `<div class="section"><div class="row"><span class="grow ellipsis">${icon('loading', 'codicon-modifier-spin')} ${esc(r.title)}</span>
-        <button class="icon-btn" data-action="showOutput" title="${esc(T.showOutput)}" aria-label="${esc(T.showOutput)}">${icon('output')}</button>
-        ${r.kind === 'fix' ? '' : `<button class="small" data-action="cancel">${esc(T.cancel)}</button>`}</div><div class="progress"></div></div>`;
+        ${
+          r.kind === 'run'
+            ? `<button class="icon-btn" data-action="monitor" title="${esc(T.openMonitor)}" aria-label="${esc(T.openMonitor)}">${icon('terminal')}</button>`
+            : `<button class="icon-btn" data-action="showOutput" title="${esc(T.showOutput)}" aria-label="${esc(T.showOutput)}">${icon('output')}</button>`
+        }
+        ${r.kind === 'fix' ? '' : `<button class="small" data-action="cancel">${esc(r.kind === 'run' ? T.mp.stop : T.cancel)}</button>`}</div><div class="progress"></div></div>`;
     }
     const blocked = s.run.blocked
       ? `<div class="warn small" style="margin-top:6px">${esc(s.run.blocked)}</div>`
       : '';
+    if (s.kind === 'micropython') {
+      const M = T.mp;
+      return `<div class="section"><div class="actions">
+      <button data-action="build" title="${esc(M.runTip)} (${esc(s.keys.build)})">${icon('play')} ${esc(M.run)}</button>
+      <button class="primary" data-action="upload" title="${esc(M.uploadTip)} (${esc(s.keys.upload)})">${icon('arrow-right')} ${esc(W.upload)}</button>
+      <button data-action="monitor" title="${esc(M.replTip)} (${esc(s.keys.monitor)})">${icon('terminal')} ${esc(M.repl)}</button>
+    </div>${blocked}</div>`;
+    }
     return `<div class="section"><div class="actions">
       <button data-action="build" title="${esc(W.verifyTip)} (${esc(s.keys.build)})">${icon('check')} ${esc(W.verify)}</button>
       <button class="primary" data-action="upload" title="${esc(W.uploadTip)} (${esc(s.keys.upload)})">${icon('arrow-right')} ${esc(W.upload)}</button>
@@ -117,7 +162,11 @@
       ? `<div class="card"><div>${esc(l.fix.message)}</div><div class="buttons"><button class="primary small" data-action="applyFix">${esc(l.fix.label)}</button></div></div>`
       : '';
     const hint = l.hint ? `<div class="warn small" style="margin:4px 0 0 20px">${esc(l.hint)}</div>` : '';
-    const output = `<div style="margin:6px 0 0 20px"><button class="link" data-action="showOutput">${icon('output')} ${esc(T.showOutput)}</button></div>`;
+    // Run output goes to the Serial Monitor; build and upload output to the Build tab.
+    const output =
+      l.kind === 'run'
+        ? `<div style="margin:6px 0 0 20px"><button class="link" data-action="monitor">${icon('terminal')} ${esc(T.openMonitor)}</button></div>`
+        : `<div style="margin:6px 0 0 20px"><button class="link" data-action="showOutput">${icon('output')} ${esc(T.showOutput)}</button></div>`;
     return `<div class="section">${head}${memory(l.memory, W)}${diags}${more}${hint}${fix}${output}</div>`;
   }
 
@@ -150,7 +199,8 @@
         ? `<div class="section" style="padding-top:6px"><div class="row">${icon('folder')}<span style="font-weight:600" class="ellipsis">${esc(s.project.name)}</span></div></div>` +
           pickers(s, T, W) +
           actions(s, T, W) +
-          lastRun(s, T, W)
+          lastRun(s, T, W) +
+          boardFiles(s, T)
         : noProject(s, T));
   }
 
@@ -163,8 +213,10 @@
       vscode.postMessage({ type: a, file: d.file, line: d.line, column: d.column });
     } else if (a === 'notice') vscode.postMessage({ type: a, id: el.dataset.id, a: Number(el.dataset.a) });
     else if (a === 'dismiss') vscode.postMessage({ type: a, id: el.dataset.id });
-    else if (a === 'openSketch') vscode.postMessage({ type: a, path: el.dataset.path });
-    else vscode.postMessage({ type: a });
+    else if (a === 'openSketch' || a === 'openBoardFile' || a === 'deleteBoardFile') {
+      e.stopPropagation();
+      vscode.postMessage({ type: a, path: el.dataset.path });
+    } else vscode.postMessage({ type: a });
   });
   root.addEventListener('change', (e) => {
     const el = e.target.closest('select[data-action]');

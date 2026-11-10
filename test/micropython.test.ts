@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { filesToUpload, MicroPythonBoard, sha256 } from '../src/toolchains/micropython/board.js';
 import { ProgramError, RawRepl, parseFileList, parseHashes } from '../src/toolchains/micropython/rawRepl.js';
+import {
+  MicroPythonToolchain,
+  projectFiles,
+  tracebackLocation,
+} from '../src/toolchains/micropython/index.js';
 import { FakeBoard } from './fixtures/micropython/fakeBoard.js';
 
 const bytes = (s: string) => new TextEncoder().encode(s);
@@ -109,5 +114,76 @@ describe('MicroPython parsers', () => {
     const a = { boardPath: '/a.py', data: bytes('1') };
     const b = { boardPath: '/b.py', data: bytes('2') };
     expect(filesToUpload([a, b], new Map([['/a.py', sha256(bytes('1'))]]))).toEqual([b]);
+  });
+});
+
+describe('MicroPython projects', () => {
+  const tc = (dirs: Record<string, string[]>, marked: string[] = []) =>
+    new MicroPythonToolchain({
+      host: { readdir: async (p: string) => dirs[p] ?? [] },
+      workspaceRoots: () => ['/w'],
+      isMarked: (root) => marked.includes(root),
+      serialMonitorPath: () => undefined,
+      ports: () => [
+        { path: '/dev/cu.usbmodem1101', vid: '2e8a', pid: '0005' },
+        { path: '/dev/cu.Bluetooth-Incoming-Port' },
+      ],
+    });
+
+  it('a folder with boot.py is a project, from any file inside it', async () => {
+    const t = tc({ '/w/pico': ['boot.py', 'main.py', 'lib'], '/w/pico/lib': ['util.py'] });
+    expect(await t.findProject('/w/pico/main.py')).toEqual({
+      root: '/w/pico',
+      name: 'pico',
+      kind: 'micropython',
+    });
+    expect(await t.findProject('/w/pico/lib/util.py')).toMatchObject({ root: '/w/pico' });
+  });
+
+  it('main.py alone is not enough; a marked folder is', async () => {
+    const dirs = { '/w/app': ['main.py'] };
+    expect(await tc(dirs).findProject('/w/app/main.py')).toBeUndefined();
+    expect(await tc(dirs, ['/w/app']).findProject('/w/app/main.py')).toMatchObject({ kind: 'micropython' });
+  });
+
+  it('does not look above the workspace folder', async () => {
+    expect(await tc({ '/': ['boot.py'] }).findProject('/w/x/y.py')).toBeUndefined();
+  });
+
+  it('lists USB serial ports as boards and needs the serial tool', async () => {
+    const t = tc({});
+    expect((await t.listBoards()).map((b) => b.port)).toEqual(['/dev/cu.usbmodem1101']);
+    expect((await t.checkInstalled()).installed).toBe(false);
+  });
+
+  it('maps a traceback to the line in the file', () => {
+    expect(
+      tracebackLocation(
+        'Traceback (most recent call last):\r\n  File "<stdin>", line 7, in <module>\r\n  File "<stdin>", line 3, in f\r\nZeroDivisionError: divide by zero\r\n',
+      ),
+    ).toEqual({ line: 3, message: 'ZeroDivisionError: divide by zero' });
+    expect(tracebackLocation('KeyboardInterrupt')).toBeUndefined();
+  });
+});
+
+describe('project files for the board', () => {
+  it('skips hidden files, caches and stubs; keeps folders', async () => {
+    const { mkdtemp, mkdir, writeFile } = await import('node:fs/promises');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const root = await mkdtemp(join(tmpdir(), 'iw-mp-'));
+    for (const d of ['lib', '.vscode', '__pycache__', 'typings']) await mkdir(join(root, d));
+    await writeFile(join(root, 'main.py'), 'print(1)\n');
+    await writeFile(join(root, 'boot.py'), '');
+    await writeFile(join(root, 'lib', 'util.py'), 'X=1\n');
+    await writeFile(join(root, 'lib', 'util.pyi'), 'X: int\n');
+    await writeFile(join(root, '.vscode', 'settings.json'), '{}');
+    await writeFile(join(root, '__pycache__', 'x.pyc'), '');
+    await writeFile(join(root, 'typings', 'machine.pyi'), '');
+    expect((await projectFiles(root)).map((f) => f.boardPath)).toEqual([
+      '/boot.py',
+      '/lib/util.py',
+      '/main.py',
+    ]);
   });
 });

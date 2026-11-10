@@ -9,6 +9,8 @@ export interface Project {
   root: string;
   /** Display name, e.g. the sketch name. */
   name: string;
+  /** Which toolchain owns it ("arduino" when absent). */
+  kind?: 'arduino' | 'micropython';
 }
 
 /** A board the toolchain can build for, e.g. Arduino FQBN "arduino:avr:uno". */

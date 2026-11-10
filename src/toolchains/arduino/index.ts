@@ -122,7 +122,8 @@ export class ArduinoToolchain implements Toolchain {
     for (let i = 0; i < 4; i++) {
       const name = basename(dir);
       const entries = await this.opts.host.readdir(dir);
-      if (entries.includes(`${name}.ino`) || entries.includes(`${name}.pde`)) return { root: dir, name };
+      if (entries.includes(`${name}.ino`) || entries.includes(`${name}.pde`))
+        return { root: dir, name, kind: 'arduino' };
       const parent = dirname(dir);
       if (parent === dir) break;
       dir = parent;

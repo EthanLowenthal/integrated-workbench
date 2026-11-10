@@ -82,6 +82,10 @@
         {
           "files": ["**/*.ino"],
           "reason": "Required for the Serial Monitor"
+        },
+        {
+          "files": ["**/boot.py"],
+          "reason": "Required to run and upload MicroPython projects"
         }
       ],
       "downloads": {

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+
+- MicroPython projects. A folder with a `boot.py` is a MicroPython project; any other folder can be marked with **Use Folder as MicroPython Project** (Explorer context menu or Command Palette; saved in `integratedWorkbench.micropython.projects`).
+  - **Run** (`Cmd+Alt+R` / `Ctrl+Alt+R`) runs the open `.py` file, or `main.py`, on the board without saving it there. Output appears in the Serial Monitor; **Stop** interrupts it. An exception's line is marked in the editor and the Problems panel.
+  - **Upload** (`Cmd+Alt+U` / `Ctrl+Alt+U`) copies the project's changed files to the board (compared by SHA-256), creating folders as needed, then soft-resets it to run `main.py`. Nothing on the board is deleted.
+  - **REPL**: the Serial Monitor sends lines with CR and has **Interrupt (Ctrl-C)** and **Soft Reset (Ctrl-D)** buttons.
+  - **Files on Board** in the Sketch view lists the board's files on request. Select a file to open a read-only copy; deleting one asks first.
+  - Everything goes through the Serial Monitor Engine: Python and mpremote are not needed.
+  - Not yet: installing MicroPython firmware on a board, and type stubs for IntelliSense.
+
 ## 0.3.0
 
 - Build panel: a **Build** tab next to the Serial Monitor shows compiler and upload output live, with errors in red and warnings in yellow. Select an error or warning line to open the file at that line. The last five runs are kept; **Copy Output** copies one. **Show Output** and **Show Build Output** open it.

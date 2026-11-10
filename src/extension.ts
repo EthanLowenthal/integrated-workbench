@@ -9,6 +9,12 @@ import { Session } from './session.js';
 import { StatusBar } from './statusBar.js';
 import { text } from './text.js';
 import { ArduinoToolchain } from './toolchains/arduino/index.js';
+import { MicroPythonToolchain } from './toolchains/micropython/index.js';
+import { boardKey } from './boardKey.js';
+import { toolBinPath } from './tools.js';
+import { existsSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { BoardFiles } from './boardFiles.js';
 import { CPPTOOLS_ID, IntelliSense } from './intellisense.js';
 import { MonitorController } from './monitor/controller.js';
 import type { BuildTarget } from './toolchains/types.js';
@@ -55,8 +61,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     boardIndexes: () => registry.boardIndexes,
   });
   const doctor = new BoardDoctor(() => ({ chips: registry.chips, drivers: registry.drivers }));
-  const session = new Session(arduino, doctor, context.globalState, () =>
-    config().get<number>('pollIntervalMs', 2000),
+  const micropython = new MicroPythonToolchain({
+    host: nodeHost,
+    workspaceRoots: () => (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath),
+    isMarked: (root) => {
+      const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(root));
+      const marked = config().get<string[]>('micropython.projects', []) ?? [];
+      return marked.includes(boardKey(root, folder?.uri.fsPath));
+    },
+    serialMonitorPath: () => {
+      const pkg = registry.toolProviding('serial-monitor');
+      const path = pkg ? toolBinPath(toolsDir, pkg) : undefined;
+      return path && existsSync(path) ? path : undefined;
+    },
+    ports: () => doctor.state.snapshot?.ports ?? [],
+  });
+  const session = new Session(
+    arduino,
+    doctor,
+    context.globalState,
+    () => config().get<number>('pollIntervalMs', 2000),
+    [micropython],
   );
   const tools = new ToolsModel(registry, arduino, session, doctor, output, context.globalState, toolsDir);
   const toolsView = new ToolsView(context.extensionUri, tools, output);
@@ -103,7 +128,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   const buildLog = new BuildLog(output);
   const runs = new Runs(session, doctor, buildLog, problems, async (what) => {
     // Something's missing: open the sidebar where it gets fixed. No popups.
-    if (what === 'engine') return toolsView.focus(engineId());
+    if (what === 'engine')
+      return toolsView.focus(session.kind === 'micropython' ? monitor.engineId : engineId());
     if (what === 'boardPackage') return toolsView.focus(boardPackageId());
     await showSketch();
     if (what === 'board' && session.project) await chooseBoard();
@@ -124,6 +150,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   const librariesView = new LibrariesView(context.extensionUri, libraries, output);
   const settingsPage = new SettingsPage(context.extensionUri, session, monitor, intellisense, registry);
   // The monitor gives the port back for uploads and takes it again once the board is back.
+  runs.micropython = {
+    exclusive: (port, work) => monitor.exclusive(port, work),
+    showMonitor: async () => {
+      await monitorView.reveal();
+      if (monitor.state.status === 'idle' || monitor.state.status === 'error') await monitor.connect();
+    },
+    print: (t) => monitor.print(t),
+  };
+  const boardFiles = new BoardFiles(session, runs);
+  sketchView.boardFiles = boardFiles;
   runs.uploadHooks = {
     before: (port) => monitor.pauseForUpload(port),
     after: () => monitor.resumeAfterUpload(),
@@ -171,7 +207,35 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     vscode.window.registerWebviewViewProvider(MONITOR_VIEW, monitorView, {
       webviewOptions: { retainContextWhenHidden: true },
     }),
-    tools.onDidChange(() => monitor.refresh()),
+    tools.onDidChange(() => {
+      monitor.refresh();
+      // For MicroPython the serial tool is the engine: pick it up once installed.
+      if (session.kind === 'micropython' && !session.toolReady && monitor.state.engineReady)
+        void session.recheckTool();
+    }),
+    boardFiles,
+    vscode.commands.registerCommand('integratedWorkbench.stop', () => runs.cancel()),
+    vscode.commands.registerCommand('integratedWorkbench.run', () => runs.run()),
+    vscode.commands.registerCommand('integratedWorkbench.useAsMicroPython', async (uri?: vscode.Uri) => {
+      const file = uri?.fsPath ?? vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (!file) return;
+      const root =
+        uri && (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory
+          ? file
+          : dirname(file);
+      const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(root));
+      const cfg = vscode.workspace.getConfiguration('integratedWorkbench', folder?.uri);
+      const key = boardKey(root, folder?.uri.fsPath);
+      const list = cfg.get<string[]>('micropython.projects', []) ?? [];
+      if (!list.includes(key))
+        await cfg.update(
+          'micropython.projects',
+          [...list, key],
+          folder ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Global,
+        );
+      await session.recheckTool();
+      await showSketch();
+    }),
     vscode.commands.registerCommand('integratedWorkbench.openMonitor', async () => {
       await monitorView.reveal();
       if (monitor.state.status === 'idle' || monitor.state.status === 'error') await monitor.connect();
@@ -202,7 +266,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
       if (await runs.upload()) await vscode.commands.executeCommand('integratedWorkbench.openMonitor');
     }),
     vscode.commands.registerCommand('integratedWorkbench.showTools', (id?: string) =>
-      toolsView.focus(id === 'engine' ? engineId() : id),
+      toolsView.focus(
+        id === 'engine' ? (session.kind === 'micropython' ? monitor.engineId : engineId()) : id,
+      ),
     ),
     vscode.commands.registerCommand('integratedWorkbench.detectBoard', async () => {
       await showSketch();
@@ -220,6 +286,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
       void session.recheckTool();
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('integratedWorkbench.micropython.projects')) void session.recheckTool();
       if (e.affectsConfiguration('integratedWorkbench.registries')) {
         void vscode.commands.executeCommand('integratedWorkbench.reloadRegistries');
       }

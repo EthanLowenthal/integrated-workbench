@@ -65,6 +65,8 @@
         <button class="small" id="conn"></button>
         <select id="baud" class="mon-select"></select>
         <select id="ending" class="mon-select"></select>
+        <button class="small repl-only" id="ctrl-c">${icon('debug-stop')}</button>
+        <button class="small repl-only" id="ctrl-d">${icon('debug-restart')}</button>
         <span class="grow"></span>
         <input type="search" id="filter" class="mon-filter">
         <button class="small toggle" id="t-ts">${icon('history')}</button>
@@ -103,6 +105,8 @@
       ['t-scroll', T.autoscroll],
       ['clear', T.clear],
       ['save', T.save],
+      ['ctrl-c', T.interrupt],
+      ['ctrl-d', T.softReset],
     ]) {
       $(id).title = label;
       $(id).setAttribute('aria-label', label);
@@ -137,6 +141,12 @@
       banner.innerHTML = `${icon('warning', 'warn')}<span class="grow">${esc(T.engineMissing)}</span><button class="small primary" id="install">${esc(T.install)}</button>`;
       banner.style.display = 'flex';
     } else banner.style.display = 'none';
+    // MicroPython REPL: Ctrl-C / Ctrl-D buttons; the line ending is always CR, so hide the picker.
+    for (const b of document.querySelectorAll('.repl-only')) {
+      b.style.display = s.repl ? '' : 'none';
+      b.disabled = status !== 'connected';
+    }
+    $('ending').style.display = s.repl ? 'none' : '';
     $('msg').disabled = status !== 'connected';
     $('send').disabled = status !== 'connected';
   }
@@ -450,6 +460,8 @@
       persist();
     } else if (el.id === 'conn') vscode.postMessage({ type: el.dataset.action });
     else if (el.id === 'install') vscode.postMessage({ type: 'installEngine' });
+    else if (el.id === 'ctrl-c') vscode.postMessage({ type: 'raw', data: '\x03' });
+    else if (el.id === 'ctrl-d') vscode.postMessage({ type: 'raw', data: '\x04' });
     else if (el.id === 't-ts') toggle('timestamps');
     else if (el.id === 't-hex') toggle('hex');
     else if (el.id === 't-scroll') toggle('autoscroll');

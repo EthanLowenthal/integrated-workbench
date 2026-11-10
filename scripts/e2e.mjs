@@ -34,6 +34,11 @@ writeFileSync(
   join(ws, 'FromArduinoIde', 'sketch.yaml'),
   '# made by Arduino IDE 2\ndefault_fqbn: arduino:avr:leonardo\n',
 );
+mkdirSync(join(ws, 'Pico'), { recursive: true });
+writeFileSync(join(ws, 'Pico', 'boot.py'), '');
+writeFileSync(join(ws, 'Pico', 'main.py'), 'print("hello")\n');
+mkdirSync(join(ws, 'PlainPython'), { recursive: true });
+writeFileSync(join(ws, 'PlainPython', 'main.py'), 'print("not for a board")\n');
 mkdirSync(join(ws, 'UsesServo'), { recursive: true });
 writeFileSync(
   join(ws, 'UsesServo', 'UsesServo.ino'),

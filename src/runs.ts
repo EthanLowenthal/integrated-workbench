@@ -1,14 +1,19 @@
 import * as vscode from 'vscode';
+import { readFile } from 'node:fs/promises';
+import { basename, extname, sep } from 'node:path';
 import type { BuildLog } from './buildLog.js';
+import { MicroPythonBoard } from './toolchains/micropython/board.js';
+import { projectFiles, tracebackLocation } from './toolchains/micropython/index.js';
+import { ProgramError, type ByteLink } from './toolchains/micropython/rawRepl.js';
 import type { BoardDoctor } from './doctor.js';
 import type { Session } from './session.js';
 import { text } from './text.js';
 import type { BuildDiagnostic, MemoryUsage, SuggestedFix } from './toolchains/types.js';
 
-export type RunKind = 'build' | 'upload' | 'fix';
+export type RunKind = 'build' | 'upload' | 'fix' | 'run';
 
 export interface LastRun {
-  kind: 'build' | 'upload';
+  kind: 'build' | 'upload' | 'run';
   ok: boolean;
   durationMs: number;
   sketch: string;
@@ -43,6 +48,14 @@ export class Runs implements vscode.Disposable {
   state: RunState = {};
   private abort?: AbortController;
   private lastMemory?: MemoryUsage;
+  /** Port access for MicroPython projects (provided by the Serial Monitor). */
+  micropython?: {
+    exclusive<T>(port: string, work: (link: ByteLink) => Promise<T>): Promise<T>;
+    /** Opens the Serial Monitor and connects it to the project's port. */
+    showMonitor(): Promise<void>;
+    /** Shows text in the Serial Monitor. */
+    print(text: string): void;
+  };
   /** Called around the flash step so the Serial Monitor can release and re-take the port. */
   uploadHooks: { before?: (port: string) => Promise<void>; after?: (port: string) => Promise<void> } = {};
 
@@ -124,8 +137,137 @@ export class Runs implements vscode.Disposable {
     for (const [file, list] of byFile) this.problems.set(vscode.Uri.file(file), list);
   }
 
+  /** MicroPython needs the serial tool and a port; there is no board package or build. */
+  private async readyMicroPython(): Promise<string | undefined> {
+    const s = this.session;
+    if (this.state.running) return undefined;
+    if (!s.toolReady) {
+      this.set({ blocked: text.needSerialEngine });
+      await this.needsSetup('engine');
+      return undefined;
+    }
+    if (!s.port || !s.selectedBoard) {
+      this.set({ blocked: text.needPort });
+      await this.needsSetup('port');
+      return undefined;
+    }
+    if (!this.micropython) return undefined;
+    return s.port;
+  }
+
+  /**
+   * MicroPython Run: runs the open .py file (or main.py) on the board without saving it there.
+   * Output appears in the Serial Monitor; Cancel stops the program (Ctrl-C).
+   */
+  async run(): Promise<boolean> {
+    const port = await this.readyMicroPython();
+    const mp = this.micropython;
+    const project = this.session.project;
+    if (!port || !mp || !project) return false;
+    const active = vscode.window.activeTextEditor?.document.uri.fsPath;
+    const file =
+      active && extname(active) === '.py' && active.startsWith(project.root + sep)
+        ? active
+        : `${project.root}${sep}main.py`;
+    await vscode.workspace.saveAll(false);
+    let code: string;
+    try {
+      code = await readFile(file, 'utf8');
+    } catch {
+      this.set({ blocked: text.noMainPy });
+      return false;
+    }
+    const name = basename(file);
+    const title = text.running(name, port);
+    this.problems.clear();
+    await mp.showMonitor();
+    const started = Date.now();
+    let ok = true;
+    let summary = text.runDone(name);
+    const diagnostics: BuildDiagnostic[] = [];
+    await this.track('run', title, async (signal) => {
+      try {
+        await mp.exclusive(port, (link) => {
+          const board = new MicroPythonBoard(link);
+          return board.run(code, { onStdout: (t) => mp.print(t), signal }).finally(() => board.close());
+        });
+      } catch (err) {
+        if (err instanceof ProgramError) {
+          mp.print(err.traceback);
+          if (signal.aborted) {
+            summary = text.runStopped(name);
+            return;
+          }
+          ok = false;
+          const loc = tracebackLocation(err.traceback);
+          summary = text.runFailed(name, loc?.message ?? err.message);
+          if (loc) diagnostics.push({ file, line: loc.line, severity: 'error', message: loc.message });
+        } else {
+          ok = false;
+          summary = text.runFailed(name, err instanceof Error ? err.message : String(err));
+        }
+      }
+    });
+    this.publish(diagnostics);
+    this.set({
+      last: { kind: 'run', ok, durationMs: Date.now() - started, sketch: project.name, summary, diagnostics },
+    });
+    return ok;
+  }
+
+  /** MicroPython Upload: copies changed project files to the board, then soft-resets it to run main.py. */
+  private async uploadMicroPython(): Promise<boolean> {
+    const port = await this.readyMicroPython();
+    const mp = this.micropython;
+    const project = this.session.project;
+    if (!port || !mp || !project) return false;
+    await vscode.workspace.saveAll(false);
+    const title = text.uploading(project.name, port);
+    this.log.start('upload', title);
+    const started = Date.now();
+    let ok = true;
+    let summary: string;
+    let hint: string | undefined;
+    try {
+      const files = await projectFiles(project.root);
+      const res = await this.track('upload', title, () =>
+        mp.exclusive(port, async (link) => {
+          const board = new MicroPythonBoard(link);
+          try {
+            const r = await board.sync(files, (path, i, n) => this.log.append(`[${i + 1}/${n}] ${path}\n`));
+            board.softReset();
+            return r;
+          } finally {
+            board.close();
+          }
+        }),
+      );
+      this.log.append(text.syncSummary(res.uploaded.length, res.unchanged.length) + '\n');
+      summary = res.uploaded.length ? text.filesUploaded(res.uploaded.length, port) : text.noChanges;
+    } catch (err) {
+      ok = false;
+      hint = err instanceof Error ? err.message : String(err);
+      this.log.append(`${hint}\n`);
+      summary = text.uploadFailed(port);
+    }
+    this.log.finish(ok, summary);
+    this.set({
+      last: {
+        kind: 'upload',
+        ok,
+        durationMs: Date.now() - started,
+        sketch: project.name,
+        summary,
+        diagnostics: [],
+        hint,
+      },
+    });
+    return ok;
+  }
+
   /** Compiles. Returns true on success. */
   async build(kind: 'build' | 'upload' = 'build'): Promise<boolean> {
+    if (this.session.kind === 'micropython') return kind === 'build' ? this.run() : false;
     if (!(await this.ready())) return false;
     const s = this.session;
     const project = s.project!;
@@ -161,6 +303,7 @@ export class Runs implements vscode.Disposable {
   }
 
   async upload(): Promise<boolean> {
+    if (this.session.kind === 'micropython') return this.uploadMicroPython();
     if (!(await this.ready())) return false;
     const s = this.session;
     if (!s.port || !s.selectedBoard) {
@@ -215,7 +358,7 @@ export class Runs implements vscode.Disposable {
     this.log.finish(ok, fix.label);
     if (ok) {
       await this.session.recheckTool();
-      await this.build(this.state.last?.kind ?? 'build');
+      await this.build(this.state.last?.kind === 'upload' ? 'upload' : 'build');
     }
   }
 

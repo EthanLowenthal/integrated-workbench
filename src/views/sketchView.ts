@@ -9,6 +9,7 @@ import { text } from '../text.js';
 import type { ToolsModel } from '../toolsModel.js';
 import type { IntelliSense } from '../intellisense.js';
 import type { LibrariesModel } from '../librariesModel.js';
+import type { BoardFiles } from '../boardFiles.js';
 import { webviewHtml, webviewOptions } from './webview.js';
 import { findFilesLimited } from '../findFiles.js';
 
@@ -39,6 +40,8 @@ type Msg =
   | { type: 'openFile'; file: string; line: number; column?: number }
   | { type: 'showTools'; focus?: string }
   | { type: 'notice'; id: string; a: number }
+  | { type: 'listBoardFiles' }
+  | { type: 'openBoardFile' | 'deleteBoardFile'; path: string }
   | { type: 'dismiss'; id: string }
   | { type: 'openSketch'; path: string };
 
@@ -74,6 +77,12 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
     this.subs.push(l.onDidChange(() => void this.post()));
   }
   private libs?: LibrariesModel;
+  /** Set after construction: files on a MicroPython board. */
+  set boardFiles(b: BoardFiles) {
+    this.files = b;
+    this.subs.push(b.onDidChange(() => void this.post()));
+  }
+  private files?: BoardFiles;
   private notices: Notice[] = [];
   private readonly dismissed = new Set<string>();
   private sketches: { name: string; path: string }[] = [];
@@ -141,6 +150,8 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
     }
     const last = this.runs.state.last;
     const state = {
+      kind: s.kind,
+      boardFiles: s.kind === 'micropython' ? this.files?.state : undefined,
       project: s.project && { name: s.project.name, root: s.project.root },
       sketches: this.sketches,
       board: s.target,
@@ -189,6 +200,7 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         detectWaiting: text.detectWaiting,
         detectBoard: text.detectBoard,
         webview: text.webview,
+        mp: text.micropythonUi,
       },
     };
     const json = JSON.stringify(state);
@@ -206,7 +218,15 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
       label: text.install,
       run: () => vscode.commands.executeCommand('integratedWorkbench.showTools', focus),
     });
-    if (!s.toolReady) {
+    if (!s.toolReady && s.kind === 'micropython') {
+      out.push({
+        id: 'serialEngine',
+        severity: 'warning',
+        title: text.monitor.engineMissing,
+        detail: text.serialEngineDetail,
+        actions: [showTools('engine')],
+      });
+    } else if (!s.toolReady) {
       out.push({
         id: 'engine',
         severity: 'warning',
@@ -313,7 +333,7 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
       });
     }
     const intelli = this.intelli?.status;
-    if (s.project && intelli === 'needsExtension') {
+    if (s.project && s.kind === 'arduino' && intelli === 'needsExtension') {
       out.push({
         id: 'cpptools',
         severity: 'info',
@@ -326,7 +346,7 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         ],
         dismissible: true,
       });
-    } else if (s.project && intelli === 'error') {
+    } else if (s.project && s.kind === 'arduino' && intelli === 'error') {
       out.push({
         id: 'intellisense',
         severity: 'warning',
@@ -376,6 +396,12 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         await this.notices.find((n) => n.id === m.id)?.actions[m.a]?.run();
         return;
       }
+      case 'listBoardFiles':
+        return this.files?.refresh();
+      case 'openBoardFile':
+        return this.files?.open(m.path);
+      case 'deleteBoardFile':
+        return this.files?.remove(m.path);
       case 'dismiss':
         this.dismissed.add(m.id);
         return this.post();

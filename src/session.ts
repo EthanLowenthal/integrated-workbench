@@ -5,6 +5,7 @@ import { readBoard, writeBoard } from './boardSettings.js';
 import { readDefaultFqbn } from './toolchains/arduino/sketchYaml.js';
 import { formatFqbn, parseFqbn } from './toolchains/arduino/fqbn.js';
 import type { BoardOption, BuildTarget, DetectedBoard, Project, Toolchain } from './toolchains/types.js';
+import { MICROPYTHON_TARGET } from './toolchains/micropython/index.js';
 
 const PORTS_KEY = 'integratedWorkbench.ports';
 
@@ -38,10 +39,13 @@ export class Session implements vscode.Disposable {
   private readonly disposables: vscode.Disposable[] = [];
 
   constructor(
-    readonly toolchain: Toolchain,
+    /** Arduino: the default, and the first asked about every file. */
+    private readonly arduino: Toolchain,
     private readonly doctor: BoardDoctor,
     private readonly globalState: vscode.Memento,
     private readonly pollIntervalMs: () => number,
+    /** Other toolchains, asked in order when Arduino doesn't claim the file. */
+    private readonly others: Toolchain[] = [],
   ) {
     this.changed.event(() => this.publishContext());
     const yaml = vscode.workspace.createFileSystemWatcher('**/sketch.yaml');
@@ -82,15 +86,26 @@ export class Session implements vscode.Disposable {
     );
   }
 
+  /** The toolchain of the current project (Arduino when none is open). */
+  get toolchain(): Toolchain {
+    const kind = this.project?.kind;
+    return (kind && [this.arduino, ...this.others].find((t) => t.id === kind)) || this.arduino;
+  }
+
+  get kind(): 'arduino' | 'micropython' {
+    return this.project?.kind ?? 'arduino';
+  }
+
   async start(): Promise<void> {
     await this.updateProject();
   }
 
   /** Context keys the Get Started walkthrough uses to mark steps done. */
   private publishContext(): void {
-    const set = (k: string, v: boolean) =>
+    const set = (k: string, v: boolean | string) =>
       void vscode.commands.executeCommand('setContext', `integratedWorkbench.${k}`, v);
     set('engineReady', this.toolReady);
+    set('projectKind', this.project ? this.kind : '');
     set('boardSelected', !!this.fqbn);
     set('portSelected', !!this.selectedBoard);
   }
@@ -116,6 +131,7 @@ export class Session implements vscode.Disposable {
 
   /** The board to build for (id includes options), with a display name when we can find one. */
   get target(): BuildTarget | undefined {
+    if (this.kind === 'micropython') return this.project ? MICROPYTHON_TARGET : undefined;
     const base = this.baseFqbn;
     if (!this.fqbn || !base) return undefined;
     const name =
@@ -127,6 +143,7 @@ export class Session implements vscode.Disposable {
 
   /** Is the board's package installed? Treated as yes until arduino-cli can tell us. */
   get targetInstalled(): boolean {
+    if (this.kind === 'micropython') return true;
     return !this.fqbn || !this.toolReady || this.targets.some((t) => t.id === this.baseFqbn);
   }
 
@@ -201,7 +218,7 @@ export class Session implements vscode.Disposable {
 
   /** The workspace setting first; otherwise an existing sketch.yaml (read only, never written). */
   private async readFqbn(): Promise<void> {
-    if (!this.project) {
+    if (!this.project || this.kind !== 'arduino') {
       this.fqbn = undefined;
       return;
     }
@@ -226,7 +243,11 @@ export class Session implements vscode.Disposable {
     const doc = vscode.window.activeTextEditor?.document;
     // Keep the last project when focus moves to output panels, settings, etc.
     if (doc?.uri.scheme === 'file') {
-      const next = await this.toolchain.findProject(doc.uri.fsPath);
+      let next: Project | undefined;
+      for (const tc of [this.arduino, ...this.others]) {
+        next = await tc.findProject(doc.uri.fsPath).catch(() => undefined);
+        if (next) break;
+      }
       if (stale()) return;
       if (!force && next && next.root === this.project?.root) return;
       this.project = next;
