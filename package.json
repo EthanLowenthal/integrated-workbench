@@ -1,9 +1,9 @@
 {
-  "name": "sketchdesk",
-  "displayName": "SketchDesk",
+  "name": "integrated-workbench",
+  "displayName": "Integrated Workbench",
   "description": "Board-aware microcontroller development: pick up the plugged-in board, compile, upload, and find out in plain English why a board isn't showing up. Builds and uploads Arduino sketches via arduino-cli.",
   "version": "0.0.1",
-  "publisher": "sketchdesk",
+  "publisher": "integrated-workbench",
   "license": "MIT",
   "engines": {
     "vscode": "^1.90.0",
@@ -28,80 +28,80 @@
   "contributes": {
     "commands": [
       {
-        "command": "sketchdesk.build",
+        "command": "integratedWorkbench.build",
         "title": "Verify",
-        "category": "SketchDesk",
+        "category": "Integrated Workbench",
         "icon": "$(check)"
       },
       {
-        "command": "sketchdesk.upload",
+        "command": "integratedWorkbench.upload",
         "title": "Upload",
-        "category": "SketchDesk",
+        "category": "Integrated Workbench",
         "icon": "$(arrow-right)"
       },
       {
-        "command": "sketchdesk.selectBoard",
+        "command": "integratedWorkbench.selectBoard",
         "title": "Select Board",
-        "category": "SketchDesk"
+        "category": "Integrated Workbench"
       },
       {
-        "command": "sketchdesk.selectPort",
+        "command": "integratedWorkbench.selectPort",
         "title": "Select Port",
-        "category": "SketchDesk"
+        "category": "Integrated Workbench"
       },
       {
-        "command": "sketchdesk.boardDoctor",
+        "command": "integratedWorkbench.boardDoctor",
         "title": "Board Doctor",
-        "category": "SketchDesk"
+        "category": "Integrated Workbench"
       }
     ],
     "menus": {
       "editor/title": [
         {
-          "command": "sketchdesk.build",
-          "when": "sketchdesk.inProject",
+          "command": "integratedWorkbench.build",
+          "when": "integratedWorkbench.inProject",
           "group": "navigation@1"
         },
         {
-          "command": "sketchdesk.upload",
-          "when": "sketchdesk.inProject",
+          "command": "integratedWorkbench.upload",
+          "when": "integratedWorkbench.inProject",
           "group": "navigation@2"
         }
       ],
       "commandPalette": [
         {
-          "command": "sketchdesk.build",
-          "when": "sketchdesk.inProject"
+          "command": "integratedWorkbench.build",
+          "when": "integratedWorkbench.inProject"
         },
         {
-          "command": "sketchdesk.upload",
-          "when": "sketchdesk.inProject"
+          "command": "integratedWorkbench.upload",
+          "when": "integratedWorkbench.inProject"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "sketchdesk.build",
+        "command": "integratedWorkbench.build",
         "key": "ctrl+alt+r",
         "mac": "cmd+alt+r",
-        "when": "sketchdesk.inProject"
+        "when": "integratedWorkbench.inProject"
       },
       {
-        "command": "sketchdesk.upload",
+        "command": "integratedWorkbench.upload",
         "key": "ctrl+alt+u",
         "mac": "cmd+alt+u",
-        "when": "sketchdesk.inProject"
+        "when": "integratedWorkbench.inProject"
       }
     ],
     "configuration": {
-      "title": "SketchDesk",
+      "title": "Integrated Workbench",
       "properties": {
-        "sketchdesk.arduinoCliPath": {
+        "integratedWorkbench.arduinoCliPath": {
           "type": "string",
           "default": "",
           "description": "Path to arduino-cli. Leave empty to find it automatically (PATH, Homebrew, Arduino IDE)."
         },
-        "sketchdesk.pollIntervalMs": {
+        "integratedWorkbench.pollIntervalMs": {
           "type": "number",
           "default": 2000,
           "minimum": 500,

@@ -8,11 +8,11 @@ import { StatusBar } from './statusBar.js';
 import { text } from './text.js';
 import { ArduinoToolchain } from './toolchains/arduino/index.js';
 
-const config = () => vscode.workspace.getConfiguration('sketchdesk');
+const config = () => vscode.workspace.getConfiguration('integratedWorkbench');
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  const output = vscode.window.createOutputChannel('SketchDesk');
-  const problems = vscode.languages.createDiagnosticCollection('sketchdesk');
+  const output = vscode.window.createOutputChannel('Integrated Workbench');
+  const problems = vscode.languages.createDiagnosticCollection('integratedWorkbench');
   const arduino = new ArduinoToolchain({
     host: nodeHost,
     buildRoot: vscode.Uri.joinPath(context.globalStorageUri, 'build').fsPath,
@@ -45,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     return ok;
   };
 
-  /** arduino-cli missing: offer to download SketchDesk's own copy (once, with consent). */
+  /** arduino-cli missing: offer to download Integrated Workbench's own copy (once, with consent). */
   let downloading: Promise<boolean> | undefined;
   const downloadCli = () =>
     (downloading ??= Promise.resolve(
@@ -87,7 +87,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       const choice = await vscode.window.showWarningMessage(text.cliMissing, text.cliGuide, text.cliSetPath);
       if (choice === text.cliGuide) await vscode.env.openExternal(vscode.Uri.parse(text.cliGuideUrl));
       else if (choice === text.cliSetPath)
-        await vscode.commands.executeCommand('workbench.action.openSettings', 'sketchdesk.arduinoCliPath');
+        await vscode.commands.executeCommand('workbench.action.openSettings', 'integratedWorkbench.arduinoCliPath');
       return;
     }
     const choice = await vscode.window.showInformationMessage(
@@ -97,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
     if (choice === text.cliDownload) await downloadCli();
     else if (choice === text.cliUseOwn)
-      await vscode.commands.executeCommand('workbench.action.openSettings', 'sketchdesk.arduinoCliPath');
+      await vscode.commands.executeCommand('workbench.action.openSettings', 'integratedWorkbench.arduinoCliPath');
   };
   session.onToolMissing = () => void promptInstallCli();
 
@@ -122,21 +122,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     doctor,
     session,
     statusBar,
-    vscode.commands.registerCommand('sketchdesk.build', () => runBuild(deps)),
-    vscode.commands.registerCommand('sketchdesk.upload', () => runUpload(deps)),
-    vscode.commands.registerCommand('sketchdesk.selectBoard', async () => {
+    vscode.commands.registerCommand('integratedWorkbench.build', () => runBuild(deps)),
+    vscode.commands.registerCommand('integratedWorkbench.upload', () => runUpload(deps)),
+    vscode.commands.registerCommand('integratedWorkbench.selectBoard', async () => {
       if (!(await arduino.checkInstalled()).installed) return promptInstallCli();
       const target = await chooseBoard();
       if (target) await session.setSelection({ target });
     }),
-    vscode.commands.registerCommand('sketchdesk.selectPort', async () => {
+    vscode.commands.registerCommand('integratedWorkbench.selectPort', async () => {
       if (!(await arduino.checkInstalled()).installed) return promptInstallCli();
       const port = await pickPort(session);
       if (port) await selectPort(port);
     }),
-    vscode.commands.registerCommand('sketchdesk.boardDoctor', () => showBoardDoctor(doctor, selectPort)),
+    vscode.commands.registerCommand('integratedWorkbench.boardDoctor', () => showBoardDoctor(doctor, selectPort)),
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration('sketchdesk.arduinoCliPath')) {
+      if (e.affectsConfiguration('integratedWorkbench.arduinoCliPath')) {
         arduino.resetCli();
         void session.recheckTool();
       }

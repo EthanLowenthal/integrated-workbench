@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { ProbeHost } from '../../core/probes/host.js';
 
 /**
- * SketchDesk's own copy of arduino-cli, so users never install it themselves.
+ * Integrated Workbench's own copy of arduino-cli, so users never install it themselves.
  * Pinned version, official GitHub release, SHA-256 checked against values baked in here
  * (from the release's checksums file). arduino-cli is GPL-3.0 and runs as a separate program.
  */

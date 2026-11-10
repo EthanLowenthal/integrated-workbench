@@ -59,7 +59,7 @@ export const messages = {
   unknownDeviceNoPort: (vid: string, pid: string): Text => ({
     title: "Something was detected, but it isn't a serial device we recognize",
     detail:
-      `A USB device with ID ${vid}:${pid} appeared, but no serial port was created and SketchDesk doesn't ` +
+      `A USB device with ID ${vid}:${pid} appeared, but no serial port was created and Integrated Workbench doesn't ` +
       'know this chip yet. If this is your board, copy the ID and report it so we can add it. ' +
       'Searching the web for the ID usually tells you which driver it needs.',
   }),
@@ -117,7 +117,7 @@ export const messages = {
   noBoards: (): Text => ({
     title: 'No boards found',
     detail:
-      'No USB-serial boards are connected. Use "Watch for Board" and plug your board in: SketchDesk will ' +
+      'No USB-serial boards are connected. Use "Watch for Board" and plug your board in: Integrated Workbench will ' +
       'see what changes and tell you what is wrong.',
   }),
 

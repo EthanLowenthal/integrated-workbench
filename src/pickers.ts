@@ -68,7 +68,7 @@ export async function pickPort(session: Session): Promise<string | undefined> {
   items.push({ label: `$(question) ${text.openBoardDoctor}`, doctor: true, alwaysShow: true });
   const picked = await vscode.window.showQuickPick(items, { placeHolder: text.pickPort });
   if (picked?.doctor) {
-    await vscode.commands.executeCommand('sketchdesk.boardDoctor');
+    await vscode.commands.executeCommand('integratedWorkbench.boardDoctor');
     return undefined;
   }
   return picked?.port;

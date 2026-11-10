@@ -189,10 +189,11 @@ describe('ArduinoToolchain', () => {
     // The fix only runs when applied, and runs update-index then install.
     expect(calls).toHaveLength(1);
     expect(await res.fix!.apply(() => {})).toBe(true);
-    expect(calls.slice(1)).toEqual([
-      ['core', 'update-index'],
+    expect(calls.slice(1).map((a) => a.slice(0, 3))).toEqual([
+      ['core', 'update-index', '--additional-urls'],
       ['core', 'install', 'esp32:esp32'],
     ]);
+    expect(calls[2]).toContain('--additional-urls');
   });
 
   it('flash uploads from the same build folder', async () => {

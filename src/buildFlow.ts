@@ -169,7 +169,7 @@ export async function runUpload(deps: FlowDeps): Promise<boolean> {
     ...(known ? [text.doctorTitle] : []),
     text.showOutput,
   );
-  if (choice === text.doctorTitle) await vscode.commands.executeCommand('sketchdesk.boardDoctor');
+  if (choice === text.doctorTitle) await vscode.commands.executeCommand('integratedWorkbench.boardDoctor');
   else if (choice === text.showOutput) output.show();
   return false;
 }

@@ -12,22 +12,22 @@ export function shortPort(path: string): string {
 /** Board · Port · [Verify] [Upload], shown while a sketch file is active. */
 export class StatusBar implements vscode.Disposable {
   private readonly board = vscode.window.createStatusBarItem(
-    'sketchdesk.board',
+    'integratedWorkbench.board',
     vscode.StatusBarAlignment.Left,
     50,
   );
   private readonly port = vscode.window.createStatusBarItem(
-    'sketchdesk.port',
+    'integratedWorkbench.port',
     vscode.StatusBarAlignment.Left,
     49,
   );
   private readonly build = vscode.window.createStatusBarItem(
-    'sketchdesk.build',
+    'integratedWorkbench.build',
     vscode.StatusBarAlignment.Left,
     48,
   );
   private readonly upload = vscode.window.createStatusBarItem(
-    'sketchdesk.upload',
+    'integratedWorkbench.upload',
     vscode.StatusBarAlignment.Left,
     47,
   );
@@ -37,18 +37,18 @@ export class StatusBar implements vscode.Disposable {
     private readonly session: Session,
     private readonly doctor: BoardDoctor,
   ) {
-    this.board.name = 'SketchDesk Board';
-    this.board.command = 'sketchdesk.selectBoard';
+    this.board.name = 'Integrated Workbench Board';
+    this.board.command = 'integratedWorkbench.selectBoard';
     this.board.tooltip = text.boardTooltip;
-    this.port.name = 'SketchDesk Port';
-    this.build.name = 'SketchDesk Verify';
+    this.port.name = 'Integrated Workbench Port';
+    this.build.name = 'Integrated Workbench Verify';
     this.build.text = '$(check)';
     this.build.tooltip = text.buildTooltip;
-    this.build.command = 'sketchdesk.build';
-    this.upload.name = 'SketchDesk Upload';
+    this.build.command = 'integratedWorkbench.build';
+    this.upload.name = 'Integrated Workbench Upload';
     this.upload.text = '$(arrow-right)';
     this.upload.tooltip = text.uploadTooltip;
-    this.upload.command = 'sketchdesk.upload';
+    this.upload.command = 'integratedWorkbench.upload';
     this.subs = [session.onDidChange(() => this.render()), doctor.onDidChange(() => this.render())];
     this.render();
   }
@@ -68,17 +68,17 @@ export class StatusBar implements vscode.Disposable {
       const chip = b.target ? undefined : lookupChip(b.vid, b.pid).chip?.name;
       this.port.text = `$(plug) ${shortPort(sel.port)}${chip ? ` (${chip})` : ''}`;
       this.port.tooltip = text.portTooltip;
-      this.port.command = 'sketchdesk.selectPort';
+      this.port.command = 'integratedWorkbench.selectPort';
       this.port.backgroundColor = undefined;
     } else if (problem) {
       this.port.text = `$(warning) ${text.boardProblem}`;
       this.port.tooltip = `${problem.title}\n\n${text.problemTooltip}`;
-      this.port.command = 'sketchdesk.boardDoctor';
+      this.port.command = 'integratedWorkbench.boardDoctor';
       this.port.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
     } else {
       this.port.text = `$(plug) ${text.noPort}`;
       this.port.tooltip = text.portTooltip;
-      this.port.command = 'sketchdesk.selectPort';
+      this.port.command = 'integratedWorkbench.selectPort';
       this.port.backgroundColor = undefined;
     }
     items.forEach((i) => i.show());

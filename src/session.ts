@@ -8,7 +8,7 @@ export interface Selection {
   port?: string;
 }
 
-const SELECTION_KEY = 'sketchdesk.selection';
+const SELECTION_KEY = 'integratedWorkbench.selection';
 
 /**
  * Tracks the project behind the active editor, the boards that are plugged in, and the
@@ -88,7 +88,7 @@ export class Session implements vscode.Disposable {
     if (doc?.uri.scheme === 'file') {
       this.project = await this.toolchain.findProject(doc.uri.fsPath);
     }
-    void vscode.commands.executeCommand('setContext', 'sketchdesk.inProject', !!this.project);
+    void vscode.commands.executeCommand('setContext', 'integratedWorkbench.inProject', !!this.project);
     this.changed.fire();
     if (this.project) {
       const status = await this.toolchain.checkInstalled();

@@ -42,4 +42,4 @@ export const DRIVER_LINKS: Record<DriverKey, DriverLink> = {
 };
 
 /** Where to report devices we don't recognize. */
-export const ISSUE_URL = 'https://github.com/sketchdesk/sketchdesk/issues/new?template=unknown-device.md'; // TODO verify (repo not created yet)
+export const ISSUE_URL = 'https://github.com/EthanLowenthal/sketchdesk/issues/new?template=unknown-device.md'; // TODO verify (repo not created yet)

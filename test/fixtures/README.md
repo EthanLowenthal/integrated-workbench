@@ -33,5 +33,5 @@ Raw probe output, one file per OS and scenario. Parsers and `diagnose()` are tes
 | arduino-cli | `arduino/*.synth.*` | board list with boards (1.x and 0.x shapes), compiler errors (macOS, Windows) | synth |
 | Linux | `linux/*.txt` | `systemctl`, `id -nG`, `/etc/group`, `lsof`, `lsusb` output | synth |
 
-To capture a real Linux sysfs fixture, run `readLinuxSysfs(nodeHost)` from `@sketchdesk/core` and
+To capture a real Linux sysfs fixture, run `readLinuxSysfs(nodeHost)` from `src/core` and
 `JSON.stringify` the result.

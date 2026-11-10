@@ -1,6 +1,6 @@
-# SketchDesk plan
+# Integrated Workbench plan
 
-SketchDesk is a VS Code workspace for microcontroller development that **knows what board is
+Integrated Workbench is a VS Code workspace for microcontroller development that **knows what board is
 plugged in** and gives you a smooth **code -> build -> flash -> serial monitor** loop, whatever you
 write in: Arduino (`.ino` / `.cpp`), embedded Rust, MicroPython / CircuitPython, and more later.
 
@@ -95,7 +95,7 @@ Arduino first: it has the biggest audience and the most mature CLI. The Toolchai
 
 ## Open questions
 
-- **Name:** the "SketchDesk – for Arduino" Marketplace title undersells a multi-language tool. Drop the "for Arduino" suffix? (Keep using "Arduino" only referentially in the description.)
+- **Name:** the "Integrated Workbench – for Arduino" Marketplace title undersells a multi-language tool. Drop the "for Arduino" suffix? (Keep using "Arduino" only referentially in the description.)
 - **Arduino + `.cpp`:** only `.cpp`/`.h` next to a `.ino` (standard), or also projects with just `main.cpp`? The second needs a small `.ino` wrapper.
 
 ## Rules carried over from the original spec

@@ -17,21 +17,24 @@ import type {
 import {
   parseBoardList,
   parseBoardListAll,
+  parseCoreSearch,
+  type CoreInfo,
   parseCompilerDiagnostics,
   parseMissingPlatform,
   parseVersion,
 } from './parse.js';
+import { EXTRA_BOARD_INDEXES } from './boardIndexes.js';
 import { assetFor, installManagedCli, managedCliPath, type CliAsset } from './managedCli.js';
 
 export interface ArduinoOptions {
   host: ProbeHost;
   /** Folder for build output (extension global storage). One subfolder per sketch. */
   buildRoot: string;
-  /** User setting `sketchdesk.arduinoCliPath`; empty = search. */
+  /** User setting `integratedWorkbench.arduinoCliPath`; empty = search. */
   cliPath?: () => string | undefined;
   stream?: StreamRunner;
   platform?: NodeJS.Platform;
-  /** Where SketchDesk keeps its own arduino-cli (extension global storage). */
+  /** Where Integrated Workbench keeps its own arduino-cli (extension global storage). */
   managedDir?: string;
 }
 
@@ -113,7 +116,7 @@ export class ArduinoToolchain implements Toolchain {
   async checkInstalled(): Promise<ToolStatus> {
     if (this.resolved) return { installed: true, ...this.resolved };
     const configured = this.opts.cliPath?.()?.trim();
-    // Order: the user's explicit setting, then SketchDesk's own pinned copy, then one already installed.
+    // Order: the user's explicit setting, then Integrated Workbench's own pinned copy, then one already installed.
     const managed = this.opts.managedDir ? [managedCliPath(this.opts.managedDir, this.platform)] : [];
     const candidates = configured ? [configured] : [...managed, ...cliCandidates(this.platform, homedir())];
     for (const path of candidates) {
@@ -130,12 +133,12 @@ export class ArduinoToolchain implements Toolchain {
     };
   }
 
-  /** Can SketchDesk download its own arduino-cli on this OS/CPU? Returns the asset (with size) if so. */
+  /** Can Integrated Workbench download its own arduino-cli on this OS/CPU? Returns the asset (with size) if so. */
   managedAsset(): CliAsset | undefined {
     return this.opts.managedDir ? assetFor(this.platform, process.arch) : undefined;
   }
 
-  /** Downloads SketchDesk's own arduino-cli. Only call after the user agreed. */
+  /** Downloads Integrated Workbench's own arduino-cli. Only call after the user agreed. */
   async installManaged(onProgress?: (fraction: number) => void, signal?: AbortSignal): Promise<ToolStatus> {
     if (!this.opts.managedDir) throw new Error('No storage folder for arduino-cli.');
     await installManagedCli({
@@ -217,18 +220,46 @@ export class ArduinoToolchain implements Toolchain {
     return { success: res.code === 0 };
   }
 
-  /** Installs a core (platform), e.g. "arduino:avr". Only call after the user asked for it. */
+  /** Refreshes the board package index (Arduino's plus EXTRA_BOARD_INDEXES). Small download. */
+  async updateIndex(signal?: AbortSignal): Promise<void> {
+    const res = await this.stream(await this.cli(), ['core', 'update-index', ...this.urlArgs()], { signal });
+    if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not update the board list.');
+  }
+
+  /** Every board package arduino-cli knows about, with installed/latest versions. */
+  async searchCores(): Promise<CoreInfo[]> {
+    const res = await this.opts.host.run(
+      await this.cli(),
+      ['core', 'search', '--format', 'json', ...this.urlArgs()],
+      { timeoutMs: 60_000 },
+    );
+    if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not read the board list.');
+    return parseCoreSearch(res.stdout);
+  }
+
+  /** Installs (or upgrades to the latest) a board package. Only call after the user asked for it. */
   async installCore(platform: string, onOutput: (t: string) => void, signal?: AbortSignal): Promise<boolean> {
     const cli = await this.cli();
     for (const args of [
-      ['core', 'update-index'],
-      ['core', 'install', platform],
+      ['core', 'update-index', ...this.urlArgs()],
+      ['core', 'install', platform, ...this.urlArgs()],
     ]) {
       onOutput(`$ arduino-cli ${args.join(' ')}\n`);
       const res = await this.stream(cli, args, { onStdout: onOutput, onStderr: onOutput, signal });
       if (res.code !== 0) return false;
     }
     return true;
+  }
+
+  async uninstallCore(platform: string, onOutput: (t: string) => void, signal?: AbortSignal): Promise<boolean> {
+    const args = ['core', 'uninstall', platform];
+    onOutput(`$ arduino-cli ${args.join(' ')}\n`);
+    const res = await this.stream(await this.cli(), args, { onStdout: onOutput, onStderr: onOutput, signal });
+    return res.code === 0;
+  }
+
+  private urlArgs(): string[] {
+    return ['--additional-urls', EXTRA_BOARD_INDEXES.join(',')];
   }
 
   private platformFix(output: string, fqbn: string): SuggestedFix | undefined {
@@ -240,4 +271,8 @@ export class ArduinoToolchain implements Toolchain {
       apply: (onOutput, signal) => this.installCore(platform, onOutput, signal),
     };
   }
+}
+
+function lastLine(text: string): string {
+  return text.trim().split(/\r?\n/).pop() ?? '';
 }

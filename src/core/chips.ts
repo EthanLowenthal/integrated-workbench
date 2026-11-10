@@ -23,6 +23,8 @@ export interface ChipInfo {
   bootloader?: boolean;
   /** In this mode the device never creates a serial port (e.g. RP2040 BOOTSEL is a USB drive). */
   noSerialPort?: boolean;
+  /** Arduino board package (core) that supports this board, e.g. "arduino:avr". */
+  platform?: string;
 }
 
 export interface VendorInfo {
@@ -31,6 +33,8 @@ export interface VendorInfo {
   family: ChipFamily;
   kind: ChipKind;
   driver?: DriverKey;
+  /** Board package for any board from this vendor (native-USB vendors only). */
+  platform?: string;
 }
 
 /** Match VID first, then PID. Entries not checked against a primary source are marked TODO verify. */
@@ -40,8 +44,8 @@ export const VENDORS: readonly VendorInfo[] = [
   { vid: '0403', name: 'FTDI', family: 'ftdi', kind: 'bridge', driver: 'ftdi-vcp' },
   { vid: '2341', name: 'Arduino', family: 'arduino', kind: 'native' },
   { vid: '2a03', name: 'Arduino (arduino.org)', family: 'arduino', kind: 'native' }, // TODO verify
-  { vid: '303a', name: 'Espressif', family: 'espressif', kind: 'native' },
-  { vid: '2e8a', name: 'Raspberry Pi', family: 'rp2040', kind: 'native' },
+  { vid: '303a', name: 'Espressif', family: 'espressif', kind: 'native', platform: 'esp32:esp32' },
+  { vid: '2e8a', name: 'Raspberry Pi', family: 'rp2040', kind: 'native', platform: 'rp2040:rp2040' },
 ];
 
 export const CHIPS: readonly ChipInfo[] = [
@@ -65,10 +69,10 @@ export const CHIPS: readonly ChipInfo[] = [
   { vid: '0403', pid: '6015', name: 'FTDI FT-X', family: 'ftdi', kind: 'bridge', driver: 'ftdi-vcp' },
   { vid: '0403', pid: '6010', name: 'FTDI FT2232', family: 'ftdi', kind: 'bridge', driver: 'ftdi-vcp' }, // TODO verify
   // Arduino (referential naming: these are the boards' own USB IDs)
-  { vid: '2341', pid: '0043', name: 'Uno R3', family: 'arduino', kind: 'native' },
-  { vid: '2341', pid: '0001', name: 'Uno', family: 'arduino', kind: 'native' }, // TODO verify
-  { vid: '2341', pid: '0042', name: 'Mega 2560 R3', family: 'arduino', kind: 'native' },
-  { vid: '2341', pid: '8036', name: 'Leonardo', family: 'arduino', kind: 'native' },
+  { vid: '2341', pid: '0043', name: 'Uno R3', family: 'arduino', kind: 'native', platform: 'arduino:avr' },
+  { vid: '2341', pid: '0001', name: 'Uno', family: 'arduino', kind: 'native', platform: 'arduino:avr' }, // TODO verify
+  { vid: '2341', pid: '0042', name: 'Mega 2560 R3', family: 'arduino', kind: 'native', platform: 'arduino:avr' },
+  { vid: '2341', pid: '8036', name: 'Leonardo', family: 'arduino', kind: 'native', platform: 'arduino:avr' },
   {
     vid: '2341',
     pid: '0036',
@@ -77,7 +81,7 @@ export const CHIPS: readonly ChipInfo[] = [
     kind: 'native',
     bootloader: true,
   },
-  { vid: '2341', pid: '8037', name: 'Micro', family: 'arduino', kind: 'native' }, // TODO verify
+  { vid: '2341', pid: '8037', name: 'Micro', family: 'arduino', kind: 'native', platform: 'arduino:avr' }, // TODO verify
   {
     vid: '2341',
     pid: '0037',
@@ -97,7 +101,7 @@ export const CHIPS: readonly ChipInfo[] = [
     bootloader: true,
   }, // TODO verify
   // Raspberry Pi RP2040
-  { vid: '2e8a', pid: '0005', name: 'RP2040 (MicroPython)', family: 'rp2040', kind: 'native' },
+  { vid: '2e8a', pid: '0005', name: 'RP2040 (MicroPython)', family: 'rp2040', kind: 'native', platform: '' },
   { vid: '2e8a', pid: '000a', name: 'RP2040 (Pico SDK / Arduino core)', family: 'rp2040', kind: 'native' }, // TODO verify
   {
     vid: '2e8a',
@@ -119,6 +123,12 @@ export interface ChipMatch {
 
 export function normalizeHex(id: string): string {
   return id.trim().toLowerCase().replace(/^0x/, '').padStart(4, '0');
+}
+
+/** Board package to recommend for a plugged-in device, if we can tell. Empty string in the table = none. */
+export function platformFor(match: ChipMatch): string | undefined {
+  const p = match.chip?.platform ?? (match.vendor?.kind === 'native' ? match.vendor.platform : undefined);
+  return p || undefined;
 }
 
 export function lookupChip(vid: string | undefined, pid: string | undefined): ChipMatch {

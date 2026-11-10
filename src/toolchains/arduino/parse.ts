@@ -142,3 +142,49 @@ export function parseMissingHeaders(output: string): string[] {
   }
   return [...out];
 }
+
+/** A board package ("core"/"platform") from `core search` / `core list`. */
+export interface CoreInfo {
+  /** "arduino:avr" */
+  id: string;
+  /** "Arduino AVR Boards" */
+  name: string;
+  maintainer?: string;
+  latestVersion?: string;
+  installedVersion?: string;
+  /** Board names in the latest release (search results don't include FQBNs). */
+  boards: string[];
+}
+
+interface RawPlatform {
+  id?: string;
+  maintainer?: string;
+  deprecated?: boolean;
+  installed_version?: string;
+  latest_version?: string;
+  releases?: Record<string, { name?: string; boards?: { name?: string }[] }>;
+}
+
+/**
+ * `arduino-cli core search --format json` and `core list --format json` (1.x):
+ * `{ "platforms": [ { id, maintainer, releases: { "<ver>": { name, boards: [{ name }] } }, installed_version, latest_version } ] }`.
+ * Deprecated platforms (e.g. arduino:mbed, replaced by standalone packages) are dropped.
+ */
+export function parseCoreSearch(json: string): CoreInfo[] {
+  const parsed = JSON.parse(json || '{}') as { platforms?: RawPlatform[] };
+  const out: CoreInfo[] = [];
+  for (const p of parsed.platforms ?? []) {
+    if (!p.id || p.deprecated) continue;
+    const version = p.installed_version || p.latest_version;
+    const release = (version && p.releases?.[version]) || Object.values(p.releases ?? {})[0];
+    out.push({
+      id: p.id,
+      name: release?.name ?? p.id,
+      maintainer: p.maintainer,
+      latestVersion: p.latest_version || undefined,
+      installedVersion: p.installed_version || undefined,
+      boards: (release?.boards ?? []).map((b) => b.name).filter((n): n is string => !!n),
+    });
+  }
+  return out;
+}

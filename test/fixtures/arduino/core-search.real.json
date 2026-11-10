@@ -1,0 +1,240 @@
+{
+  "platforms": [
+    {
+      "id": "arduino:avr",
+      "maintainer": "Arduino",
+      "website": "https://www.arduino.cc/",
+      "email": "packages@arduino.cc",
+      "indexed": true,
+      "releases": {
+        "1.8.8": {
+          "name": "Arduino AVR Boards",
+          "version": "1.8.8",
+          "types": [
+            "Arduino"
+          ],
+          "boards": [
+            {
+              "name": "Arduino Yún"
+            },
+            {
+              "name": "Arduino UNO"
+            },
+            {
+              "name": "Arduino UNO Mini"
+            },
+            {
+              "name": "Arduino UNO WiFi"
+            },
+            {
+              "name": "Arduino Diecimila"
+            },
+            {
+              "name": "Arduino Nano"
+            }
+          ],
+          "help": {
+            "online": "https://www.arduino.cc/en/Reference/HomePage"
+          },
+          "missing_metadata": true,
+          "compatible": true
+        }
+      },
+      "installed_version": "",
+      "latest_version": "1.8.8"
+    },
+    {
+      "id": "arduino:esp32",
+      "maintainer": "Arduino",
+      "website": "https://www.arduino.cc/",
+      "email": "packages@arduino.cc",
+      "indexed": true,
+      "releases": {
+        "2.0.18-arduino.5": {
+          "name": "Arduino ESP32 Boards",
+          "version": "2.0.18-arduino.5",
+          "types": [
+            "Arduino"
+          ],
+          "boards": [
+            {
+              "name": "Arduino Nano ESP32"
+            }
+          ],
+          "help": {
+            "online": "https://www.arduino.cc/en/Reference/HomePage"
+          },
+          "missing_metadata": true,
+          "compatible": true
+        }
+      },
+      "installed_version": "",
+      "latest_version": "2.0.18-arduino.5"
+    },
+    {
+      "id": "arduino:renesas_uno",
+      "maintainer": "Arduino",
+      "website": "https://www.arduino.cc/",
+      "email": "packages@arduino.cc",
+      "indexed": true,
+      "releases": {
+        "1.6.0": {
+          "name": "Arduino UNO R4 Boards",
+          "version": "1.6.0",
+          "types": [
+            "Arduino"
+          ],
+          "boards": [
+            {
+              "name": "Arduino UNO R4 Minima"
+            },
+            {
+              "name": "Arduino UNO R4 WiFi"
+            },
+            {
+              "name": "Arduino Nano R4"
+            }
+          ],
+          "help": {
+            "online": "https://www.arduino.cc/en/Reference/HomePage"
+          },
+          "missing_metadata": true,
+          "compatible": true
+        }
+      },
+      "installed_version": "",
+      "latest_version": "1.6.0"
+    },
+    {
+      "id": "esp32:esp32",
+      "maintainer": "Espressif Systems",
+      "website": "https://github.com/espressif/arduino-esp32",
+      "email": "hristo@espressif.com",
+      "indexed": true,
+      "releases": {
+        "3.3.12": {
+          "name": "esp32",
+          "version": "3.3.12",
+          "types": [
+            "ESP32"
+          ],
+          "boards": [
+            {
+              "name": "ESP32 Dev Board"
+            },
+            {
+              "name": "ESP32-C3 Dev Board"
+            },
+            {
+              "name": "ESP32-C5 Dev Board"
+            },
+            {
+              "name": "ESP32-C6 Dev Board"
+            },
+            {
+              "name": "ESP32-H2 Dev Board"
+            },
+            {
+              "name": "ESP32-P4 Dev Board"
+            }
+          ],
+          "help": {
+            "online": "https://esp32.com"
+          },
+          "missing_metadata": true,
+          "compatible": true
+        }
+      },
+      "installed_version": "",
+      "latest_version": "3.3.12"
+    },
+    {
+      "id": "rp2040:rp2040",
+      "maintainer": "Earle F. Philhower, III",
+      "website": "https://github.com/earlephilhower/arduino-pico",
+      "email": "earlephilhower@yahoo.com",
+      "indexed": true,
+      "releases": {
+        "6.3.2": {
+          "name": "Raspberry Pi Pico/RP2040/RP2350",
+          "version": "6.3.2",
+          "types": [
+            "Raspberry Pi Pico"
+          ],
+          "boards": [
+            {
+              "name": "Raspberry Pi Pico"
+            },
+            {
+              "name": "Raspberry Pi Pico W"
+            },
+            {
+              "name": "Raspberry Pi Pico 2"
+            },
+            {
+              "name": "Raspberry Pi Pico 2W"
+            },
+            {
+              "name": "0xCB Helios"
+            },
+            {
+              "name": "Adafruit Feather RP2040"
+            }
+          ],
+          "help": {
+            "online": "https://arduino-pico.readthedocs.io/en/latest/"
+          },
+          "missing_metadata": true,
+          "compatible": true
+        }
+      },
+      "installed_version": "",
+      "latest_version": "6.3.2"
+    },
+    {
+      "id": "arduino:mbed",
+      "maintainer": "Arduino",
+      "website": "https://www.arduino.cc/",
+      "email": "packages@arduino.cc",
+      "deprecated": true,
+      "indexed": true,
+      "releases": {
+        "3.3.0": {
+          "name": "[DEPRECATED - Please install standalone packages] Arduino Mbed OS Boards",
+          "version": "3.3.0",
+          "types": [
+            "Arduino"
+          ],
+          "boards": [
+            {
+              "name": "Arduino Nano 33 BLE"
+            },
+            {
+              "name": "Arduino Nano 33 BLE Sense"
+            },
+            {
+              "name": "Arduino Nano RP2040 Connect"
+            },
+            {
+              "name": "Arduino Portenta H7"
+            },
+            {
+              "name": "Arduino Edge Control"
+            },
+            {
+              "name": "Raspberry Pi Pico"
+            }
+          ],
+          "help": {
+            "online": "https://www.arduino.cc/en/Reference/HomePage"
+          },
+          "missing_metadata": true,
+          "deprecated": true,
+          "compatible": true
+        }
+      },
+      "installed_version": "",
+      "latest_version": "3.3.0"
+    }
+  ]
+}

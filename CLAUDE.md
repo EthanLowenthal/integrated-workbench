@@ -1,10 +1,10 @@
-# SketchDesk
+# Integrated Workbench
 
 Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before changing scope or UX. Focus: board-aware code -> build -> flash -> serial monitor loop for Arduino, embedded Rust and MicroPython via toolchain adapters; Board Doctor is a supporting feature.
 
 ## Hard rules
 
-- Display name `SketchDesk`; machine name `sketchdesk`. Never put "Arduino" in a product name, ID, logo or domain. Referential use only, with "Arduino" last ("SketchDesk - for Arduino").
+- Display name `Integrated Workbench`; extension name `integrated-workbench`; command/setting/context prefix `integratedWorkbench.` (never `workbench.`, which is VS Code's own). Never put "Arduino" in a product name, ID, logo or domain. Referential use only, with "Arduino" last ("Integrated Workbench - for Arduino").
 - `src/core` never imports `vscode` (enforced by eslint).
 - Run commands with `execFile` + argument arrays via `ProbeHost.run`; never `exec` or shell strings built from device data (enforced by eslint).
 - Never run elevated or destructive commands automatically. Surface them as `runCommand` / `copyCommand` actions the user confirms.
@@ -15,11 +15,11 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 ## Layout
 
 - `src/extension.ts` wires everything up. `session.ts` tracks the open project, plugged-in boards and the selected board/port; `statusBar.ts`, `pickers.ts`, `buildFlow.ts` (Verify/Upload, Problems panel), `doctor.ts` (Board Doctor UI).
-- `src/toolchains/types.ts` is the Toolchain interface; `src/toolchains/arduino/` wraps arduino-cli (parsers in `parse.ts` are pure and tested). `managedCli.ts` downloads SketchDesk's own pinned arduino-cli (version + per-platform SHA-256 baked in; bump both together from the release's checksums file) into extension global storage after a one-time consent prompt. Lookup order: `sketchdesk.arduinoCliPath` setting, managed copy, system install.
+- `src/toolchains/types.ts` is the Toolchain interface; `src/toolchains/arduino/` wraps arduino-cli (parsers in `parse.ts` are pure and tested). `managedCli.ts` downloads Integrated Workbench's own pinned arduino-cli (version + per-platform SHA-256 baked in; bump both together from the release's checksums file) into extension global storage after a one-time consent prompt. Lookup order: `integratedWorkbench.arduinoCliPath` setting, managed copy, system install.
 - `src/core/` (no vscode): `probes/*` collect, `parse/*` parse, `diagnose.ts` decides, `watch.ts` diffs snapshots.
 - Fixtures: `test/fixtures/` (`*.real.*` captured, `*.synth.*` hand-written; see its README).
-- Test kit: `~/Downloads/sketchdesk-test` (README with numbered checks + sample sketches + `SketchDesk-dev.vsix`). Refresh the VSIX there with `npm run package` after changes.
-- Run the extension: F5 ("Run SketchDesk" in `.vscode/launch.json`).
+- Test kit: `~/Downloads/integrated-workbench-test` (README with numbered checks + sample sketches + `IntegratedWorkbench-dev.vsix`). Refresh the VSIX there with `npm run package` after changes.
+- Run the extension: F5 ("Run Integrated Workbench" in `.vscode/launch.json`).
 
 ## Commands
 
