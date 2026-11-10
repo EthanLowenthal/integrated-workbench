@@ -166,7 +166,16 @@ describe('ArduinoToolchain', () => {
       }
       return { code: 0, stdout: '', stderr: '' };
     };
-    const host = fakeHost({ run: () => version });
+    const installedEsp32 = ok(
+      JSON.stringify({
+        platforms: [
+          { id: 'esp32:esp32', installed_version: '3.3.12', latest_version: '3.3.12', releases: {} },
+        ],
+      }),
+    );
+    const host = fakeHost({
+      run: (_f, args) => (args[0] === 'core' && args[1] === 'list' ? installedEsp32 : version),
+    });
     const tc = new ArduinoToolchain({
       host,
       buildRoot: '/b',
@@ -242,5 +251,22 @@ describe('arduino-cli 1.5.1 real output (macOS, nothing plugged in, no cores)', 
   });
   it('missing core message', () => {
     expect(parseMissingPlatform(fixture('arduino/compile-platform-missing.real.txt'))).toBe('arduino:avr');
+  });
+});
+
+describe('board package install verification', () => {
+  it('an install that exits cleanly but did not register the package counts as failed', async () => {
+    const stream: StreamRunner = async () => ({ code: 0, stdout: '', stderr: '' });
+    // core list says nothing is installed, as after an install interrupted while unpacking.
+    const host = fakeHost({
+      run: (_f, args) =>
+        args[1] === 'list'
+          ? ok(fixture('arduino/core-list-empty.real.json'))
+          : ok('{"VersionString":"1.5.1"}'),
+    });
+    const tc = new ArduinoToolchain({ host, buildRoot: '/b', stream });
+    const out: string[] = [];
+    expect(await tc.installCore('arduino:avr', (t) => out.push(t))).toBe(false);
+    expect(out.join('')).toMatch(/arduino:avr did not finish installing/);
   });
 });

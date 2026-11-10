@@ -319,7 +319,24 @@ export class ArduinoToolchain implements Toolchain {
       const res = await this.stream(cli, args, { onStdout: onOutput, onStderr: onOutput, signal, timeoutMs });
       if (res.code !== 0) return false;
     }
+    // An install that is interrupted (window reload, VS Code closed, killed) can leave files behind
+    // without registering the package. Confirm it is really installed.
+    const installed = await this.installedCores().catch(() => []);
+    if (!installed.some((c) => c.id.toLowerCase() === platform.toLowerCase())) {
+      onOutput(`\n${platform} did not finish installing.\n`);
+      return false;
+    }
+    this.clearCaches();
     return true;
+  }
+
+  /** Installed board packages (`core list`). */
+  async installedCores(): Promise<CoreInfo[]> {
+    const res = await this.opts.host.run(await this.cli(), ['core', 'list', '--format', 'json'], {
+      timeoutMs: TIMEOUTS.cliListMs,
+    });
+    if (res.code !== 0) throw new Error(lastLine(res.stderr) || 'Could not list installed board packages.');
+    return parseCoreSearch(res.stdout);
   }
 
   async uninstallCore(

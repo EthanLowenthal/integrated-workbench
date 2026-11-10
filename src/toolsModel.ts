@@ -350,10 +350,12 @@ export class ToolsModel implements vscode.Disposable {
     return p?.kind === 'arduino-core' ? p.platform : id;
   }
 
-  async install(id: string): Promise<void> {
-    if (this.busy[id]) return;
+  /** Installs a package. Returns true if it is installed afterwards. */
+  async install(id: string): Promise<boolean> {
+    if (this.busy[id]) return false;
     const pkg = this.packageFor(id);
-    if (!(await this.trusted(pkg))) return;
+    if (!(await this.trusted(pkg))) return false;
+    let ok = true;
     try {
       if (pkg?.kind === 'tool') {
         await this.installToolPackage(pkg);
@@ -370,11 +372,36 @@ export class ToolsModel implements vscode.Disposable {
         if (!ok) throw new Error(text.coreInstallFailed(platform));
       }
     } catch (err) {
+      ok = false;
       this.error = err instanceof Error ? err.message : String(err);
     } finally {
       this.setBusy(id, undefined);
     }
     await this.afterChange();
+    return ok;
+  }
+
+  /**
+   * Boards in board packages that aren't installed, for the board picker. Recommended packages first.
+   * Board names come from the package index; their IDs are only known once the package is installed.
+   */
+  async availableBoards(): Promise<{ packageId: string; packageName: string; board: string }[]> {
+    if (!this.coresLoaded) await this.refresh();
+    const recommended = new Set(this.state.recommended.map((i) => i.id));
+    const byPlatform = new Map(this.registry.arduinoCores.map((c) => [c.platform, c]));
+    const rows = this.cores
+      .filter((c) => !c.installedVersion)
+      .flatMap((c) => {
+        const reg = byPlatform.get(c.id);
+        const packageId = reg?.id ?? c.id;
+        return c.boards.map((board) => ({ packageId, packageName: reg?.name ?? c.name, board }));
+      });
+    return rows.sort(
+      (a, b) =>
+        Number(recommended.has(b.packageId)) - Number(recommended.has(a.packageId)) ||
+        a.packageName.localeCompare(b.packageName) ||
+        a.board.localeCompare(b.board),
+    );
   }
 
   private async installToolPackage(pkg: WithOrigin<ToolPackage>): Promise<void> {

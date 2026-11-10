@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Select Board lists boards from board packages that aren't installed yet. Selecting one installs its package, then selects the board.
+- Board package installs are verified: an install that was interrupted (for example by reloading the window) is reported as failed instead of appearing installed.
+- Select Board shows an error instead of an empty list when boards can't be listed.
+
 ## 0.1.0
 
 First release for testing.

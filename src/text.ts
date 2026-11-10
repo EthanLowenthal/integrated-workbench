@@ -41,6 +41,13 @@ export const text = {
   openBoardDoctor: 'Show Diagnostics',
   loadingBoards: 'Loading boards...',
   noBoardPackages: 'No board packages installed',
+  availableSection: 'Available to install',
+  notInstalled: (pkg: string) => `Not installed · ${pkg}`,
+  installsPackage: 'Selecting a board installs its board package first.',
+  installingFor: (pkg: string) => `Installing ${pkg}`,
+  listBoardsFailed: (err: string) => `Could not list boards: ${err}`,
+  boardNotFoundAfterInstall: (board: string) =>
+    `${board} was not found after installing. Select the board again.`,
   openTools: 'Install Board Packages...',
 
   // Boards and Tools

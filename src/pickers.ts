@@ -5,13 +5,26 @@ import { shortPort } from './statusBar.js';
 import { text } from './text.js';
 import type { BuildTarget } from './toolchains/types.js';
 
-type TargetItem = vscode.QuickPickItem & { target?: BuildTarget };
+type TargetItem = vscode.QuickPickItem & {
+  target?: BuildTarget;
+  /** A board from a package that isn't installed yet. */
+  available?: { packageId: string; board: string };
+  openTools?: boolean;
+};
 
-/** Board picker: plugged-in boards first, then every board from installed cores. */
-export async function pickBoard(
-  session: Session,
-  openTools: () => Promise<void>,
-): Promise<BuildTarget | undefined> {
+export interface BoardPickerDeps {
+  openTools: () => Promise<void>;
+  /** Boards in packages that aren't installed (name only). */
+  availableBoards: () => Promise<{ packageId: string; packageName: string; board: string }[]>;
+  /** Installs a package and returns the board's target once installed. */
+  installFor: (packageId: string, board: string) => Promise<BuildTarget | undefined>;
+}
+
+/**
+ * Board picker: connected boards, then installed boards, then every board in packages that
+ * aren't installed (selecting one installs its package first).
+ */
+export async function pickBoard(session: Session, deps: BoardPickerDeps): Promise<BuildTarget | undefined> {
   const qp = vscode.window.createQuickPick<TargetItem>();
   qp.placeholder = text.pickBoard;
   qp.matchOnDescription = true;
@@ -26,33 +39,52 @@ export async function pickBoard(
     : [];
   qp.items = [...head, { label: text.loadingBoards, alwaysShow: true }];
 
-  let all: BuildTarget[] = [];
+  let installed: BuildTarget[] = [];
+  let error: string | undefined;
   try {
-    all = await session.toolchain.listTargets();
+    installed = await session.toolchain.listTargets();
+  } catch (err) {
+    error = err instanceof Error ? err.message : String(err);
+  }
+  let available: Awaited<ReturnType<BoardPickerDeps['availableBoards']>> = [];
+  try {
+    available = await deps.availableBoards();
   } catch {
-    // Shown below as "no boards installed".
+    // Installed boards still work without the index.
   }
   qp.busy = false;
 
-  const empty: TargetItem[] = all.length
-    ? []
-    : [
-        { label: text.noBoardPackages, kind: vscode.QuickPickItemKind.Separator },
-        { label: `$(package) ${text.openTools}`, alwaysShow: true, target: undefined, detail: '' },
-      ];
+  const items: TargetItem[] = [...head];
+  if (error) items.push({ label: `$(warning) ${text.listBoardsFailed(error)}`, alwaysShow: true });
+  if (installed.length) {
+    items.push({ label: text.allBoardsSection, kind: vscode.QuickPickItemKind.Separator });
+    items.push(...installed.map((t) => ({ label: t.name, description: t.id, target: t })));
+  }
+  if (available.length) {
+    items.push({ label: text.availableSection, kind: vscode.QuickPickItemKind.Separator });
+    items.push(
+      ...available.map((a) => ({
+        label: a.board,
+        description: text.notInstalled(a.packageName),
+        iconPath: new vscode.ThemeIcon('cloud-download'),
+        available: { packageId: a.packageId, board: a.board },
+      })),
+    );
+  }
+  if (!installed.length && !available.length) {
+    items.push({ label: text.noBoardPackages, kind: vscode.QuickPickItemKind.Separator });
+    items.push({ label: `$(package) ${text.openTools}`, alwaysShow: true, openTools: true });
+  }
+  qp.items = items;
+  if (!installed.length && available.length) qp.title = text.installsPackage;
 
-  qp.items = [
-    ...head,
-    ...(all.length ? [{ label: text.allBoardsSection, kind: vscode.QuickPickItemKind.Separator }] : []),
-    ...all.map((t) => ({ label: t.name, description: t.id, target: t })),
-    ...empty,
-  ];
   const picked = await new Promise<TargetItem | undefined>((resolve) => {
     qp.onDidAccept(() => resolve(qp.selectedItems[0]));
     qp.onDidHide(() => resolve(undefined));
   });
   qp.dispose();
-  if (picked && !picked.target && picked.label.includes(text.openTools)) await openTools();
+  if (picked?.openTools) await deps.openTools();
+  if (picked?.available) return deps.installFor(picked.available.packageId, picked.available.board);
   return picked?.target;
 }
 

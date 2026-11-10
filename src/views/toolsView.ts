@@ -69,7 +69,8 @@ export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable 
       case 'refresh':
         return this.model.refresh({ updateIndex: true });
       case 'install':
-        return this.model.install(m.id);
+        await this.model.install(m.id);
+        return;
       case 'uninstall':
         return this.model.uninstall(m.id);
       case 'showOutput':

@@ -136,12 +136,24 @@ export async function run(): Promise<void> {
     await vscode.workspace
       .getConfiguration('integratedWorkbench')
       .update('arduinoCliPath', process.env.E2E_CLI, vscode.ConfigurationTarget.Global);
-    await until(
-      'engine ready',
-      () => (api.session.toolReady && api.session.targets.length ? true : undefined),
-      30000,
+    await until('engine ready', () => (api.session.toolReady ? true : undefined), 30000);
+    // Fresh data folder: no board packages. The picker offers boards from packages that aren't installed.
+    assert.equal(api.session.targets.length, 0, 'no board packages installed yet');
+    const available = await api.tools.availableBoards();
+    const nano = available.find((b) => b.board === 'Arduino Nano');
+    assert.ok(nano, 'Arduino Nano offered as available to install');
+    log(
+      `board picker without packages: ${available.length} boards available to install (Nano from "${nano.packageName}")`,
     );
-    await api.session.setTarget({ id: 'arduino:avr:nano', name: 'Arduino Nano' });
+    // Picking it installs the package (from the seeded download cache), then selects the board.
+    const picked = await api.installBoard(nano.packageId, nano.board);
+    assert.equal(picked?.id, 'arduino:avr:nano');
+    assert.ok(
+      api.session.targets.some((t) => t.id === 'arduino:avr:uno'),
+      'installed boards now listed',
+    );
+    log(`picked Nano -> installed ${nano.packageId}, ${api.session.targets.length} installed boards`);
+    await api.session.setTarget(picked);
     const cpu = await until(
       'board options',
       () => api.session.boardOptions.find((o) => o.id === 'cpu'),

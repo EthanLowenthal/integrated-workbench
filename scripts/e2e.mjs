@@ -2,7 +2,7 @@
 // in VS Code with a fresh, temporary profile. Uses VSCODE_PATH, or the usual macOS install locations.
 import { runTests } from '@vscode/test-electron';
 import * as esbuild from 'esbuild';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -29,6 +29,19 @@ const ws = join(tmp, 'workspace');
 mkdirSync(join(ws, 'Blink'), { recursive: true });
 writeFileSync(join(ws, 'Blink', 'Blink.ino'), 'void setup() {}\nvoid loop() {}\n');
 
+// With a real toolchain: start from a fresh Arduino data folder with no board packages, seeded with the
+// package indexes and download cache from E2E_ARDUINO_DATA, so installs work offline.
+let arduinoData;
+if (process.env.E2E_ARDUINO_DATA) {
+  arduinoData = join(tmp, 'arduino-data');
+  mkdirSync(arduinoData, { recursive: true });
+  for (const f of readdirSync(process.env.E2E_ARDUINO_DATA)) {
+    if (f.endsWith('.json') || f.endsWith('.sig'))
+      cpSync(join(process.env.E2E_ARDUINO_DATA, f), join(arduinoData, f));
+  }
+  cpSync(join(process.env.E2E_ARDUINO_DATA, 'staging'), join(arduinoData, 'staging'), { recursive: true });
+}
+
 try {
   await runTests({
     ...(vscodeExecutablePath ? { vscodeExecutablePath } : {}),
@@ -36,7 +49,7 @@ try {
     extensionTestsPath: join(root, 'dist/e2e/suite.js'),
     // Optional: point at an existing arduino-cli and data folder to also test real board options and compiles.
     extensionTestsEnv: process.env.E2E_CLI
-      ? { E2E_CLI: process.env.E2E_CLI, ARDUINO_DIRECTORIES_DATA: process.env.E2E_ARDUINO_DATA }
+      ? { E2E_CLI: process.env.E2E_CLI, ARDUINO_DIRECTORIES_DATA: arduinoData }
       : {},
     launchArgs: [
       ws,

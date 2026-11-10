@@ -11,6 +11,7 @@ import { text } from './text.js';
 import { ArduinoToolchain } from './toolchains/arduino/index.js';
 import { CPPTOOLS_ID, IntelliSense } from './intellisense.js';
 import { MonitorController } from './monitor/controller.js';
+import type { BuildTarget } from './toolchains/types.js';
 import { ToolsModel } from './toolsModel.js';
 import { MONITOR_VIEW, MonitorView } from './views/monitorView.js';
 import { SettingsPage } from './views/settingsPage.js';
@@ -27,6 +28,8 @@ export interface TestApi {
   runs: Runs;
   monitor: MonitorController;
   intellisense: IntelliSense;
+  /** The board picker's install-then-select path. */
+  installBoard: (packageId: string, board: string) => Promise<BuildTarget | undefined>;
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<TestApi> {
@@ -59,8 +62,34 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   };
   const engineId = () => registry.toolProviding('arduino-cli')?.id;
   const showSketch = () => vscode.commands.executeCommand(`${SKETCH_VIEW}.focus`);
+  /** Installs a board package from the picker, then finds the chosen board in it. */
+  const installFor = async (packageId: string, board: string) => {
+    const platform = registry.arduinoCores.find((c) => c.id === packageId)?.platform ?? packageId;
+    const ok = await vscode.window.withProgress(
+      { location: { viewId: SKETCH_VIEW }, title: text.installingFor(platform) },
+      () =>
+        vscode.window.withProgress(
+          { location: vscode.ProgressLocation.Window, title: text.installingFor(platform) },
+          () => tools.install(packageId),
+        ),
+    );
+    if (!ok) {
+      await toolsView.focus(packageId);
+      return undefined;
+    }
+    await session.refreshTargets();
+    const target = session.targets.find(
+      (t) => t.name === board && t.id.toLowerCase().startsWith(`${platform.toLowerCase()}:`),
+    );
+    if (!target) vscode.window.setStatusBarMessage(text.boardNotFoundAfterInstall(board), 6000);
+    return target;
+  };
   const chooseBoard = async () => {
-    const target = await pickBoard(session, () => toolsView.focus());
+    const target = await pickBoard(session, {
+      openTools: () => toolsView.focus(),
+      availableBoards: () => tools.availableBoards(),
+      installFor,
+    });
     if (target) await session.setTarget(target);
     return target;
   };
@@ -180,7 +209,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   // Background: these talk to arduino-cli and the network, which can be slow.
   void session.start();
   void tools.refresh();
-  return { session, tools, registry, runs, monitor, intellisense };
+  return { session, tools, registry, runs, monitor, intellisense, installBoard: installFor };
 }
 
 export function deactivate(): void {}
