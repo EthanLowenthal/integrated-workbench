@@ -1,0 +1,97 @@
+{
+  "eventType": "hello",
+  "message": "OK",
+  "protocolVersion": 1
+}
+{
+  "eventType": "describe",
+  "message": "OK",
+  "port_description": {
+    "protocol": "serial",
+    "configuration_parameters": {
+      "baudrate": {
+        "label": "Baudrate",
+        "type": "enum",
+        "value": [
+          "300",
+          "600",
+          "750",
+          "1200",
+          "2400",
+          "4800",
+          "9600",
+          "19200",
+          "31250",
+          "38400",
+          "57600",
+          "74880",
+          "115200",
+          "230400",
+          "250000",
+          "460800",
+          "500000",
+          "921600",
+          "1000000",
+          "2000000"
+        ],
+        "selected": "9600"
+      },
+      "bits": {
+        "label": "Data bits",
+        "type": "enum",
+        "value": [
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ],
+        "selected": "8"
+      },
+      "dtr": {
+        "label": "DTR",
+        "type": "enum",
+        "value": [
+          "on",
+          "off"
+        ],
+        "selected": "on"
+      },
+      "parity": {
+        "label": "Parity",
+        "type": "enum",
+        "value": [
+          "none",
+          "even",
+          "odd",
+          "mark",
+          "space"
+        ],
+        "selected": "none"
+      },
+      "rts": {
+        "label": "RTS",
+        "type": "enum",
+        "value": [
+          "on",
+          "off"
+        ],
+        "selected": "on"
+      },
+      "stop_bits": {
+        "label": "Stop bits",
+        "type": "enum",
+        "value": [
+          "1",
+          "1.5",
+          "2"
+        ],
+        "selected": "1"
+      }
+    }
+  }
+}
+{
+  "eventType": "quit",
+  "message": "OK"
+}

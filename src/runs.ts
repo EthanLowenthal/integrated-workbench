@@ -39,6 +39,8 @@ export class Runs implements vscode.Disposable {
   readonly onDidChange = this.changed.event;
   state: RunState = {};
   private abort?: AbortController;
+  /** Called around the flash step so the Serial Monitor can release and re-take the port. */
+  uploadHooks: { before?: (port: string) => Promise<void>; after?: (port: string) => Promise<void> } = {};
 
   constructor(
     private readonly session: Session,
@@ -163,9 +165,11 @@ export class Runs implements vscode.Disposable {
     if (!(await this.build('upload'))) return false;
     const project = s.project!;
     const target = s.target!;
+    await this.uploadHooks.before?.(port);
     const res = await this.track('upload', text.uploading(project.name, port), (signal) =>
       s.toolchain.flash({ project, target, port, onOutput: (t) => this.output.append(t), signal }),
     );
+    void this.uploadHooks.after?.(port);
     let hint = res.error;
     if (!res.success && !hint) {
       // Ask Board Doctor whether it knows why (port held by another app, permissions, ...).

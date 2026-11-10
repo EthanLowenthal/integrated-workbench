@@ -274,3 +274,199 @@ input[type='search'] {
   justify-content: space-between;
   cursor: pointer;
 }
+
+/* Serial Monitor panel */
+body:has(.mon) {
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.mon {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.mon-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, transparent));
+}
+.mon-tabs {
+  display: flex;
+  gap: 2px;
+  margin-right: 6px;
+}
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  padding: 2px 6px;
+  color: var(--vscode-panelTitle-inactiveForeground, var(--vscode-descriptionForeground));
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.tab:hover {
+  background: none;
+  color: var(--vscode-panelTitle-activeForeground, var(--vscode-foreground));
+}
+.tab.on {
+  color: var(--vscode-panelTitle-activeForeground, var(--vscode-foreground));
+  border-bottom-color: var(--vscode-panelTitle-activeBorder, var(--vscode-focusBorder));
+}
+.mon-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--vscode-descriptionForeground);
+  white-space: nowrap;
+}
+.mon-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vscode-descriptionForeground);
+  opacity: 0.6;
+}
+.mon-status.connected .dot {
+  background: var(--vscode-testing-iconPassed, var(--vscode-charts-green));
+  opacity: 1;
+}
+.mon-status.connecting .dot,
+.mon-status.reconnecting .dot,
+.mon-status.paused .dot {
+  background: var(--vscode-editorWarning-foreground);
+  opacity: 1;
+}
+.mon-status.error .dot {
+  background: var(--vscode-errorForeground);
+  opacity: 1;
+}
+.mon-select {
+  flex: none;
+  width: auto;
+  padding: 1px 4px;
+}
+.mon-filter {
+  width: 140px !important;
+  padding: 2px 6px !important;
+}
+button.toggle {
+  background: none;
+  border: 1px solid transparent;
+  padding: 2px 5px;
+}
+button.toggle.on {
+  background: var(--vscode-inputOption-activeBackground, var(--vscode-button-secondaryBackground));
+  border-color: var(--vscode-inputOption-activeBorder, transparent);
+  color: var(--vscode-inputOption-activeForeground, inherit);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.mon-banner {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--vscode-inputValidation-infoBackground, transparent);
+  border-bottom: 1px solid var(--vscode-widget-border, transparent);
+}
+.mon-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.mon-out {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 4px 8px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--vscode-editor-font-size, 12px);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+}
+.mon-out:focus {
+  outline: none;
+}
+.mon-out .ts {
+  color: var(--vscode-descriptionForeground);
+  margin-right: 10px;
+  user-select: none;
+}
+.mon-plot {
+  position: absolute;
+  inset: 0;
+  padding: 4px 8px 28px;
+}
+.mon-plot canvas {
+  display: block;
+}
+.plot-legend {
+  position: absolute;
+  left: 64px;
+  bottom: 6px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+.plot-legend .lg {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.plot-legend .lg:hover {
+  background: none;
+  text-decoration: underline;
+}
+.plot-legend .lg.off {
+  opacity: 0.4;
+}
+.plot-legend .sw {
+  display: inline-block;
+  width: 10px;
+  height: 2px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.plot-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+}
+.plot-pause {
+  position: absolute;
+  right: 8px;
+  bottom: 4px;
+}
+.mon-send {
+  display: flex;
+  gap: 6px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, transparent));
+}
+.mon-send input {
+  flex: 1;
+  font: inherit;
+  font-family: var(--vscode-editor-font-family, monospace);
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 2px;
+  padding: 3px 6px;
+}

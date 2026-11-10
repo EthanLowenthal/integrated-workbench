@@ -201,6 +201,7 @@ describe('recommend', () => {
     });
     expect(recs.map((r) => [r.pkg.id, r.reasons])).toEqual([
       ['arduino-cli', ['Required to build .ino sketches']],
+      ['serial-monitor', ['Required for the Serial Monitor']],
       ['arduino:avr', ['Blink targets Arduino Uno']],
       ['esp32:esp32', ['ESP32-S3 connected']],
     ]);

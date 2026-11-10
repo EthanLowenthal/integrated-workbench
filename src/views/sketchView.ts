@@ -128,6 +128,7 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
       keys: {
         build: this.keyLabel('Cmd+Alt+R', 'Ctrl+Alt+R'),
         upload: this.keyLabel('Cmd+Alt+U', 'Ctrl+Alt+U'),
+        monitor: this.keyLabel('Cmd+Alt+M', 'Ctrl+Alt+M'),
       },
       text: {
         openSketch: text.openSketch,
@@ -143,7 +144,7 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         install: text.install,
         view: text.view,
         boardCheck: text.boardCheck,
-        monitorSoon: text.monitorSoon,
+        openMonitor: text.openMonitor,
         refreshPorts: text.refreshPorts,
         showOutput: text.showOutput,
         cancel: text.cancel,
@@ -192,7 +193,7 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         await vscode.commands.executeCommand('integratedWorkbench.showTools', m.focus);
         return;
       case 'monitor':
-        vscode.window.setStatusBarMessage(text.monitorSoon, 4000);
+        await vscode.commands.executeCommand('integratedWorkbench.openMonitor');
         return;
       case 'openFile': {
         const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(m.file));

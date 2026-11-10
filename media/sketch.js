@@ -77,7 +77,7 @@
     return `<div class="section"><div class="actions">
       <button data-action="build" title="${esc(W.verifyTip)} (${esc(s.keys.build)})">${icon('check')} ${esc(W.verify)}</button>
       <button class="primary" data-action="upload" title="${esc(W.uploadTip)} (${esc(s.keys.upload)})">${icon('arrow-right')} ${esc(W.upload)}</button>
-      <button class="dim" data-action="monitor" title="${esc(T.monitorSoon)}">${icon('terminal')} ${esc(W.monitor)}</button>
+      <button data-action="monitor" title="${esc(T.openMonitor)} (${esc(s.keys.monitor)})">${icon('terminal')} ${esc(W.monitor)}</button>
     </div>${blocked}</div>`;
   }
 

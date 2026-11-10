@@ -7,7 +7,9 @@ import { Runs } from './runs.js';
 import { Session } from './session.js';
 import { StatusBar } from './statusBar.js';
 import { ArduinoToolchain } from './toolchains/arduino/index.js';
+import { MonitorController } from './monitor/controller.js';
 import { ToolsModel } from './toolsModel.js';
+import { MONITOR_VIEW, MonitorView } from './views/monitorView.js';
 import { SKETCH_VIEW, SketchView } from './views/sketchView.js';
 import { TOOLS_VIEW, ToolsView } from './views/toolsView.js';
 
@@ -19,6 +21,7 @@ export interface TestApi {
   tools: ToolsModel;
   registry: RegistryService;
   runs: Runs;
+  monitor: MonitorController;
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<TestApi> {
@@ -70,6 +73,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   });
   const sketchView = new SketchView(context.extensionUri, session, doctor, runs, tools, registry, output);
   const statusBar = new StatusBar(session, doctor, runs);
+  const monitor = new MonitorController(registry, toolsDir, session, context.workspaceState, output);
+  const monitorView = new MonitorView(context.extensionUri, monitor);
+  // The monitor gives the port back for uploads and takes it again once the board is back.
+  runs.uploadHooks = {
+    before: (port) => monitor.pauseForUpload(port),
+    after: () => monitor.resumeAfterUpload(),
+  };
 
   context.subscriptions.push(
     output,
@@ -82,6 +92,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     toolsView,
     sketchView,
     statusBar,
+    monitor,
+    monitorView,
+    // Keep the output when the panel is hidden.
+    vscode.window.registerWebviewViewProvider(MONITOR_VIEW, monitorView, {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
+    tools.onDidChange(() => monitor.refresh()),
+    vscode.commands.registerCommand('integratedWorkbench.openMonitor', async () => {
+      await monitorView.reveal();
+      if (monitor.state.status === 'idle' || monitor.state.status === 'error') await monitor.connect();
+    }),
     vscode.window.registerWebviewViewProvider(SKETCH_VIEW, sketchView),
     vscode.window.registerWebviewViewProvider(TOOLS_VIEW, toolsView),
     vscode.commands.registerCommand('integratedWorkbench.build', () => runs.build()),
@@ -123,7 +144,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   // Background: these talk to arduino-cli and the network, which can be slow.
   void session.start();
   void tools.refresh();
-  return { session, tools, registry, runs };
+  return { session, tools, registry, runs, monitor };
 }
 
 export function deactivate(): void {}

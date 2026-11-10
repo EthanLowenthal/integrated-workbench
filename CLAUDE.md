@@ -35,6 +35,12 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - Board stored in the sketch's sketch.yaml (`default_fqbn`); port per machine in globalState.
 - `npm run test:e2e` runs test/e2e/suite.ts inside the installed VS Code with a throwaway profile.
 
+## Serial Monitor
+
+- Transport: `src/monitor/pluggableMonitor.ts` drives Arduino's `serial-monitor` tool directly over the pluggable monitor protocol (stdin commands, JSON replies, port data over a 127.0.0.1 TCP socket). Not `arduino-cli monitor`, which refuses to open ports until a board package is installed. No native modules. The tool is a registry package (`serial-monitor` in tools.json).
+- `src/monitor/controller.ts` owns the connection: live baud via CONFIGURE, per-sketch baud, pause/resume around uploads (Runs.uploadHooks), reconnect for up to 60 s. Panel view: `src/views/monitorView.ts` + `media/monitor.js` (output, hex, timestamps, filter, send history, canvas plotter).
+- Test without hardware: `test/fixtures/monitor/fake-monitor.mjs` speaks the protocol; on macOS the e2e test opens /dev/cu.Bluetooth-Incoming-Port with the real tool.
+
 ## Timeouts and responsiveness
 
 - Every external call has a limit from `src/core/timeouts.ts` (probes, arduino-cli, downloads with stall + total limits, registry fetches, workspace searches). `runWithTimeout` in `src/core/probes/host.ts` always settles: SIGTERM, then SIGKILL after a grace period, resolving immediately with `timedOut: true`. `StreamOptions.timeoutMs` is required so new long-running calls can't forget one.

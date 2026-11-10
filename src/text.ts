@@ -25,7 +25,7 @@ export const text = {
   install: 'Install',
   view: 'View',
   boardCheck: 'Diagnostics',
-  monitorSoon: 'Serial Monitor (coming soon)',
+  openMonitor: 'Open Serial Monitor',
   unknownBoard: 'Unknown device',
   refreshPorts: 'Refresh Ports',
   showOutput: 'Show Output',
@@ -84,6 +84,55 @@ export const text = {
   adminPrompt: (cmd: string) =>
     `"${cmd}" requires administrator privileges and will not be run automatically. Copy it and run it in an administrator terminal.`,
   adminCopy: 'Copy Command',
+
+  /** Serial Monitor (controller messages and the panel's static strings). */
+  monitor: {
+    noPort: 'No port selected. Connect a board and select its port in the Sketch view.',
+    engineMissing: 'Serial Monitor Engine not installed.',
+    pausedForUpload: 'Paused for upload',
+    waitingForPort: 'Waiting for the port to reconnect...',
+    portGone: (port: string) => `${port} did not reconnect.`,
+    logFiles: 'Log files',
+    /** Plain strings for the webview. */
+    ui: {
+      connect: 'Connect',
+      disconnect: 'Disconnect',
+      install: 'Install',
+      engineMissing: 'Serial Monitor Engine not installed.',
+      baud: 'Baud rate',
+      lineEnding: 'Line ending',
+      endings: {
+        none: 'No line ending',
+        lf: 'New line (LF)',
+        cr: 'Carriage return (CR)',
+        crlf: 'Both (CRLF)',
+      },
+      timestamps: 'Timestamps',
+      hex: 'Hex',
+      autoscroll: 'Autoscroll',
+      filter: 'Filter',
+      clear: 'Clear Output',
+      save: 'Save Output...',
+      monitorTab: 'Monitor',
+      plotTab: 'Plot',
+      pausePlot: 'Pause',
+      resumePlot: 'Resume',
+      sendPlaceholder: 'Message (Enter to send, Up/Down for history)',
+      send: 'Send',
+      status: {
+        idle: 'Not connected',
+        connecting: 'Connecting',
+        connected: 'Connected',
+        paused: 'Paused',
+        reconnecting: 'Reconnecting',
+        error: 'Not connected',
+      },
+      noPort: 'No port',
+      plotEmpty:
+        'Numeric values in the output are plotted here, for example "temp=21.5 humidity=40" or "21.5,40".',
+      linesTrimmed: 'Older lines removed',
+    },
+  },
 
   /** Static strings rendered inside the sidebar webviews (sent with each state update). */
   webview: {

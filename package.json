@@ -68,6 +68,12 @@
         "command": "integratedWorkbench.showTools",
         "title": "Show Boards and Tools",
         "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.openMonitor",
+        "title": "Open Serial Monitor",
+        "category": "Integrated Workbench",
+        "icon": "$(terminal)"
       }
     ],
     "menus": {
@@ -81,6 +87,11 @@
           "command": "integratedWorkbench.upload",
           "when": "integratedWorkbench.inProject",
           "group": "navigation@2"
+        },
+        {
+          "command": "integratedWorkbench.openMonitor",
+          "when": "integratedWorkbench.inProject",
+          "group": "navigation@3"
         }
       ],
       "commandPalette": [
@@ -112,6 +123,12 @@
         "command": "integratedWorkbench.upload",
         "key": "ctrl+alt+u",
         "mac": "cmd+alt+u",
+        "when": "integratedWorkbench.inProject"
+      },
+      {
+        "command": "integratedWorkbench.openMonitor",
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m",
         "when": "integratedWorkbench.inProject"
       }
     ],
@@ -165,6 +182,13 @@
           "title": "Integrated Workbench",
           "icon": "media/icon.svg"
         }
+      ],
+      "panel": [
+        {
+          "id": "integratedWorkbenchMonitor",
+          "title": "Serial Monitor",
+          "icon": "media/icon.svg"
+        }
       ]
     },
     "views": {
@@ -178,6 +202,13 @@
           "type": "webview",
           "id": "integratedWorkbench.tools",
           "name": "Boards and Tools"
+        }
+      ],
+      "integratedWorkbenchMonitor": [
+        {
+          "type": "webview",
+          "id": "integratedWorkbench.monitor",
+          "name": "Serial Monitor"
         }
       ]
     }

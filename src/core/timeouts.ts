@@ -34,6 +34,12 @@ export const TIMEOUTS = {
   registryFetchMs: 15_000,
   /** Searching the workspace for files (recommendation rules, sketch list). */
   findFilesMs: 5_000,
+  /** Serial monitor: each protocol command (HELLO, DESCRIBE, CONFIGURE, CLOSE). */
+  monitorCommandMs: 5_000,
+  /** Serial monitor: opening a port (includes the monitor connecting back over TCP). */
+  monitorOpenMs: 10_000,
+  /** Serial monitor: how long to keep trying to reconnect after the port disappears. */
+  monitorReconnectMs: 60_000,
   /** Grace period between asking a timed-out process to stop and force-killing it. */
   killGraceMs: 3_000,
 };

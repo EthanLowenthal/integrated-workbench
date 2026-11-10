@@ -93,5 +93,35 @@ export async function run(): Promise<void> {
     ),
   );
   log('sketch.yaml written; arduino:avr recommended for Blink');
+  // Serial Monitor: without its engine it says so instead of hanging.
+  await vscode.commands.executeCommand('integratedWorkbench.openMonitor');
+  if (!api.monitor.state.engineReady) {
+    assert.equal(api.monitor.state.status, 'error');
+    assert.match(api.monitor.state.message ?? '', /Serial Monitor Engine not installed/);
+    log(`monitor without engine -> "${api.monitor.state.message}"`);
+    // Install the engine through Boards and Tools (real download from GitHub, sha256-checked).
+    await api.tools.install('serial-monitor');
+    await until('monitor engine installed', () => (api.monitor.state.engineReady ? true : undefined), 60000);
+    log('Serial Monitor Engine installed');
+  }
+
+  // A real serial device on macOS: the Bluetooth serial port. Open it, change baud live, close.
+  const btPort = '/dev/cu.Bluetooth-Incoming-Port';
+  if (
+    process.platform === 'darwin' &&
+    (await vscode.workspace.fs.stat(vscode.Uri.file(btPort)).then(
+      () => true,
+      () => false,
+    ))
+  ) {
+    await api.monitor.connect(btPort);
+    assert.equal(api.monitor.state.status, 'connected', api.monitor.state.message);
+    assert.ok(api.monitor.state.bauds.length > 5, 'baud list from the port');
+    await api.monitor.setBaud('9600');
+    assert.equal(api.monitor.state.baud, '9600');
+    await api.monitor.disconnect();
+    assert.equal(api.monitor.state.status, 'idle');
+    log(`monitor: opened ${btPort}, ${api.monitor.state.bauds.length} baud rates, changed baud live, closed`);
+  }
   log('PASS');
 }
