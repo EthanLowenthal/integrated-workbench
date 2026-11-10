@@ -3,7 +3,9 @@ import { homedir } from 'node:os';
 import { basename, dirname, extname, join } from 'node:path';
 import type { ProbeHost } from '../../core/probes/host.js';
 import { streamProcess, type StreamRunner } from '../process.js';
+import { parseFqbn } from './fqbn.js';
 import type {
+  BoardOption,
   BuildResult,
   BuildTarget,
   DetectedBoard,
@@ -17,6 +19,7 @@ import type {
 import {
   parseBoardList,
   parseBoardListAll,
+  parseBoardDetails,
   parseCoreSearch,
   type CoreInfo,
   parseCompilerDiagnostics,
@@ -91,7 +94,9 @@ export class ArduinoToolchain implements Toolchain {
   private readonly platform: NodeJS.Platform;
 
   constructor(private readonly opts: ArduinoOptions) {
-    this.stream = opts.stream ?? streamProcess;
+    // Every long-running command's output ends up in front of a person: no terminal color codes.
+    const stream = opts.stream ?? streamProcess;
+    this.stream = (file, args, o) => stream(file, [...args, '--no-color'], o);
     this.platform = opts.platform ?? process.platform;
   }
 
@@ -187,6 +192,48 @@ export class ArduinoToolchain implements Toolchain {
     if (res.code !== 0)
       throw new Error(res.stderr.trim() || `arduino-cli board listall failed (${res.code})`);
     return parseBoardListAll(res.stdout);
+  }
+
+  private optionsCache = new Map<string, BoardOption[]>();
+
+  /** Board menus (Flash Size, Processor, Upload Method, ...) with each default. */
+  async boardOptions(targetId: string): Promise<BoardOption[]> {
+    const base = parseFqbn(targetId).base;
+    const cached = this.optionsCache.get(base);
+    if (cached) return cached;
+    const res = await this.opts.host.run(
+      await this.cli(),
+      ['board', 'details', '-b', base, '--format', 'json'],
+      {
+        timeoutMs: TIMEOUTS.cliListMs,
+      },
+    );
+    if (res.code !== 0)
+      throw new Error(lastLine(res.stderr) || `arduino-cli board details failed (${res.code})`);
+    const options = parseBoardDetails(res.stdout);
+    this.optionsCache.set(base, options);
+    return options;
+  }
+
+  /** Forget cached board details (after installing or removing board packages). */
+  clearCaches(): void {
+    this.optionsCache.clear();
+  }
+
+  /**
+   * Writes compile_commands.json for the sketch without building it (a few seconds).
+   * Returns the build folder it was written to.
+   */
+  async compilationDatabase(project: Project, fqbn: string, signal?: AbortSignal): Promise<string> {
+    const buildPath = `${this.buildPath(project)}-intellisense`;
+    const res = await this.stream(
+      await this.cli(),
+      ['compile', '--fqbn', fqbn, '--build-path', buildPath, '--only-compilation-database', project.root],
+      { signal, timeoutMs: TIMEOUTS.compileDbMs },
+    );
+    if (res.code !== 0)
+      throw new Error(lastLine(res.stderr) || lastLine(res.stdout) || 'Could not read the build settings.');
+    return buildPath;
   }
 
   buildPath(project: Project): string {

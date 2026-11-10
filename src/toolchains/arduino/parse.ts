@@ -1,4 +1,4 @@
-import type { BuildDiagnostic, BuildTarget, DetectedBoard } from '../types.js';
+import type { BoardOption, BuildDiagnostic, BuildTarget, DetectedBoard } from '../types.js';
 
 /** Pure parsers for arduino-cli output. Formats checked against arduino-cli 1.x; 0.x shapes accepted too. */
 
@@ -184,6 +184,36 @@ export function parseCoreSearch(json: string): CoreInfo[] {
       latestVersion: p.latest_version || undefined,
       installedVersion: p.installed_version || undefined,
       boards: (release?.boards ?? []).map((b) => b.name).filter((n): n is string => !!n),
+    });
+  }
+  return out;
+}
+
+interface RawConfigOption {
+  option?: string;
+  option_label?: string;
+  values?: { value?: string; value_label?: string; selected?: boolean }[];
+}
+
+/**
+ * `arduino-cli board details -b <base fqbn> --format json` -> board options.
+ * Query with the base FQBN so `selected` marks each option's default. Boards without options
+ * (e.g. Uno) have no config_options field.
+ */
+export function parseBoardDetails(json: string): BoardOption[] {
+  const parsed = JSON.parse(json || '{}') as { config_options?: RawConfigOption[] };
+  const out: BoardOption[] = [];
+  for (const o of parsed.config_options ?? []) {
+    if (!o.option) continue;
+    const values = (o.values ?? [])
+      .filter((v): v is { value: string; value_label?: string; selected?: boolean } => !!v.value)
+      .map((v) => ({ id: v.value, label: v.value_label || v.value, selected: !!v.selected }));
+    if (!values.length) continue;
+    out.push({
+      id: o.option,
+      label: o.option_label || o.option,
+      values: values.map(({ id, label }) => ({ id, label })),
+      defaultValue: (values.find((v) => v.selected) ?? values[0]!).id,
     });
   }
   return out;

@@ -470,3 +470,73 @@ button:disabled {
   border-radius: 2px;
   padding: 3px 6px;
 }
+
+/* Board options */
+.opts {
+  margin: 6px 0 2px 52px;
+}
+.opts summary {
+  cursor: pointer;
+  padding: 2px 0;
+}
+.opts .opt {
+  margin: 4px 0;
+  gap: 6px;
+}
+.opts .opt-label {
+  width: 96px;
+  flex: none;
+  color: var(--vscode-descriptionForeground);
+}
+.opts select {
+  padding: 2px 4px;
+}
+
+/* Sketch Settings page (editor tab), styled after VS Code's Settings editor */
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 24px 48px;
+}
+.page h1 {
+  font-size: 26px;
+  font-weight: 400;
+  margin: 6px 0 8px;
+}
+.page h2 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 28px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--vscode-settings-headerBorder, var(--vscode-widget-border, transparent));
+}
+.setting {
+  padding: 10px 12px 10px 14px;
+  margin: 2px 0;
+  border-left: 2px solid transparent;
+}
+.setting:hover {
+  background: var(--vscode-settings-rowHoverBackground, var(--vscode-list-hoverBackground));
+}
+.setting.modified {
+  border-left-color: var(--vscode-settings-modifiedItemIndicator, var(--vscode-focusBorder));
+}
+.setting-title {
+  font-weight: 600;
+}
+.setting-desc {
+  color: var(--vscode-descriptionForeground);
+  margin: 2px 0 6px;
+}
+.setting-control select {
+  width: auto;
+  min-width: 280px;
+  max-width: 100%;
+  flex: none;
+}
+.setting-control .row {
+  gap: 10px;
+}
+.setting-control .value {
+  min-width: 0;
+}

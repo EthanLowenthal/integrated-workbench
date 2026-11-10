@@ -1,15 +1,19 @@
 import * as vscode from 'vscode';
 import { nodeHost } from './core/index.js';
 import { BoardDoctor } from './doctor.js';
+import { newSketch } from './newSketch.js';
 import { pickBoard, pickPort } from './pickers.js';
 import { RegistryService } from './registryService.js';
 import { Runs } from './runs.js';
 import { Session } from './session.js';
 import { StatusBar } from './statusBar.js';
+import { text } from './text.js';
 import { ArduinoToolchain } from './toolchains/arduino/index.js';
+import { CPPTOOLS_ID, IntelliSense } from './intellisense.js';
 import { MonitorController } from './monitor/controller.js';
 import { ToolsModel } from './toolsModel.js';
 import { MONITOR_VIEW, MonitorView } from './views/monitorView.js';
+import { SettingsPage } from './views/settingsPage.js';
 import { SKETCH_VIEW, SketchView } from './views/sketchView.js';
 import { TOOLS_VIEW, ToolsView } from './views/toolsView.js';
 
@@ -22,6 +26,7 @@ export interface TestApi {
   registry: RegistryService;
   runs: Runs;
   monitor: MonitorController;
+  intellisense: IntelliSense;
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<TestApi> {
@@ -75,6 +80,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   const statusBar = new StatusBar(session, doctor, runs);
   const monitor = new MonitorController(registry, toolsDir, session, context.workspaceState, output);
   const monitorView = new MonitorView(context.extensionUri, monitor);
+  const intellisense = new IntelliSense(context.extension.id, session, arduino, output);
+  sketchView.intellisense = intellisense;
+  const settingsPage = new SettingsPage(context.extensionUri, session, monitor, intellisense, registry);
   // The monitor gives the port back for uploads and takes it again once the board is back.
   runs.uploadHooks = {
     before: (port) => monitor.pauseForUpload(port),
@@ -94,6 +102,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     statusBar,
     monitor,
     monitorView,
+    intellisense,
+    settingsPage,
+    vscode.commands.registerCommand('integratedWorkbench.openSketchSettings', () => settingsPage.open()),
+    vscode.commands.registerCommand('integratedWorkbench.installCppExtension', () =>
+      vscode.commands.executeCommand('extension.open', CPPTOOLS_ID),
+    ),
+    vscode.commands.registerCommand('integratedWorkbench.writeCompileCommands', async () => {
+      const uri = await intellisense.writeCompileCommands();
+      if (uri)
+        vscode.window.setStatusBarMessage(
+          text.intellisense.wrote(vscode.workspace.asRelativePath(uri)),
+          5000,
+        );
+    }),
     // Keep the output when the panel is hidden.
     vscode.window.registerWebviewViewProvider(MONITOR_VIEW, monitorView, {
       webviewOptions: { retainContextWhenHidden: true },
@@ -105,6 +127,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     }),
     vscode.window.registerWebviewViewProvider(SKETCH_VIEW, sketchView),
     vscode.window.registerWebviewViewProvider(TOOLS_VIEW, toolsView),
+    vscode.commands.registerCommand('integratedWorkbench.newSketch', () => newSketch(session)),
+    vscode.commands.registerCommand('integratedWorkbench.getStarted', () =>
+      vscode.commands.executeCommand(
+        'workbench.action.openWalkthrough',
+        `${context.extension.id}#getStarted`,
+        false,
+      ),
+    ),
     vscode.commands.registerCommand('integratedWorkbench.build', () => runs.build()),
     vscode.commands.registerCommand('integratedWorkbench.upload', () => runs.upload()),
     vscode.commands.registerCommand('integratedWorkbench.selectBoard', async () => {
@@ -137,6 +167,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
         arduino.resetCli();
         void session.recheckTool();
         void tools.refresh();
+        void intellisense.start();
+        // First run: open the Get Started walkthrough once.
+        if (!context.globalState.get<boolean>('integratedWorkbench.welcomed')) {
+          void context.globalState.update('integratedWorkbench.welcomed', true);
+          void vscode.commands.executeCommand('integratedWorkbench.getStarted');
+        }
       }
     }),
   );
@@ -144,7 +180,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
   // Background: these talk to arduino-cli and the network, which can be slow.
   void session.start();
   void tools.refresh();
-  return { session, tools, registry, runs, monitor };
+  return { session, tools, registry, runs, monitor, intellisense };
 }
 
 export function deactivate(): void {}

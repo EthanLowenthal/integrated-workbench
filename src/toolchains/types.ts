@@ -29,6 +29,20 @@ export interface DetectedBoard {
   serialNumber?: string;
 }
 
+export interface BoardOptionValue {
+  id: string;
+  label: string;
+}
+
+/** A board menu, e.g. ESP32 "Flash Size" or Nano "Processor". */
+export interface BoardOption {
+  id: string;
+  label: string;
+  values: BoardOptionValue[];
+  /** Used when the board ID doesn't set this option. */
+  defaultValue: string;
+}
+
 export type BuildSeverity = 'error' | 'warning' | 'info';
 
 export interface BuildDiagnostic {
@@ -87,6 +101,8 @@ export interface Toolchain {
   listBoards(): Promise<DetectedBoard[]>;
   /** Every target the user could pick (installed cores' boards, Rust targets, ...). */
   listTargets(): Promise<BuildTarget[]>;
+  /** Board menus for a target (without options in its id). Empty if the board has none. */
+  boardOptions?(targetId: string): Promise<BoardOption[]>;
   build(ctx: RunContext): Promise<BuildResult>;
   flash(ctx: RunContext & { port: string }): Promise<FlashResult>;
 }

@@ -1,0 +1,25 @@
+{
+  "fqbn": "arduino:avr:nano",
+  "name": "Arduino Nano",
+  "config_options": [
+    {
+      "option": "cpu",
+      "option_label": "Processor",
+      "values": [
+        {
+          "value": "atmega328",
+          "value_label": "ATmega328P",
+          "selected": true
+        },
+        {
+          "value": "atmega328old",
+          "value_label": "ATmega328P (Old Bootloader)"
+        },
+        {
+          "value": "atmega168",
+          "value_label": "ATmega168"
+        }
+      ]
+    }
+  ]
+}

@@ -19,6 +19,8 @@ export const TIMEOUTS = {
   updateIndexMs: 2 * 60_000,
   /** Compiling. First ESP32/STM32 builds can take several minutes. */
   compileMs: 15 * 60_000,
+  /** Generating the compilation database for IntelliSense (no full build). */
+  compileDbMs: 3 * 60_000,
   /** Uploading. */
   uploadMs: 5 * 60_000,
   /** Installing a board package (toolchains can be hundreds of MB). */

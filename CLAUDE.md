@@ -18,7 +18,7 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - `src/toolchains/types.ts` is the Toolchain interface; `src/toolchains/arduino/` wraps arduino-cli (parsers in `parse.ts` are pure and tested). `managedCli.ts` downloads Integrated Workbench's own pinned arduino-cli (version + per-platform SHA-256 baked in; bump both together from the release's checksums file) into extension global storage after a one-time consent prompt. Lookup order: `integratedWorkbench.arduinoCliPath` setting, managed copy, system install.
 - `src/core/` (no vscode): `probes/*` collect, `parse/*` parse, `diagnose.ts` decides, `watch.ts` diffs snapshots.
 - Fixtures: `test/fixtures/` (`*.real.*` captured, `*.synth.*` hand-written; see its README).
-- Test kit: `~/Downloads/integrated-workbench-test` (README with numbered checks + sample sketches + `IntegratedWorkbench-dev.vsix`). Refresh the VSIX there with `npm run package` after changes.
+- Test kit: `~/Downloads/integrated-workbench-test` (README with numbered checks + sample sketches + `IntegratedWorkbench-<version>.vsix`). Refresh the VSIX there with `npm run package` after changes.
 - Run the extension: F5 ("Run Integrated Workbench" in `.vscode/launch.json`).
 
 ## Registry
@@ -40,6 +40,13 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - Transport: `src/monitor/pluggableMonitor.ts` drives Arduino's `serial-monitor` tool directly over the pluggable monitor protocol (stdin commands, JSON replies, port data over a 127.0.0.1 TCP socket). Not `arduino-cli monitor`, which refuses to open ports until a board package is installed. No native modules. The tool is a registry package (`serial-monitor` in tools.json).
 - `src/monitor/controller.ts` owns the connection: live baud via CONFIGURE, per-sketch baud, pause/resume around uploads (Runs.uploadHooks), reconnect for up to 60 s. Panel view: `src/views/monitorView.ts` + `media/monitor.js` (output, hex, timestamps, filter, send history, canvas plotter).
 - Test without hardware: `test/fixtures/monitor/fake-monitor.mjs` speaks the protocol; on macOS the e2e test opens /dev/cu.Bluetooth-Incoming-Port with the real tool.
+
+## Board options, IntelliSense, settings page, onboarding
+
+- Board options: `arduino-cli board details` -> `Session.boardOptions`; only non-default values are written into `default_fqbn` (`src/toolchains/arduino/fqbn.ts`).
+- IntelliSense: `src/intellisense.ts` registers a C/C++ extension custom configuration provider fed from `compile --only-compilation-database` (`compileDb.ts` maps build-folder copies back to sketch files and forces Arduino.h for .ino). Nothing is written to the sketch unless the user runs "Write compile_commands.json for clangd".
+- Larger UIs open as editor-tab pages (`src/views/settingsPage.ts`, Sketch Settings). Get Started is a native walkthrough (`package.json` walkthroughs + `media/walkthrough/*.md`), opened once on first activation; steps complete via context keys set in Session.
+- e2e with a real toolchain: `E2E_CLI=<arduino-cli> E2E_ARDUINO_DATA=<data dir with arduino:avr> npm run test:e2e`.
 
 ## Timeouts and responsiveness
 

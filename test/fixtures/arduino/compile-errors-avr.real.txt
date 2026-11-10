@@ -1,0 +1,16 @@
+<SKETCH>/BrokenSketch.ino: In function 'void loop()':
+<SKETCH>/BrokenSketch.ino:10:3: error: 'digitalWirte' was not declared in this scope
+   digitalWirte(LED_BUILTIN, HIGH);  // error: typo
+   ^~~~~~~~~~~~
+<SKETCH>/BrokenSketch.ino:10:3: note: suggested alternative: 'digitalWrite'
+   digitalWirte(LED_BUILTIN, HIGH);  // error: typo
+   ^~~~~~~~~~~~
+   digitalWrite
+<SKETCH>/helper.cpp: In function 'void helperBlink()':
+<SKETCH>/helper.cpp:6:3: error: expected ';' before 'delay'
+   delay(500);
+   ^~~~~
+
+[92mUsed platform[0m [92mVersion[0m [90mPath[0m
+[93marduino:avr[0m   1.8.8   [90m<S>/a15/packages/arduino/hardware/avr/1.8.8[0m
+Error during build: exit status 1

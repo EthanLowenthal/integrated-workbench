@@ -62,7 +62,17 @@
     const where = s.board
       ? `<div class="muted small" style="margin:4px 0 0 52px">${esc(T.boardSaved)}</div>`
       : '';
-    return `<div class="section">${board}${where}${port}</div>`;
+    return `<div class="section">${board}${where}${options(s, W)}${port}</div>`;
+  }
+
+  function options(s, W) {
+    if (!s.board) return '';
+    const n = (s.options || []).length;
+    const changed = (s.options || []).filter((o) => o.changed).length;
+    const summary = n
+      ? `${n} ${esc(n === 1 ? W.optionOne : W.optionMany)}${changed ? `, ${changed} ${esc(W.modified)}` : ''}`
+      : '';
+    return `<div class="muted small" style="margin:2px 0 0 52px">${summary}${summary ? ' · ' : ''}<button class="link" data-action="openSettings">${esc(W.configure)}</button></div>`;
   }
 
   function actions(s, T, W) {
@@ -78,7 +88,21 @@
       <button data-action="build" title="${esc(W.verifyTip)} (${esc(s.keys.build)})">${icon('check')} ${esc(W.verify)}</button>
       <button class="primary" data-action="upload" title="${esc(W.uploadTip)} (${esc(s.keys.upload)})">${icon('arrow-right')} ${esc(W.upload)}</button>
       <button data-action="monitor" title="${esc(T.openMonitor)} (${esc(s.keys.monitor)})">${icon('terminal')} ${esc(W.monitor)}</button>
-    </div>${blocked}</div>`;
+    </div>${blocked}${intellisenseHint(s, W)}</div>`;
+  }
+
+  function intellisenseHint(s, W) {
+    const i = s.intellisense;
+    if (!i || !i.message) return '';
+    const ic =
+      i.status === 'updating'
+        ? icon('loading', 'codicon-modifier-spin')
+        : icon(i.status === 'error' ? 'warning' : 'info', i.status === 'error' ? 'warn' : '');
+    const btn =
+      i.status === 'needsExtension'
+        ? `<button class="link" data-action="installCpp">${esc(W.install)}</button>`
+        : '';
+    return `<div class="row muted small" style="margin-top:8px">${ic}<span class="grow">${esc(i.message)}</span>${btn}</div>`;
   }
 
   function lastRun(s, T, W) {
@@ -161,8 +185,12 @@
     else vscode.postMessage({ type: a });
   });
   root.addEventListener('change', (e) => {
-    const el = e.target.closest('select[data-action="selectPort"]');
-    if (el && el.value) vscode.postMessage({ type: 'selectPort', path: el.value });
+    const el = e.target.closest('select[data-action]');
+    if (!el) return;
+    if (el.dataset.action === 'selectPort' && el.value)
+      vscode.postMessage({ type: 'selectPort', path: el.value });
+    if (el.dataset.action === 'setOption')
+      vscode.postMessage({ type: 'setOption', id: el.dataset.id, value: el.value });
   });
 
   window.addEventListener('message', (e) => {

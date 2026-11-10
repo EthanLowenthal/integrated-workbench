@@ -408,6 +408,7 @@ export class ToolsModel implements vscode.Disposable {
   }
 
   private async afterChange(): Promise<void> {
+    this.arduino.clearCaches();
     await this.refresh();
     await this.session.recheckTool();
   }

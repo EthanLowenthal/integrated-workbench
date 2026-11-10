@@ -7,6 +7,7 @@ import type { Runs } from '../runs.js';
 import type { Session } from '../session.js';
 import { text } from '../text.js';
 import type { ToolsModel } from '../toolsModel.js';
+import type { IntelliSense } from '../intellisense.js';
 import { webviewHtml, webviewOptions } from './webview.js';
 import { findFilesLimited } from '../findFiles.js';
 
@@ -30,6 +31,9 @@ type Msg =
         | 'monitor';
     }
   | { type: 'selectPort'; path: string }
+  | { type: 'setOption'; id: string; value: string }
+  | { type: 'installCpp' }
+  | { type: 'openSettings' }
   | { type: 'openFile'; file: string; line: number; column?: number }
   | { type: 'showTools'; focus?: string }
   | { type: 'doctorAction'; d: number; a: number }
@@ -38,6 +42,12 @@ type Msg =
 /** The "Sketch" section of the sidebar: board, port, Verify/Upload, last result, board check. */
 export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable {
   private view?: vscode.WebviewView;
+  /** Set after construction; its status shows as a hint row. */
+  set intellisense(i: IntelliSense) {
+    this.intelli = i;
+    this.subs.push(i.onDidChange(() => void this.post()));
+  }
+  private intelli?: IntelliSense;
   private sketches: { name: string; path: string }[] = [];
   private sketchesLoaded = false;
   /** Last state sent, so the 2-second board poll doesn't redraw (and close dropdowns) when nothing changed. */
@@ -105,7 +115,25 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
     const state = {
       project: s.project && { name: s.project.name, root: s.project.root },
       sketches: this.sketches,
+      intellisense: this.intelli && {
+        status: this.intelli.status,
+        message:
+          this.intelli.status === 'needsExtension'
+            ? text.intellisense.needsExtension
+            : this.intelli.status === 'error'
+              ? text.intellisense.failed
+              : this.intelli.status === 'updating'
+                ? text.intellisense.updating
+                : undefined,
+      },
       board: s.target,
+      options: s.boardOptions.map((o) => ({
+        id: o.id,
+        label: o.label,
+        value: s.optionValues[o.id] ?? o.defaultValue,
+        changed: o.id in s.optionValues && s.optionValues[o.id] !== o.defaultValue,
+        values: o.values,
+      })),
       boardInstalled: s.targetInstalled,
       engineReady: s.toolReady,
       port: s.port,
@@ -184,6 +212,14 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
         return;
       case 'selectPort':
         return this.session.setPort(m.path);
+      case 'setOption':
+        return this.session.setOption(m.id, m.value);
+      case 'openSettings':
+        await vscode.commands.executeCommand('integratedWorkbench.openSketchSettings');
+        return;
+      case 'installCpp':
+        await vscode.commands.executeCommand('integratedWorkbench.installCppExtension');
+        return;
       case 'refreshPorts':
         await this.doctor.refresh();
         return this.session.refreshBoards();

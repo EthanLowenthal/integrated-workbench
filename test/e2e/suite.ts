@@ -123,5 +123,43 @@ export async function run(): Promise<void> {
     assert.equal(api.monitor.state.status, 'idle');
     log(`monitor: opened ${btPort}, ${api.monitor.state.bauds.length} baud rates, changed baud live, closed`);
   }
+  // Sketch Settings page and IntelliSense status (no C/C++ extension in the throwaway profile).
+  await vscode.commands.executeCommand('integratedWorkbench.openSketchSettings');
+  await until('settings page tab', () =>
+    vscode.window.tabGroups.all.flatMap((g) => g.tabs).find((t) => t.label.startsWith('Sketch Settings')),
+  );
+  log(`intellisense status without C/C++ extension: ${api.intellisense.status}`);
+  assert.equal(api.intellisense.status, 'needsExtension');
+
+  // Real toolchain (optional): board options, writing them to sketch.yaml, and a real compile.
+  if (process.env.E2E_CLI) {
+    await vscode.workspace
+      .getConfiguration('integratedWorkbench')
+      .update('arduinoCliPath', process.env.E2E_CLI, vscode.ConfigurationTarget.Global);
+    await until(
+      'engine ready',
+      () => (api.session.toolReady && api.session.targets.length ? true : undefined),
+      30000,
+    );
+    await api.session.setTarget({ id: 'arduino:avr:nano', name: 'Arduino Nano' });
+    const cpu = await until(
+      'board options',
+      () => api.session.boardOptions.find((o) => o.id === 'cpu'),
+      30000,
+    );
+    assert.equal(cpu.defaultValue, 'atmega328');
+    await api.session.setOption('cpu', 'atmega328old');
+    const y = new TextDecoder().decode(
+      await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folder.uri, 'Blink', 'sketch.yaml')),
+    );
+    assert.match(y, /^default_fqbn: arduino:avr:nano:cpu=atmega328old$/m);
+    await api.session.setOption('cpu', 'atmega328');
+    assert.equal(api.session.fqbn, 'arduino:avr:nano', 'default values are left out of the board ID');
+    const ok = await api.runs.build();
+    assert.equal(ok, true, api.runs.state.last?.summary);
+    log(
+      `real toolchain: nano options loaded, sketch.yaml updated, ${api.runs.state.last?.summary} in ${api.runs.state.last?.durationMs} ms`,
+    );
+  }
   log('PASS');
 }

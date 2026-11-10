@@ -1,8 +1,8 @@
 {
   "name": "integrated-workbench",
   "displayName": "Integrated Workbench",
-  "description": "Board-aware microcontroller development: pick up the plugged-in board, compile, upload, and find out in plain English why a board isn't showing up. Builds and uploads Arduino sketches via arduino-cli.",
-  "version": "0.0.1",
+  "description": "Build, upload, and monitor microcontroller projects. Detects connected boards, manages board packages, and includes a Serial Monitor with a plotter. Supports Arduino sketches for AVR, ESP32, STM32, and Raspberry Pi Pico.",
+  "version": "0.1.0",
   "publisher": "integrated-workbench",
   "license": "MIT",
   "engines": {
@@ -10,14 +10,21 @@
     "node": ">=20"
   },
   "categories": [
+    "Programming Languages",
+    "Debuggers",
     "Other"
   ],
   "keywords": [
     "arduino",
     "esp32",
+    "stm32",
+    "raspberry pi pico",
+    "serial monitor",
+    "embedded",
+    "microcontroller",
     "ch340",
-    "serial port",
-    "board not detected"
+    "board manager",
+    "arduino-cli"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
@@ -27,6 +34,12 @@
   ],
   "contributes": {
     "commands": [
+      {
+        "command": "integratedWorkbench.newSketch",
+        "title": "New Sketch...",
+        "category": "Integrated Workbench",
+        "icon": "$(new-file)"
+      },
       {
         "command": "integratedWorkbench.build",
         "title": "Verify",
@@ -41,17 +54,17 @@
       },
       {
         "command": "integratedWorkbench.selectBoard",
-        "title": "Select Board",
+        "title": "Select Board...",
         "category": "Integrated Workbench"
       },
       {
         "command": "integratedWorkbench.selectPort",
-        "title": "Select Port",
+        "title": "Select Port...",
         "category": "Integrated Workbench"
       },
       {
         "command": "integratedWorkbench.boardDoctor",
-        "title": "Board Doctor",
+        "title": "Show Diagnostics",
         "category": "Integrated Workbench"
       },
       {
@@ -74,6 +87,27 @@
         "title": "Open Serial Monitor",
         "category": "Integrated Workbench",
         "icon": "$(terminal)"
+      },
+      {
+        "command": "integratedWorkbench.writeCompileCommands",
+        "title": "Write compile_commands.json for clangd",
+        "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.installCppExtension",
+        "title": "Install C/C++ Extension for IntelliSense",
+        "category": "Integrated Workbench"
+      },
+      {
+        "command": "integratedWorkbench.openSketchSettings",
+        "title": "Open Sketch Settings",
+        "category": "Integrated Workbench",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "integratedWorkbench.getStarted",
+        "title": "Get Started",
+        "category": "Integrated Workbench"
       }
     ],
     "menus": {
@@ -109,6 +143,16 @@
           "command": "integratedWorkbench.reloadRegistries",
           "when": "view == integratedWorkbench.tools",
           "group": "overflow"
+        },
+        {
+          "command": "integratedWorkbench.openSketchSettings",
+          "when": "view == integratedWorkbench.sketch",
+          "group": "navigation"
+        },
+        {
+          "command": "integratedWorkbench.newSketch",
+          "when": "view == integratedWorkbench.sketch",
+          "group": "navigation"
         }
       ]
     },
@@ -138,13 +182,13 @@
         "integratedWorkbench.arduinoCliPath": {
           "type": "string",
           "default": "",
-          "description": "Path to arduino-cli. Leave empty to find it automatically (PATH, Homebrew, Arduino IDE)."
+          "description": "Path to an arduino-cli executable. When empty, Integrated Workbench uses the copy it manages, or an arduino-cli found on PATH."
         },
         "integratedWorkbench.pollIntervalMs": {
           "type": "number",
           "default": 2000,
           "minimum": 500,
-          "description": "How often to check for boards being plugged in or unplugged while a sketch is open and VS Code is focused."
+          "description": "How often, in milliseconds, to check for connected and disconnected boards while a sketch is open and the window is focused."
         },
         "integratedWorkbench.registries": {
           "type": "array",
@@ -211,7 +255,94 @@
           "name": "Serial Monitor"
         }
       ]
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "getStarted",
+        "title": "Get Started with Integrated Workbench",
+        "description": "Set up a board, upload your first sketch, and read its output.",
+        "steps": [
+          {
+            "id": "sketch",
+            "title": "Create or open a sketch",
+            "description": "Start from a new sketch, or open a file in an existing one.\n[New Sketch](command:integratedWorkbench.newSketch)",
+            "media": {
+              "markdown": "media/walkthrough/sketch.md"
+            },
+            "completionEvents": [
+              "onContext:integratedWorkbench.inProject",
+              "onCommand:integratedWorkbench.newSketch"
+            ]
+          },
+          {
+            "id": "engine",
+            "title": "Install the build engine",
+            "description": "A one-time download of arduino-cli, Arduino's official build tool.\n[Open Boards and Tools](command:integratedWorkbench.showTools?%5B%22engine%22%5D)",
+            "media": {
+              "markdown": "media/walkthrough/engine.md"
+            },
+            "completionEvents": [
+              "onContext:integratedWorkbench.engineReady"
+            ]
+          },
+          {
+            "id": "board",
+            "title": "Select your board",
+            "description": "Choose the board the sketch is for. Connected boards that identify themselves are selected automatically.\n[Select Board](command:integratedWorkbench.selectBoard)",
+            "media": {
+              "markdown": "media/walkthrough/board.md"
+            },
+            "completionEvents": [
+              "onContext:integratedWorkbench.boardSelected"
+            ]
+          },
+          {
+            "id": "connect",
+            "title": "Connect your board",
+            "description": "Plug the board in with a USB data cable and select its port.\n[Show Sketch View](command:integratedWorkbench.showSketch)",
+            "media": {
+              "markdown": "media/walkthrough/connect.md"
+            },
+            "completionEvents": [
+              "onContext:integratedWorkbench.portSelected"
+            ]
+          },
+          {
+            "id": "upload",
+            "title": "Verify and upload",
+            "description": "Compile the sketch and write it to the board.\n[Upload](command:integratedWorkbench.upload)",
+            "media": {
+              "markdown": "media/walkthrough/upload.md"
+            },
+            "completionEvents": [
+              "onCommand:integratedWorkbench.upload"
+            ]
+          },
+          {
+            "id": "monitor",
+            "title": "Open the Serial Monitor",
+            "description": "See what the board prints, send it text, and plot values.\n[Open Serial Monitor](command:integratedWorkbench.openMonitor)",
+            "media": {
+              "markdown": "media/walkthrough/monitor.md"
+            },
+            "completionEvents": [
+              "onCommand:integratedWorkbench.openMonitor"
+            ]
+          },
+          {
+            "id": "more",
+            "title": "Board options, IntelliSense, and more",
+            "description": "Configure board options and IntelliSense, and add registries.\n[Open Sketch Settings](command:integratedWorkbench.openSketchSettings)",
+            "media": {
+              "markdown": "media/walkthrough/more.md"
+            },
+            "completionEvents": [
+              "onCommand:integratedWorkbench.openSketchSettings"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
     "build": "node esbuild.mjs",
@@ -244,6 +375,16 @@
     "url": "https://github.com/EthanLowenthal/sketchdesk.git"
   },
   "dependencies": {
-    "ajv": "^8.20.0"
+    "ajv": "^8.20.0",
+    "vscode-cpptools": "^7.1.1"
+  },
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1B5E7A",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/EthanLowenthal/sketchdesk#readme",
+  "bugs": {
+    "url": "https://github.com/EthanLowenthal/sketchdesk/issues"
   }
 }

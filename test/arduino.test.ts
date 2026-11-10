@@ -187,6 +187,7 @@ describe('ArduinoToolchain', () => {
       '--build-path',
       expect.stringMatching(/^\/b\/Blink-/),
       '/s/Blink',
+      '--no-color',
     ]);
     expect(out.join('')).toContain('compiling...');
     expect(res.fix?.label).toBe('Install esp32:esp32');
@@ -221,6 +222,7 @@ describe('ArduinoToolchain', () => {
       '--input-dir',
       tc.buildPath(project),
       '/s/Blink',
+      '--no-color',
     ]);
   });
 });

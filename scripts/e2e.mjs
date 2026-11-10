@@ -34,6 +34,10 @@ try {
     ...(vscodeExecutablePath ? { vscodeExecutablePath } : {}),
     extensionDevelopmentPath: root,
     extensionTestsPath: join(root, 'dist/e2e/suite.js'),
+    // Optional: point at an existing arduino-cli and data folder to also test real board options and compiles.
+    extensionTestsEnv: process.env.E2E_CLI
+      ? { E2E_CLI: process.env.E2E_CLI, ARDUINO_DIRECTORIES_DATA: process.env.E2E_ARDUINO_DATA }
+      : {},
     launchArgs: [
       ws,
       '--user-data-dir',

@@ -44,7 +44,6 @@ export const text = {
   openTools: 'Install Board Packages...',
 
   // Boards and Tools
-  comingSoon: 'Coming soon',
   downloading: 'Downloading',
   removing: 'Uninstalling',
   installingCore: (id: string) => `Installing ${id}`,
@@ -52,10 +51,10 @@ export const text = {
     `Failed to install ${id}. See the Integrated Workbench output for details.`,
   coreRemoveFailed: (id: string) =>
     `Failed to uninstall ${id}. See the Integrated Workbench output for details.`,
-  needsEngineFirst: 'Requires the build engine, which is installed first.',
+  needsEngineFirst: 'Installing this also installs the build engine.',
   notInIndex: 'Not found in the package index. Refresh to update.',
   noDownloadHere: 'Not available for this platform.',
-  usingYourOwn: 'Using the arduino-cli configured in settings or on PATH.',
+  usingYourOwn: 'Using an existing arduino-cli installation.',
   trustRegistry: (pkg: string, registry: string) => `Install ${pkg} from "${registry}"?`,
   trustRegistryDetail: (spec: string) =>
     `This package comes from a third-party registry (${spec}). Registries can download and run programs on this computer. Install only from registries you trust. You will not be asked again for this registry.`,
@@ -84,6 +83,75 @@ export const text = {
   adminPrompt: (cmd: string) =>
     `"${cmd}" requires administrator privileges and will not be run automatically. Copy it and run it in an administrator terminal.`,
   adminCopy: 'Copy Command',
+
+  newSketch: {
+    title: 'New Sketch',
+    prompt: 'Name of the new sketch. A folder with this name and a matching .ino file are created.',
+    chooseFolder: 'Create Sketch Here',
+    nameRequired: 'Enter a name.',
+    nameTooLong: 'Use 63 characters or fewer.',
+    nameInvalid: 'Use letters, digits, "_", "." and "-", starting with a letter, digit or "_".',
+    exists: (name: string) => `A folder named "${name}" already exists.`,
+  },
+
+  settingsPage: {
+    title: 'Sketch Settings',
+    titleFor: (sketch: string) => `Sketch Settings: ${sketch}`,
+    ui: {
+      noSketch: 'Open a file in a sketch to edit its settings.',
+      storedIn:
+        "Board and board options are stored in this sketch's sketch.yaml, which arduino-cli and Arduino IDE also read. The port is stored on this computer only.",
+      openYaml: 'Open sketch.yaml',
+      board: 'Board',
+      boardDescription: 'The board this sketch is compiled and uploaded for.',
+      selectBoard: 'Select Board...',
+      changeBoard: 'Change...',
+      noBoard: 'No board selected',
+      boardPackageMissing: 'The board package for this board is not installed.',
+      installPackage: 'Open Boards and Tools',
+      engineMissing: 'The build engine is not installed.',
+      options: 'Board Options',
+      optionsDescription:
+        'Settings for this board, such as flash size, CPU speed, or upload method. Only values that differ from the default are written to sketch.yaml.',
+      noOptions: 'This board has no options.',
+      resetOptions: 'Reset to Defaults',
+      defaultLabel: 'default',
+      modified: 'Modified',
+      port: 'Port',
+      portDescription: 'The serial port used for uploading and the Serial Monitor.',
+      noPorts: 'No boards connected',
+      refresh: 'Refresh',
+      disconnected: 'disconnected',
+      monitor: 'Serial Monitor',
+      baud: 'Baud Rate',
+      baudDescription: 'Must match Serial.begin() in the sketch. Remembered per sketch.',
+      lineEnding: 'Line Ending',
+      lineEndingDescription: 'Appended to each message sent from the Serial Monitor.',
+      intellisense: 'IntelliSense',
+      intellisenseDescription:
+        'Autocomplete, go to definition, and error squiggles for the selected board, its core, and installed libraries.',
+      intellisenseStatus: {
+        off: 'Waiting for a board and its board package.',
+        needsExtension: 'Requires the C/C++ extension.',
+        updating: 'Updating...',
+        ready: 'Up to date.',
+        error: 'Could not read the build settings.',
+      },
+      installCpp: 'Install C/C++ Extension',
+      refreshIntellisense: 'Refresh',
+      writeCompileCommands: 'Write compile_commands.json',
+      clangdHint: 'Using clangd instead? Write a compile_commands.json into the sketch folder.',
+    },
+  },
+
+  /** IntelliSense (autocomplete and error squiggles in the editor). */
+  intellisense: {
+    needsExtension: 'IntelliSense requires the C/C++ extension.',
+    install: 'Install',
+    updating: 'Updating IntelliSense...',
+    failed: 'IntelliSense could not read the build settings.',
+    wrote: (file: string) => `Wrote ${file}`,
+  },
 
   /** Serial Monitor (controller messages and the panel's static strings). */
   monitor: {
@@ -138,6 +206,11 @@ export const text = {
   webview: {
     board: 'Board',
     port: 'Port',
+    boardOptions: 'Board Options',
+    optionOne: 'board option',
+    optionMany: 'board options',
+    modified: 'modified',
+    changedFromDefault: 'Modified from the board default',
     disconnected: 'disconnected',
     verify: 'Verify',
     upload: 'Upload',
@@ -169,7 +242,7 @@ export const text = {
     errorPlural: 'errors',
     moreInProblems: 'more in the Problems panel',
     addRegistry: 'Add Registry...',
-    configure: 'Configure',
+    configure: 'Configure...',
     documentation: 'Documentation',
   },
 };

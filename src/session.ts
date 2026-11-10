@@ -2,7 +2,8 @@ import { join } from 'node:path';
 import * as vscode from 'vscode';
 import type { BoardDoctor } from './doctor.js';
 import { readDefaultFqbn, writeDefaultFqbn } from './toolchains/arduino/sketchYaml.js';
-import type { BuildTarget, DetectedBoard, Project, Toolchain } from './toolchains/types.js';
+import { formatFqbn, parseFqbn } from './toolchains/arduino/fqbn.js';
+import type { BoardOption, BuildTarget, DetectedBoard, Project, Toolchain } from './toolchains/types.js';
 
 const PORTS_KEY = 'integratedWorkbench.ports';
 
@@ -22,8 +23,11 @@ export class Session implements vscode.Disposable {
   toolReady = false;
   /** Every board from installed board packages (empty until arduino-cli is ready). */
   targets: BuildTarget[] = [];
-  /** Board ID from sketch.yaml, if set. */
+  /** Board ID from sketch.yaml, if set, including any board options ("esp32:esp32:esp32s3:FlashSize=8M"). */
   fqbn?: string;
+  /** Menus for the current board (Flash Size, Processor, ...). Empty until loaded or if none. */
+  boardOptions: BoardOption[] = [];
+  private optionsFor?: string;
 
   private lastPortKey: string | undefined;
   /** Bumped on every project update; slower, older updates check it and stop. */
@@ -37,9 +41,14 @@ export class Session implements vscode.Disposable {
     private readonly globalState: vscode.Memento,
     private readonly pollIntervalMs: () => number,
   ) {
+    this.changed.event(() => this.publishContext());
     const yaml = vscode.workspace.createFileSystemWatcher('**/sketch.yaml');
     const onYaml = (uri: vscode.Uri) => {
-      if (this.project && uri.fsPath === this.yamlPath) void this.readFqbn().then(() => this.changed.fire());
+      if (this.project && uri.fsPath === this.yamlPath)
+        void this.readFqbn().then(() => {
+          this.changed.fire();
+          void this.loadBoardOptions();
+        });
     };
     this.disposables.push(
       yaml,
@@ -68,6 +77,15 @@ export class Session implements vscode.Disposable {
     await this.updateProject();
   }
 
+  /** Context keys the Get Started walkthrough uses to mark steps done. */
+  private publishContext(): void {
+    const set = (k: string, v: boolean) =>
+      void vscode.commands.executeCommand('setContext', `integratedWorkbench.${k}`, v);
+    set('engineReady', this.toolReady);
+    set('boardSelected', !!this.fqbn);
+    set('portSelected', !!this.selectedBoard);
+  }
+
   /** Re-check the toolchain (after it was installed, a core changed, or settings changed). */
   async recheckTool(): Promise<void> {
     await this.updateProject(true);
@@ -77,19 +95,64 @@ export class Session implements vscode.Disposable {
     return this.project ? join(this.project.root, 'sketch.yaml') : undefined;
   }
 
-  /** The board to build for, with a display name when we can find one. */
+  /** Board ID without options. */
+  get baseFqbn(): string | undefined {
+    return this.fqbn ? parseFqbn(this.fqbn).base : undefined;
+  }
+
+  /** Option values set in the board ID (only non-default ones are written). */
+  get optionValues(): Record<string, string> {
+    return this.fqbn ? parseFqbn(this.fqbn).options : {};
+  }
+
+  /** The board to build for (id includes options), with a display name when we can find one. */
   get target(): BuildTarget | undefined {
-    if (!this.fqbn) return undefined;
+    const base = this.baseFqbn;
+    if (!this.fqbn || !base) return undefined;
     const name =
-      this.targets.find((t) => t.id === this.fqbn)?.name ??
-      this.boards.flatMap((b) => b.candidates).find((t) => t.id === this.fqbn)?.name ??
-      this.fqbn;
+      this.targets.find((t) => t.id === base)?.name ??
+      this.boards.flatMap((b) => b.candidates).find((t) => t.id === base)?.name ??
+      base;
     return { id: this.fqbn, name };
   }
 
   /** Is the board's package installed? Treated as yes until arduino-cli can tell us. */
   get targetInstalled(): boolean {
-    return !this.fqbn || !this.toolReady || this.targets.some((t) => t.id === this.fqbn);
+    return !this.fqbn || !this.toolReady || this.targets.some((t) => t.id === this.baseFqbn);
+  }
+
+  /** Sets one board option and writes the board ID to sketch.yaml. Defaults are left out. */
+  async setOption(id: string, value: string): Promise<void> {
+    const base = this.baseFqbn;
+    if (!base) return;
+    const options = { ...this.optionValues };
+    const def = this.boardOptions.find((o) => o.id === id)?.defaultValue;
+    if (value === def) delete options[id];
+    else options[id] = value;
+    await this.writeFqbn(formatFqbn(base, options));
+  }
+
+  /** Loads the board's menus when the board changes. */
+  async loadBoardOptions(): Promise<void> {
+    const base = this.baseFqbn;
+    if (base === this.optionsFor) return;
+    this.optionsFor = base;
+    this.boardOptions = [];
+    if (base && this.toolReady && this.targetInstalled && this.toolchain.boardOptions) {
+      try {
+        const options = await this.toolchain.boardOptions(base);
+        if (this.baseFqbn === base) this.boardOptions = options;
+      } catch {
+        this.boardOptions = [];
+      }
+    }
+    this.changed.fire();
+  }
+
+  /** Forget loaded menus (board package installed or removed). */
+  resetBoardOptions(): void {
+    this.optionsFor = undefined;
+    void this.loadBoardOptions();
   }
 
   get port(): string | undefined {
@@ -103,6 +166,14 @@ export class Session implements vscode.Disposable {
   }
 
   async setTarget(target: BuildTarget): Promise<void> {
+    // A different board has different menus: start from its defaults.
+    await this.writeFqbn(parseFqbn(target.id).base);
+    if (!this.targets.some((t) => t.id === parseFqbn(target.id).base))
+      this.targets = [...this.targets, target];
+    this.changed.fire();
+  }
+
+  private async writeFqbn(fqbn: string): Promise<void> {
     if (!this.yamlPath) return;
     const uri = vscode.Uri.file(this.yamlPath);
     let current: string | undefined;
@@ -111,9 +182,9 @@ export class Session implements vscode.Disposable {
     } catch {
       current = undefined;
     }
-    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(writeDefaultFqbn(current, target.id)));
-    this.fqbn = target.id;
-    if (!this.targets.some((t) => t.id === target.id)) this.targets = [...this.targets, target];
+    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(writeDefaultFqbn(current, fqbn)));
+    this.fqbn = fqbn;
+    void this.loadBoardOptions();
     this.changed.fire();
   }
 
@@ -161,6 +232,8 @@ export class Session implements vscode.Disposable {
     if (this.project) {
       await this.refreshTargets();
       if (stale()) return;
+      this.optionsFor = undefined;
+      void this.loadBoardOptions();
       void this.doctor.refresh();
       await this.refreshBoards();
     }
