@@ -57,7 +57,7 @@ export class SettingsPage implements vscode.Disposable {
         retainContextWhenHidden: true,
       },
     );
-    this.panel.iconPath = vscode.Uri.joinPath(this.extensionUri, 'media', 'icon.png');
+    this.panel.iconPath = vscode.Uri.joinPath(this.extensionUri, 'media', 'icon.svg');
     this.panel.webview.html = webviewHtml(
       this.panel.webview,
       this.extensionUri,
