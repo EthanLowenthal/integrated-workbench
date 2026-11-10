@@ -18,7 +18,7 @@ export const text = {
   sketchKind: 'Arduino sketch',
   selectBoard: 'Select Board...',
   noBoardsPlugged: 'No boards connected',
-  boardSaved: 'Stored in sketch.yaml',
+  boardSaved: 'Stored in workspace settings',
   engineMissing: 'Build engine not installed.',
   boardPackageMissing: 'Board package not installed.',
   recommendedMissing: (n: number) => `${n} recommended package${n === 1 ? '' : 's'} not installed.`,
@@ -114,8 +114,8 @@ export const text = {
     ui: {
       noSketch: 'Open a file in a sketch to edit its settings.',
       storedIn:
-        "Board and board options are stored in this sketch's sketch.yaml, which arduino-cli and Arduino IDE also read. The port is stored on this computer only.",
-      openYaml: 'Open sketch.yaml',
+        'Board and board options are stored in the workspace settings (.vscode/settings.json). An existing sketch.yaml from Arduino IDE is used as the starting point and never changed. The port is stored on this computer only.',
+      openYaml: 'Open Settings File',
       board: 'Board',
       boardDescription: 'The board this sketch is compiled and uploaded for.',
       selectBoard: 'Select Board...',
@@ -126,7 +126,7 @@ export const text = {
       engineMissing: 'The build engine is not installed.',
       options: 'Board Options',
       optionsDescription:
-        'Settings for this board, such as flash size, CPU speed, or upload method. Only values that differ from the default are written to sketch.yaml.',
+        'Settings for this board, such as flash size, CPU speed, or upload method. Only values that differ from the default are saved.',
       noOptions: 'This board has no options.',
       resetOptions: 'Reset to Defaults',
       defaultLabel: 'default',

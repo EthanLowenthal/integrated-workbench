@@ -2,7 +2,7 @@
   "name": "integrated-workbench",
   "displayName": "Integrated Workbench",
   "description": "Build, upload, and monitor microcontroller projects. Detects connected boards, manages board packages, and includes a Serial Monitor with a plotter. Supports Arduino sketches for AVR, ESP32, STM32, and Raspberry Pi Pico.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "integrated-workbench",
   "license": "MIT",
   "engines": {
@@ -207,6 +207,15 @@
           },
           "default": [],
           "markdownDescription": "Extra registries of boards, tools and recipes, added after the built-in one. Each entry is a GitHub repo (`owner/repo` or `owner/repo@branch`, read from its `workbench-registry/index.json`), an `https://` URL to an `index.json`, or an absolute path to a local registry folder. See [Building a registry](https://github.com/EthanLowenthal/sketchdesk/blob/main/docs/REGISTRY.md)."
+        },
+        "integratedWorkbench.boards": {
+          "type": "object",
+          "scope": "resource",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          },
+          "markdownDescription": "Board for each sketch, set from the Sketch view: the sketch folder (relative to the workspace folder) mapped to the board ID with any board options, for example `\"Blink\": \"arduino:avr:uno\"` or `\"Lights\": \"esp32:esp32:esp32s3:FlashSize=8M\"`. When a sketch has no entry, its sketch.yaml (from Arduino IDE 2) is used if present; sketch.yaml is never changed."
         }
       }
     },

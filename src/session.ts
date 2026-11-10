@@ -1,7 +1,8 @@
 import { join } from 'node:path';
 import * as vscode from 'vscode';
 import type { BoardDoctor } from './doctor.js';
-import { readDefaultFqbn, writeDefaultFqbn } from './toolchains/arduino/sketchYaml.js';
+import { readBoard, writeBoard } from './boardSettings.js';
+import { readDefaultFqbn } from './toolchains/arduino/sketchYaml.js';
 import { formatFqbn, parseFqbn } from './toolchains/arduino/fqbn.js';
 import type { BoardOption, BuildTarget, DetectedBoard, Project, Toolchain } from './toolchains/types.js';
 
@@ -10,7 +11,8 @@ const PORTS_KEY = 'integratedWorkbench.ports';
 /**
  * Tracks the project behind the active editor, the boards that are plugged in, and the
  * board/port selected for that project.
- * - Board: `default_fqbn` in the sketch's sketch.yaml (shared with arduino-cli and Arduino IDE,
+ * - Board: the `integratedWorkbench.boards` workspace setting (.vscode/settings.json). An existing
+ *   sketch.yaml (Arduino IDE 2) is read as a fallback but never written. (Previously:
  *   travels with the sketch).
  * - Port: per machine, in VS Code's global state (ports differ between computers).
  */
@@ -23,7 +25,7 @@ export class Session implements vscode.Disposable {
   toolReady = false;
   /** Every board from installed board packages (empty until arduino-cli is ready). */
   targets: BuildTarget[] = [];
-  /** Board ID from sketch.yaml, if set, including any board options ("esp32:esp32:esp32s3:FlashSize=8M"). */
+  /** Board ID for the sketch, including any board options ("esp32:esp32:esp32s3:FlashSize=8M"). */
   fqbn?: string;
   /** Menus for the current board (Flash Size, Processor, ...). Empty until loaded or if none. */
   boardOptions: BoardOption[] = [];
@@ -51,6 +53,13 @@ export class Session implements vscode.Disposable {
         });
     };
     this.disposables.push(
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (this.project && e.affectsConfiguration('integratedWorkbench.boards'))
+          void this.readFqbn().then(() => {
+            this.changed.fire();
+            void this.loadBoardOptions();
+          });
+      }),
       yaml,
       yaml.onDidChange(onYaml),
       yaml.onDidCreate(onYaml),
@@ -121,7 +130,7 @@ export class Session implements vscode.Disposable {
     return !this.fqbn || !this.toolReady || this.targets.some((t) => t.id === this.baseFqbn);
   }
 
-  /** Sets one board option and writes the board ID to sketch.yaml. Defaults are left out. */
+  /** Sets one board option and saves the board ID. Defaults are left out. */
   async setOption(id: string, value: string): Promise<void> {
     const base = this.baseFqbn;
     if (!base) return;
@@ -174,15 +183,8 @@ export class Session implements vscode.Disposable {
   }
 
   private async writeFqbn(fqbn: string): Promise<void> {
-    if (!this.yamlPath) return;
-    const uri = vscode.Uri.file(this.yamlPath);
-    let current: string | undefined;
-    try {
-      current = new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
-    } catch {
-      current = undefined;
-    }
-    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(writeDefaultFqbn(current, fqbn)));
+    if (!this.project) return;
+    await writeBoard(this.project.root, fqbn);
     this.fqbn = fqbn;
     void this.loadBoardOptions();
     this.changed.fire();
@@ -197,13 +199,21 @@ export class Session implements vscode.Disposable {
     this.changed.fire();
   }
 
+  /** The workspace setting first; otherwise an existing sketch.yaml (read only, never written). */
   private async readFqbn(): Promise<void> {
-    if (!this.yamlPath) {
+    if (!this.project) {
       this.fqbn = undefined;
       return;
     }
+    const fromSettings = readBoard(this.project.root);
+    if (fromSettings) {
+      this.fqbn = fromSettings;
+      return;
+    }
     try {
-      const bytes = await vscode.workspace.fs.readFile(vscode.Uri.file(this.yamlPath));
+      const bytes = await vscode.workspace.fs.readFile(
+        vscode.Uri.file(join(this.project.root, 'sketch.yaml')),
+      );
       this.fqbn = readDefaultFqbn(new TextDecoder().decode(bytes));
     } catch {
       this.fqbn = undefined;
@@ -270,7 +280,7 @@ export class Session implements vscode.Disposable {
   /**
    * - Keep the user's port if that board is still plugged in.
    * - Otherwise, if exactly one board is plugged in, switch to it.
-   * - If that board identifies itself and the sketch has no board yet, use it (written to sketch.yaml).
+   * - If that board identifies itself and the sketch has no board yet, use it (saved to workspace settings).
    */
   private async autoSelect(): Promise<void> {
     if (!this.project) return;

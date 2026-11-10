@@ -81,18 +81,57 @@ export async function run(): Promise<void> {
     log(`verify without engine -> "${api.runs.state.blocked}"`);
   }
 
-  // Picking a board writes sketch.yaml.
+  // Picking a board saves it in the workspace settings, not in the sketch folder.
+  const exists = (u: vscode.Uri) =>
+    vscode.workspace.fs.stat(u).then(
+      () => true,
+      () => false,
+    );
+  const boardsInSettings = async () =>
+    JSON.parse(
+      new TextDecoder().decode(
+        await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folder.uri, '.vscode', 'settings.json')),
+      ),
+    )['integratedWorkbench.boards'] as Record<string, string>;
   await api.session.setTarget({ id: 'arduino:avr:uno', name: 'Arduino Uno' });
-  const yaml = new TextDecoder().decode(
-    await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folder.uri, 'Blink', 'sketch.yaml')),
+  assert.equal((await boardsInSettings())['Blink'], 'arduino:avr:uno');
+  assert.equal(
+    await exists(vscode.Uri.joinPath(folder.uri, 'Blink', 'sketch.yaml')),
+    false,
+    'no sketch.yaml created',
   );
-  assert.match(yaml, /^default_fqbn: arduino:avr:uno$/m);
   await until('recommendation from sketch board', () =>
     api.tools.state.recommended.find(
       (i) => i.id === 'arduino:avr' && i.reasons.some((r) => r.includes('Blink targets')),
     ),
   );
-  log('sketch.yaml written; arduino:avr recommended for Blink');
+  log('board saved to .vscode/settings.json (no sketch.yaml); arduino:avr recommended for Blink');
+
+  // A sketch.yaml from Arduino IDE 2 is the starting point, and is never changed.
+  const ideYaml = vscode.Uri.joinPath(folder.uri, 'FromArduinoIde', 'sketch.yaml');
+  const before = new TextDecoder().decode(await vscode.workspace.fs.readFile(ideYaml));
+  await vscode.window.showTextDocument(
+    vscode.Uri.joinPath(folder.uri, 'FromArduinoIde', 'FromArduinoIde.ino'),
+  );
+  await until('FromArduinoIde sketch', () =>
+    api.session.project?.name === 'FromArduinoIde' ? true : undefined,
+  );
+  await until('board taken from sketch.yaml', () =>
+    api.session.fqbn === 'arduino:avr:leonardo' ? true : undefined,
+  );
+  await api.session.setTarget({ id: 'arduino:avr:uno', name: 'Arduino Uno' });
+  assert.equal((await boardsInSettings())['FromArduinoIde'], 'arduino:avr:uno');
+  assert.equal(
+    new TextDecoder().decode(await vscode.workspace.fs.readFile(ideYaml)),
+    before,
+    'sketch.yaml unchanged',
+  );
+  assert.equal((await boardsInSettings())['Blink'], 'arduino:avr:uno', 'other sketches kept');
+  log(
+    'sketch.yaml from Arduino IDE: used as the starting board, left unchanged; new choice saved to settings',
+  );
+  await vscode.window.showTextDocument(ino);
+  await until('back to Blink', () => (api.session.project?.name === 'Blink' ? true : undefined));
   // Serial Monitor: without its engine it says so instead of hanging.
   await vscode.commands.executeCommand('integratedWorkbench.openMonitor');
   if (!api.monitor.state.engineReady) {
@@ -131,7 +170,7 @@ export async function run(): Promise<void> {
   log(`intellisense status without C/C++ extension: ${api.intellisense.status}`);
   assert.equal(api.intellisense.status, 'needsExtension');
 
-  // Real toolchain (optional): board options, writing them to sketch.yaml, and a real compile.
+  // Real toolchain (optional): board options, saving them to settings, and a real compile.
   if (process.env.E2E_CLI) {
     await vscode.workspace
       .getConfiguration('integratedWorkbench')
@@ -161,16 +200,13 @@ export async function run(): Promise<void> {
     );
     assert.equal(cpu.defaultValue, 'atmega328');
     await api.session.setOption('cpu', 'atmega328old');
-    const y = new TextDecoder().decode(
-      await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folder.uri, 'Blink', 'sketch.yaml')),
-    );
-    assert.match(y, /^default_fqbn: arduino:avr:nano:cpu=atmega328old$/m);
+    assert.equal((await boardsInSettings())['Blink'], 'arduino:avr:nano:cpu=atmega328old');
     await api.session.setOption('cpu', 'atmega328');
     assert.equal(api.session.fqbn, 'arduino:avr:nano', 'default values are left out of the board ID');
     const ok = await api.runs.build();
     assert.equal(ok, true, api.runs.state.last?.summary);
     log(
-      `real toolchain: nano options loaded, sketch.yaml updated, ${api.runs.state.last?.summary} in ${api.runs.state.last?.durationMs} ms`,
+      `real toolchain: nano options loaded and saved to settings, ${api.runs.state.last?.summary} in ${api.runs.state.last?.durationMs} ms`,
     );
   }
   // Detect Board: starts waiting for a board, and cancels cleanly.

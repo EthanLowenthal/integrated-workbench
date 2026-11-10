@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- The board and board options for each sketch are saved in the workspace settings (`integratedWorkbench.boards` in `.vscode/settings.json`) instead of a `sketch.yaml` in the sketch folder. A `sketch.yaml` from Arduino IDE 2 is used as the starting point when a sketch has no saved board, and is never changed.
+- Sketch Settings: **Open Settings File** replaces **Open sketch.yaml**.
+
 ## 0.2.0
 
 - Libraries view: search the Arduino library index, install, update, and uninstall libraries. "Required by This Sketch" lists headers the sketch includes that no installed library provides, with the library to install.

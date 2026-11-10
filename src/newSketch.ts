@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import * as vscode from 'vscode';
 import type { Session } from './session.js';
 import { text } from './text.js';
-import { writeDefaultFqbn } from './toolchains/arduino/sketchYaml.js';
+import { writeBoard } from './boardSettings.js';
 
 /** Arduino sketch names: letters, digits, underscore, dot, dash; must not start with dot or dash; max 63. */
 export function validateSketchName(name: string): string | undefined {
@@ -26,7 +26,7 @@ void loop() {
 
 /**
  * Creates <folder>/<Name>/<Name>.ino and opens it. If a board that identifies itself is connected,
- * its board ID goes into sketch.yaml so the sketch is ready to upload.
+ * its board is saved for the sketch so it is ready to upload.
  */
 export async function newSketch(session: Session): Promise<void> {
   // Where: the workspace folder, or ask when no folder is open.
@@ -60,7 +60,6 @@ export async function newSketch(session: Session): Promise<void> {
   const ino = join(folder, `${name}.ino`);
   await fsp.writeFile(ino, SKETCH_TEMPLATE);
   const identified = session.boards.find((b) => b.target)?.target;
-  if (identified)
-    await fsp.writeFile(join(folder, 'sketch.yaml'), writeDefaultFqbn(undefined, identified.id));
+  if (identified) await writeBoard(folder, identified.id);
   await vscode.window.showTextDocument(vscode.Uri.file(ino));
 }

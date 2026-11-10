@@ -28,6 +28,12 @@ const tmp = mkdtempSync(join(tmpdir(), 'iw-e2e-'));
 const ws = join(tmp, 'workspace');
 mkdirSync(join(ws, 'Blink'), { recursive: true });
 writeFileSync(join(ws, 'Blink', 'Blink.ino'), 'void setup() {}\nvoid loop() {}\n');
+mkdirSync(join(ws, 'FromArduinoIde'), { recursive: true });
+writeFileSync(join(ws, 'FromArduinoIde', 'FromArduinoIde.ino'), 'void setup() {}\nvoid loop() {}\n');
+writeFileSync(
+  join(ws, 'FromArduinoIde', 'sketch.yaml'),
+  '# made by Arduino IDE 2\ndefault_fqbn: arduino:avr:leonardo\n',
+);
 mkdirSync(join(ws, 'UsesServo'), { recursive: true });
 writeFileSync(
   join(ws, 'UsesServo', 'UsesServo.ino'),
@@ -59,7 +65,13 @@ try {
     extensionTestsPath: join(root, 'dist/e2e/suite.js'),
     // Optional: point at an existing arduino-cli and data folder to also test real board options and compiles.
     extensionTestsEnv: process.env.E2E_CLI
-      ? { E2E_CLI: process.env.E2E_CLI, ARDUINO_DIRECTORIES_DATA: arduinoData }
+      ? {
+          E2E_CLI: process.env.E2E_CLI,
+          // Every arduino-cli folder is temporary: board packages, downloads, and the sketchbook
+          // (where libraries are installed). Nothing touches the real ~/Documents/Arduino.
+          ARDUINO_DIRECTORIES_DATA: arduinoData,
+          ARDUINO_DIRECTORIES_USER: join(tmp, 'sketchbook'),
+        }
       : {},
     launchArgs: [
       ws,

@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import * as vscode from 'vscode';
 import { lookupChip } from '../core/chips.js';
 import type { IntelliSense } from '../intellisense.js';
@@ -6,6 +5,7 @@ import type { LineEnding, MonitorController } from '../monitor/controller.js';
 import type { RegistryService } from '../registryService.js';
 import type { Session } from '../session.js';
 import { text } from '../text.js';
+import { settingsFileFor } from '../boardSettings.js';
 import { webviewHtml, webviewOptions } from './webview.js';
 
 type Msg =
@@ -132,8 +132,11 @@ export class SettingsPage implements vscode.Disposable {
       case 'lineEnding':
         return this.monitor.setLineEnding(m.ending);
       case 'openYaml':
-        if (s.project)
-          await vscode.window.showTextDocument(vscode.Uri.file(join(s.project.root, 'sketch.yaml')));
+        if (s.project) {
+          const file = settingsFileFor(s.project.root);
+          if (file) await vscode.window.showTextDocument(file);
+          else await vscode.commands.executeCommand('workbench.action.openSettingsJson');
+        }
         return;
       case 'installCpp':
         await vscode.commands.executeCommand('integratedWorkbench.installCppExtension');

@@ -124,3 +124,14 @@ describe('.ino prototypes for IntelliSense (real arduino-cli output)', () => {
     ]);
   });
 });
+
+describe('board setting keys', () => {
+  it('keys sketches by folder relative to the workspace folder', async () => {
+    const { boardKey } = await import('../src/boardKey.js');
+    expect(boardKey('/ws/Blink', '/ws')).toBe('Blink');
+    expect(boardKey('/ws/sketches/Blink', '/ws')).toBe('sketches/Blink');
+    expect(boardKey('/ws', '/ws')).toBe('.');
+    expect(boardKey('/elsewhere/Blink', '/ws')).toBe('/elsewhere/Blink');
+    expect(boardKey('/elsewhere/Blink', undefined)).toBe('/elsewhere/Blink');
+  });
+});
