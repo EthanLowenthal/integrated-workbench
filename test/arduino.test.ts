@@ -218,3 +218,21 @@ describe('ArduinoToolchain', () => {
     ]);
   });
 });
+
+describe('arduino-cli 1.5.1 real output (macOS, nothing plugged in, no cores)', () => {
+  it('version', () => expect(parseVersion(fixture('arduino/version.real.json'))).toBe('1.5.1'));
+  it('board list has only non-USB ports (no vid), which the session filters out', () => {
+    const boards = parseBoardList(fixture('arduino/board-list-no-boards.real.json'));
+    expect(boards.map((b) => b.port).sort()).toEqual([
+      '/dev/cu.Bluetooth-Incoming-Port',
+      '/dev/cu.debug-console',
+    ]);
+    expect(boards.every((b) => b.vid === undefined)).toBe(true);
+  });
+  it('board listall with no cores is {}', () => {
+    expect(parseBoardListAll(fixture('arduino/board-listall-no-cores.real.json'))).toEqual([]);
+  });
+  it('missing core message', () => {
+    expect(parseMissingPlatform(fixture('arduino/compile-platform-missing.real.txt'))).toBe('arduino:avr');
+  });
+});

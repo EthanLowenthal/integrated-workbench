@@ -21,6 +21,7 @@ import {
   parseMissingPlatform,
   parseVersion,
 } from './parse.js';
+import { assetFor, installManagedCli, managedCliPath, type CliAsset } from './managedCli.js';
 
 export interface ArduinoOptions {
   host: ProbeHost;
@@ -30,6 +31,8 @@ export interface ArduinoOptions {
   cliPath?: () => string | undefined;
   stream?: StreamRunner;
   platform?: NodeJS.Platform;
+  /** Where SketchDesk keeps its own arduino-cli (extension global storage). */
+  managedDir?: string;
 }
 
 const SKETCH_FILE_EXTS = new Set(['.ino', '.pde', '.cpp', '.c', '.h', '.hpp', '.hh', '.S']);
@@ -110,7 +113,9 @@ export class ArduinoToolchain implements Toolchain {
   async checkInstalled(): Promise<ToolStatus> {
     if (this.resolved) return { installed: true, ...this.resolved };
     const configured = this.opts.cliPath?.()?.trim();
-    const candidates = configured ? [configured] : cliCandidates(this.platform, homedir());
+    // Order: the user's explicit setting, then SketchDesk's own pinned copy, then one already installed.
+    const managed = this.opts.managedDir ? [managedCliPath(this.opts.managedDir, this.platform)] : [];
+    const candidates = configured ? [configured] : [...managed, ...cliCandidates(this.platform, homedir())];
     for (const path of candidates) {
       const res = await this.opts.host.run(path, ['version', '--format', 'json'], { timeoutMs: 10_000 });
       const version = res.code === 0 ? parseVersion(res.stdout) : undefined;
@@ -123,6 +128,25 @@ export class ArduinoToolchain implements Toolchain {
       installed: false,
       reason: configured ? `arduino-cli not found at ${configured}` : 'arduino-cli not found',
     };
+  }
+
+  /** Can SketchDesk download its own arduino-cli on this OS/CPU? Returns the asset (with size) if so. */
+  managedAsset(): CliAsset | undefined {
+    return this.opts.managedDir ? assetFor(this.platform, process.arch) : undefined;
+  }
+
+  /** Downloads SketchDesk's own arduino-cli. Only call after the user agreed. */
+  async installManaged(onProgress?: (fraction: number) => void, signal?: AbortSignal): Promise<ToolStatus> {
+    if (!this.opts.managedDir) throw new Error('No storage folder for arduino-cli.');
+    await installManagedCli({
+      storageDir: this.opts.managedDir,
+      host: this.opts.host,
+      platform: this.platform,
+      onProgress,
+      signal,
+    });
+    this.resetCli();
+    return this.checkInstalled();
   }
 
   private async cli(): Promise<string> {

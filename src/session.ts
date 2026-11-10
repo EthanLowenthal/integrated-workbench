@@ -21,6 +21,9 @@ export class Session implements vscode.Disposable {
   project?: Project;
   boards: DetectedBoard[] = [];
   toolReady = false;
+  /** Called the first time a project is opened and the toolchain's CLI is missing. */
+  onToolMissing?: () => void;
+  private toolMissingReported = false;
 
   private lastPortKey = '';
   private pollTimer?: NodeJS.Timeout;
@@ -55,6 +58,12 @@ export class Session implements vscode.Disposable {
     await this.updateProject();
   }
 
+  /** Re-check the CLI (after it was installed or the path setting changed). */
+  async recheckTool(): Promise<void> {
+    this.toolMissingReported = true;
+    await this.updateProject();
+  }
+
   get selection(): Selection {
     if (!this.project) return {};
     return this.state.get<Record<string, Selection>>(SELECTION_KEY, {})[this.project.root] ?? {};
@@ -84,6 +93,10 @@ export class Session implements vscode.Disposable {
     if (this.project) {
       const status = await this.toolchain.checkInstalled();
       this.toolReady = status.installed;
+      if (!status.installed && !this.toolMissingReported) {
+        this.toolMissingReported = true;
+        this.onToolMissing?.();
+      }
       void this.doctor.refresh();
       await this.refreshBoards();
     }

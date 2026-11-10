@@ -44,10 +44,10 @@ async function prepare(deps: FlowDeps): Promise<{ project: Project; target: Buil
     void vscode.window.showWarningMessage(text.notInSketch);
     return undefined;
   }
-  const status = await session.toolchain.checkInstalled();
-  if (!status.installed) {
+  if (!(await session.toolchain.checkInstalled()).installed) {
+    // If the user downloads the build engine from this prompt, carry on with the build.
     await deps.promptInstallCli();
-    return undefined;
+    if (!(await session.toolchain.checkInstalled()).installed) return undefined;
   }
   let target = session.selection.target;
   if (!target) {

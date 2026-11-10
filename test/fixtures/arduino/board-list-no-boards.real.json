@@ -1,0 +1,22 @@
+{
+  "detected_ports": [
+    {
+      "port": {
+        "address": "/dev/cu.debug-console",
+        "label": "/dev/cu.debug-console",
+        "protocol": "serial",
+        "protocol_label": "Serial Port",
+        "properties": {}
+      }
+    },
+    {
+      "port": {
+        "address": "/dev/cu.Bluetooth-Incoming-Port",
+        "label": "/dev/cu.Bluetooth-Incoming-Port",
+        "protocol": "serial",
+        "protocol_label": "Serial Port",
+        "properties": {}
+      }
+    }
+  ]
+}

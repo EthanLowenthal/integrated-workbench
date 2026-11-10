@@ -29,10 +29,16 @@ export const text = {
   coreInstalled: (id: string) => `Installed ${id}.`,
   coreInstallFailed: (id: string) => `Couldn't install ${id}. See the SketchDesk output for details.`,
 
-  // arduino-cli missing
-  cliMissing: "SketchDesk needs arduino-cli to build and upload Arduino sketches, and it isn't installed.",
-  cliCopyBrew: 'Copy install command',
-  cliBrewCommand: 'brew install arduino-cli',
+  // arduino-cli (SketchDesk's Arduino build engine)
+  cliOffer: (mb: number) =>
+    `To compile and upload Arduino sketches, SketchDesk needs its build engine (arduino-cli, ${mb} MB, downloaded once from Arduino's official GitHub releases). Download it now?`,
+  cliDownload: 'Download',
+  cliUseOwn: 'Use my own arduino-cli...',
+  cliDownloading: 'Downloading SketchDesk build engine',
+  cliReady: 'SketchDesk is ready to build Arduino sketches.',
+  cliDownloadFailed: (err: string) => `Couldn't download the build engine: ${err}`,
+  cliMissing:
+    "SketchDesk can't download arduino-cli for this computer. Install it yourself, then set its path.",
   cliGuide: 'Installation guide',
   cliGuideUrl: 'https://arduino.github.io/arduino-cli/latest/installation/', // TODO verify
   cliSetPath: 'Set path...',

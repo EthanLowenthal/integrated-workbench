@@ -29,6 +29,8 @@ Raw probe output, one file per OS and scenario. Parsers and `diagnose()` are tes
 | Linux | `linux/ch340-brltty.synth.json` | CH340 claimed by brltty (usbfs), no tty | synth |
 | Linux | `linux/ch340-ok.synth.json` | CH340 on ttyUSB0 | synth |
 | Linux | `linux/uno-acm.synth.json` | Uno on ttyACM0 | synth |
+| arduino-cli | `arduino/*.real.*` | arduino-cli 1.5.1: version, board list (nothing plugged in), listall (no cores), compile with core missing | real (macOS 26.3) |
+| arduino-cli | `arduino/*.synth.*` | board list with boards (1.x and 0.x shapes), compiler errors (macOS, Windows) | synth |
 | Linux | `linux/*.txt` | `systemctl`, `id -nG`, `/etc/group`, `lsof`, `lsusb` output | synth |
 
 To capture a real Linux sysfs fixture, run `readLinuxSysfs(nodeHost)` from `@sketchdesk/core` and

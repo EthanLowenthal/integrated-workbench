@@ -14,14 +14,15 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 
 ## Layout
 - `src/extension.ts` wires everything up. `session.ts` tracks the open project, plugged-in boards and the selected board/port; `statusBar.ts`, `pickers.ts`, `buildFlow.ts` (Verify/Upload, Problems panel), `doctor.ts` (Board Doctor UI).
-- `src/toolchains/types.ts` is the Toolchain interface; `src/toolchains/arduino/` wraps arduino-cli (parsers in `parse.ts` are pure and tested).
+- `src/toolchains/types.ts` is the Toolchain interface; `src/toolchains/arduino/` wraps arduino-cli (parsers in `parse.ts` are pure and tested). `managedCli.ts` downloads SketchDesk's own pinned arduino-cli (version + per-platform SHA-256 baked in; bump both together from the release's checksums file) into extension global storage after a one-time consent prompt. Lookup order: `sketchdesk.arduinoCliPath` setting, managed copy, system install.
 - `src/core/` (no vscode): `probes/*` collect, `parse/*` parse, `diagnose.ts` decides, `watch.ts` diffs snapshots.
 - Fixtures: `test/fixtures/` (`*.real.*` captured, `*.synth.*` hand-written; see its README).
+- Test kit: `~/Downloads/sketchdesk-test` (README with numbered checks + sample sketches + `SketchDesk-dev.vsix`). Refresh the VSIX there with `npm run package` after changes.
 - Run the extension: F5 ("Run SketchDesk" in `.vscode/launch.json`).
 
 ## Commands
 
-- `npm test`, `npm run typecheck`, `npm run lint`, `npm run build` (esbuild -> dist/extension.js), `npm run format`
+- `npm test`, `npm run typecheck`, `npm run lint`, `npm run build` (esbuild -> dist/extension.js), `npm run package` (dev .vsix), `npm run format`
 
 ## Notes
 
