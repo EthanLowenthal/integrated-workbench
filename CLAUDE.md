@@ -6,7 +6,7 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 
 - Settings that make the extension run a program or download from a source (`arduinoCliPath`, `registries`) have `"scope": "machine"`, so a workspace's `.vscode/settings.json` can't set them. The extension doesn't run in untrusted workspaces (`capabilities.untrustedWorkspaces.supported: false`): compiling can execute code from a sketch.
 
-- Display name `Integrated Workbench`; extension name `integrated-workbench`; command/setting/context prefix `integratedWorkbench.` (never `workbench.`, which is VS Code's own). Never put "Arduino" in a product name, ID, logo or domain. Referential use only, with "Arduino" last ("Integrated Workbench - for Arduino").
+- Display name `Integrated Workbench`; publisher `ethml` (same as GDS Lens), extension ID `ethml.integrated-workbench`; extension name `integrated-workbench`; command/setting/context prefix `integratedWorkbench.` (never `workbench.`, which is VS Code's own). Never put "Arduino" in a product name, ID, logo or domain. Referential use only, with "Arduino" last ("Integrated Workbench - for Arduino").
 - `src/core` never imports `vscode` (enforced by eslint).
 - Run commands with `execFile` + argument arrays via `ProbeHost.run`; never `exec` or shell strings built from device data (enforced by eslint).
 - Never run elevated or destructive commands automatically. Surface them as `runCommand` / `copyCommand` actions the user confirms.
@@ -61,6 +61,13 @@ Product plan and current direction: [docs/PLAN.md](docs/PLAN.md). Read it before
 - Every external call has a limit from `src/core/timeouts.ts` (probes, arduino-cli, downloads with stall + total limits, registry fetches, workspace searches). `runWithTimeout` in `src/core/probes/host.ts` always settles: SIGTERM, then SIGKILL after a grace period, resolving immediately with `timedOut: true`. `StreamOptions.timeoutMs` is required so new long-running calls can't forget one.
 - `activate()` awaits only the built-in registry (local file). Session start, tools refresh and extra registries run in the background.
 - Sidebar views skip posting identical state (the 2 s board poll would otherwise redraw and close dropdowns). Session and ToolsModel drop stale or overlapping refreshes.
+
+## Docs and release
+
+- README.md is the Marketplace page: GDS Lens extension README structure (badges, claim, hero image, Install, Features, task sections, Commands/Settings/Shortcuts tables). Copy follows Google developer documentation style (sentence-case headings, bold only for UI elements and run-in headings, condition before instruction). Build steps live in DEVELOPING.md.
+- Releases: push a `v<version>` tag; `.github/workflows/release.yml` packages, creates the GitHub release, and publishes to the Marketplace (`VSCE_PAT`) and Open VSX (`OVSX_PAT`) when those secrets exist.
+- Registries UI in Boards and Tools appears only when `integratedWorkbench.registries` has entries.
+- Upload failures: `src/toolchains/arduino/uploadAdvice.ts` maps uploader output to a reason and optional board-option fix (Nano bootloader). In VS Code forks (`cppToolsAvailableHere()` false), IntelliSense goes through clangd (`setUpClangd`), and an existing `compile_commands.json` is kept current.
 
 ## Commands
 

@@ -7,7 +7,7 @@ import type { Runs } from '../runs.js';
 import type { Session } from '../session.js';
 import { text } from '../text.js';
 import type { ToolsModel } from '../toolsModel.js';
-import type { IntelliSense } from '../intellisense.js';
+import { cppToolsAvailableHere, type IntelliSense } from '../intellisense.js';
 import type { LibrariesModel } from '../librariesModel.js';
 import type { BoardFiles } from '../boardFiles.js';
 import { webviewHtml, webviewOptions } from './webview.js';
@@ -362,10 +362,10 @@ export class SketchView implements vscode.WebviewViewProvider, vscode.Disposable
       out.push({
         id: 'cpptools',
         severity: 'info',
-        title: text.intellisense.needsExtension,
+        title: cppToolsAvailableHere() ? text.intellisense.needsExtension : text.intellisense.needsClangd,
         actions: [
           {
-            label: text.install,
+            label: cppToolsAvailableHere() ? text.install : text.intellisense.setUpClangd,
             run: () => vscode.commands.executeCommand('integratedWorkbench.installCppExtension'),
           },
         ],

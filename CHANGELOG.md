@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- Failed uploads are explained in plain words from the uploader's output: a board that doesn't answer, an ESP32 not in upload mode, a busy port, or missing permissions. For an Arduino Nano that doesn't answer, a button switches between the old and new bootloader options and uploads again.
+- In editors built on VS Code (Cursor, VSCodium, and others), where Microsoft's C/C++ extension isn't available, **Set Up clangd** installs clangd and writes the sketch's `compile_commands.json`. Once written, it is kept up to date when the board or its options change.
+- Registries are listed in Boards and Tools only after you add one in `integratedWorkbench.registries`.
+- Security: `integratedWorkbench.arduinoCliPath` and `integratedWorkbench.registries` can only be set in user settings, not by a workspace, and the extension runs only in trusted workspaces.
+- The extension now starts in workspaces that only contain MicroPython projects.
+- Fixed path handling on Windows in board-folder detection, IntelliSense mapping, and registries.
+
 ## 0.5.0
 
 - **Install MicroPython on Board...** (Command Palette, or the Sketch view's "..." menu in a MicroPython project) installs MicroPython 1.29.0. Firmware comes from micropython.org, is checked against a SHA-256 in the registry, and is downloaded once.

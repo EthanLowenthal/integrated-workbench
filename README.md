@@ -1,74 +1,241 @@
 # Integrated Workbench
 
-Build, upload, and monitor microcontroller projects in VS Code, with a sidebar that knows which board is connected.
+[![Visual Studio Marketplace](https://vsmarketplacebadges.dev/version-short/ethml.integrated-workbench.svg?style=flat-square&label=Marketplace&color=1B5E7A)](https://marketplace.visualstudio.com/items?itemName=ethml.integrated-workbench)
+[![Installs](https://vsmarketplacebadges.dev/installs-short/ethml.integrated-workbench.svg?style=flat-square&label=installs&color=1B5E7A)](https://marketplace.visualstudio.com/items?itemName=ethml.integrated-workbench)
+[![Open VSX downloads](https://img.shields.io/open-vsx/dt/ethml/integrated-workbench?style=flat-square&label=Open%20VSX%20downloads&color=1B5E7A)](https://open-vsx.org/extension/ethml/integrated-workbench)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/EthanLowenthal/integrated-workbench/blob/HEAD/LICENSE)
 
-Integrated Workbench compiles and uploads Arduino sketches (`.ino`, `.cpp`, `.h`) for AVR, ESP32, STM32, Raspberry Pi Pico, and any other board package in the Arduino ecosystem, and runs MicroPython projects on boards that have MicroPython installed. It sets up its own tools, explains why a board is not detected, and includes a Serial Monitor with a live plotter.
+Plug in a board and it works. If it doesn't, Integrated Workbench tells you why.
+
+Build, upload, and monitor Arduino sketches in VS Code from a sidebar that knows which board is
+connected. There is nothing to install first and nothing added to your sketch folder, and
+sketches from Arduino IDE open as they are. It works with AVR, ESP32, STM32, Raspberry Pi Pico,
+and any other board package in the Arduino ecosystem, and with MicroPython.
+
+<!-- Hero screenshot goes here: images/sidebar.png (Sketch view, Serial Monitor plot, Build tab),
+     referenced as https://github.com/EthanLowenthal/integrated-workbench/raw/HEAD/images/sidebar.png -->
+
+## Install
+
+In the Extensions view, search for Integrated Workbench, or install it from the
+[Marketplace](https://marketplace.visualstudio.com/items?itemName=ethml.integrated-workbench) or
+[Open VSX](https://open-vsx.org/extension/ethml/integrated-workbench). The **Get Started**
+walkthrough opens on first run.
+
+To upload your first sketch, do the following:
+
+1. Open a sketch folder, or run **Integrated Workbench: New Sketch...**.
+1. In the Integrated Workbench sidebar, click **Install** next to "Build engine not installed."
+   The engine is about 17 MB and installs once.
+1. Connect the board. Its port appears within a couple of seconds.
+1. Click **Select Board...** and choose your board. If its board package isn't installed, the
+   package installs first.
+1. Click **Upload**.
 
 ## Features
 
-- **Sidebar.** The Sketch view shows the sketch, its board, and the connected port, with Verify, Upload, and Monitor. Progress and compiler errors appear inline, and select-to-open takes you to the line.
-- **Board detection.** Connected boards are detected within a couple of seconds. Boards that identify themselves over USB are selected automatically; boards with a USB-serial chip (CH340, CP210x, FTDI) show the chip.
-- **Boards and Tools.** Install, update, and remove board packages. Packages recommended for the current workspace and connected boards are listed first, each with the reason.
-- **Build output.** The Build panel tab shows compiler and upload output live; select an error to go to that line. After a compile, flash and RAM use show as bars in the Sketch view.
-- **Serial Monitor.** Live output with timestamps, hex view, filter, and save. Send text with a choice of line ending and history. The Plot tab graphs values such as `temp=21.5 humidity=40`. The monitor releases the port during uploads and reconnects afterwards.
-- **Libraries.** Search, install, update, and remove libraries. Libraries a sketch includes but that are not installed are listed with an Install button, and a compile that fails on a missing `#include` offers the library that provides it.
-- **Sketch Settings.** Board, board options (flash size, CPU speed, upload method, and others), port, and Serial Monitor defaults in one page. The board and its options are stored in the workspace settings (`.vscode/settings.json`). A sketch from Arduino IDE 2 opens with the board from its `sketch.yaml`, which is never changed.
-- **IntelliSense.** With the C/C++ extension installed, autocomplete and error squiggles use the selected board's compiler, defines, include paths, and libraries. clangd users can write a `compile_commands.json`.
-- **Diagnostics.** **Detect Board** watches USB while you connect a board and reports what it saw. When a board does not appear, the Sketch view explains why: a charge-only cable, a missing CH340 or CP210x driver, a port held by another program, or Linux permissions. Fixes come with links to vendor driver pages or commands to copy.
-- **MicroPython.** A folder with `boot.py` (or one you mark) is a MicroPython project. **Run** runs the open file on the board without saving it; **Upload** copies changed files and restarts the board; the Serial Monitor is the REPL; **Files on Board** lists, opens and deletes files. **Install MicroPython on Board** puts MicroPython on a Raspberry Pi Pico (copied in BOOTSEL mode) or an ESP32 (written with esptool). No Python installation is needed.
-- **Registries.** Everything Integrated Workbench knows about boards, tools, and USB IDs comes from registries. Add your own in `integratedWorkbench.registries`.
+Integrated Workbench includes the following features:
 
-## Getting started
+- **Board detection**. Connected boards appear within a couple of seconds. A board that
+  identifies itself over USB is selected for you; a board with a USB-serial chip such as a CH340,
+  CP210x, or FTDI shows the chip.
+- **Problems explained**. When a board doesn't appear, the sidebar names the likely cause: a
+  charge-only cable, a missing CH340 or CP210x driver, a port held by another program, or Linux
+  permissions, with a link to the driver or a command to copy. When an upload fails, it says what
+  the uploader's error means.
+- **One-click fixes**. A Nano that doesn't answer gets a button that switches the bootloader option
+  and uploads again. A compile that fails on a missing `#include` offers to install the library
+  that provides it.
+- **Serial Monitor and plotter**. Timestamps, hex view, filter, save, line endings, and send
+  history. The Plot tab graphs values such as `temp=21.5 humidity=40`. During uploads, the monitor
+  lets go of the port and reconnects afterward.
+- **Build output**. The Build panel tab shows compiler and upload output as it arrives. After a
+  compile, the sidebar shows flash and RAM use.
+- **Board packages and libraries**. Install, update, and remove them from the sidebar. The ones your
+  sketch and connected boards need are listed first, with the reason.
+- **Board options**. Flash size, CPU speed, upload method, and the other options for your board are
+  on one Sketch Settings page.
+- **IntelliSense**. Autocomplete and error squiggles use the selected board's compiler, defines,
+  include paths, and libraries.
+- **MicroPython**. Run a file on the board, upload changed files, use the REPL, and install
+  MicroPython on a Raspberry Pi Pico or an ESP32. You don't need to install Python.
 
-1. Install Integrated Workbench. The **Get Started** walkthrough opens automatically; it is also under **Help > Welcome** and the command **Integrated Workbench: Get Started**.
-2. Open a sketch, or run **Integrated Workbench: New Sketch...**.
-3. In **Boards and Tools**, install the build engine (about 17 MB, once) and the package for your board.
-4. Connect the board, then select **Upload**.
-5. Select **Monitor** to open the Serial Monitor.
+## Use the sidebar
+
+The Integrated Workbench sidebar has the following views:
+
+- **Sketch**: the open sketch, its board and port, the **Verify**, **Upload**, and **Monitor**
+  buttons, results, and notifications
+- **Boards and Tools**: the build engine, the Serial Monitor engine, and board packages
+- **Libraries**: libraries the sketch uses, installed libraries, and search
+
+The sketch is whichever sketch folder contains the file open in the editor. A sketch is a folder
+with an `.ino` file of the same name, such as `Blink/Blink.ino`.
+
+### Notifications
+
+Anything that needs attention is listed at the top of the Sketch view: a tool to install, a board
+problem, a library the sketch is missing, or an available update. The Integrated Workbench icon in
+the activity bar shows how many need attention. To see the explanation for a notification, hold
+the pointer over it.
+
+### Board and port
+
+To choose the board, click **Select Board...**. The list shows connected boards first, then
+installed boards, then boards from packages that aren't installed yet.
+
+The board and its options are saved in the workspace settings (`.vscode/settings.json`), so
+nothing is added to the sketch folder. A sketch from Arduino IDE 2 opens with the board in its
+`sketch.yaml`; that file is read, never changed. The port is remembered on each computer.
+
+If the board doesn't appear, click **Detect Board...** under the port, then connect the board while
+Integrated Workbench watches USB. It reports what changed.
+
+### Board options
+
+To change options such as flash size or the Nano bootloader, open Sketch Settings: in the Sketch
+view title bar, click **More Actions** > **Open Sketch Settings**. Only options that differ from
+the board's defaults are saved.
+
+## Use the Serial Monitor
+
+To open the Serial Monitor, in the Sketch view, click **Monitor**. The Serial Monitor opens in the
+panel area, next to Terminal. In the Serial Monitor, you can do the following:
+
+- Set the baud rate to match `Serial.begin()` in the sketch. The baud rate is remembered for each
+  sketch.
+- To graph values, click the **Plot** tab. Lines such as `temp=21.5 humidity=40` or `21.5,40` are
+  plotted, one series for each value.
+- To upload and then watch the output, run **Upload and Open Serial Monitor**.
+
+## Use MicroPython
+
+A folder with a `boot.py` file is a MicroPython project. To use another folder, right-click it in
+the Explorer and select **Use Folder as MicroPython Project**.
+
+The Sketch view has the following buttons for a MicroPython project:
+
+- **Run** runs the open `.py` file, or `main.py`, on the board without saving it there. Output
+  appears in the Serial Monitor, and **Stop** interrupts it. If the program raises an exception,
+  the line is marked in the editor.
+- **Upload** copies the files that changed to the board, then restarts it to run `main.py`. Files
+  on the board that aren't in the project are left alone.
+- **REPL** opens the Serial Monitor, with **Interrupt (Ctrl-C)** and **Soft Reset (Ctrl-D)**
+  buttons.
+
+To see the files on the board, click **List Files** under **Files on Board**. To open a read-only
+copy of a file, click it.
+
+### Install MicroPython on a board
+
+To put MicroPython on a board, run **Integrated Workbench: Install MicroPython on Board...**,
+choose the board, and then do one of the following:
+
+- For a Raspberry Pi Pico, hold the BOOTSEL button while you connect the board. The firmware is
+  copied to the board's drive, and the board restarts with MicroPython.
+- For an ESP32, select its port first. The board is erased, and `esptool` writes MicroPython. The
+  first time, `esptool` downloads (about 60 MB).
+
+## IntelliSense
+
+In VS Code, IntelliSense for sketches uses the
+[C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools). If it
+isn't installed, the Sketch view offers to install it.
+
+The C/C++ extension isn't available in other editors built on VS Code, such as Cursor and
+VSCodium. In those editors, in the Sketch view, click **Set Up clangd**. It installs the clangd
+extension and writes a `compile_commands.json` file into the sketch folder, which is updated when
+the board changes.
 
 ## Requirements
 
-None to install beforehand. Integrated Workbench downloads what it needs, after you choose to install it:
+You don't need to install anything first. After you choose to install them, Integrated Workbench
+downloads the following tools:
 
-| Tool                                                        | Purpose                                                 | Size        |
-| ----------------------------------------------------------- | ------------------------------------------------------- | ----------- |
-| [arduino-cli](https://github.com/arduino/arduino-cli)       | Compiles, uploads, and manages board packages           | about 17 MB |
-| [serial-monitor](https://github.com/arduino/serial-monitor) | Connects the Serial Monitor to serial ports             | about 2 MB  |
-| [esptool](https://github.com/espressif/esptool)             | Installs MicroPython on ESP32 boards (only when you do) | about 60 MB |
+| Tool                                                        | Purpose                                       | Size        |
+| ----------------------------------------------------------- | --------------------------------------------- | ----------- |
+| [arduino-cli](https://github.com/arduino/arduino-cli)       | Compiles, uploads, and manages board packages | About 17 MB |
+| [serial-monitor](https://github.com/arduino/serial-monitor) | Connects the Serial Monitor to serial ports   | About 2 MB  |
+| [esptool](https://github.com/espressif/esptool)             | Installs MicroPython on ESP32 boards          | About 60 MB |
 
-arduino-cli and serial-monitor are official Arduino tools and esptool is Espressif's; all are pinned to a version and verified against a SHA-256 checksum before use. They are stored in VS Code's extension storage and are not added to your PATH. Board packages are installed by arduino-cli into the standard Arduino data folder, so packages already installed by Arduino IDE are reused.
+Each tool is pinned to a version and checked against a SHA-256 checksum before use. The tools are
+kept in VS Code's extension storage and aren't added to your `PATH`. Board packages install into
+the standard Arduino data folder, so packages that Arduino IDE already installed are reused.
 
-For IntelliSense, install the [C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) (or clangd).
-
-## Settings
-
-| Setting                              | Description                                                                                                 |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `integratedWorkbench.arduinoCliPath` | Use an arduino-cli you installed instead of the managed copy.                                               |
-| `integratedWorkbench.registries`     | Additional registries of boards, tools, and USB IDs (GitHub `owner/repo`, an https URL, or a local folder). |
-| `integratedWorkbench.pollIntervalMs` | How often to check for connected boards while a sketch is open.                                             |
+Integrated Workbench runs only in trusted workspaces, because compiling a sketch can run code from
+it.
 
 ## Keyboard shortcuts
 
-| Command                        | Windows / Linux    | macOS             |
-| ------------------------------ | ------------------ | ----------------- |
-| Verify                         | `Ctrl+Alt+R`       | `Cmd+Alt+R`       |
-| Upload                         | `Ctrl+Alt+U`       | `Cmd+Alt+U`       |
-| Open Serial Monitor            | `Ctrl+Alt+M`       | `Cmd+Alt+M`       |
-| Upload and Open Serial Monitor | `Ctrl+Alt+Shift+U` | `Cmd+Alt+Shift+U` |
+| Command                                         | Windows and Linux  | macOS             |
+| ----------------------------------------------- | ------------------ | ----------------- |
+| Verify (in a MicroPython project: Run on Board) | `Ctrl+Alt+R`       | `Cmd+Alt+R`       |
+| Upload                                          | `Ctrl+Alt+U`       | `Cmd+Alt+U`       |
+| Open Serial Monitor                             | `Ctrl+Alt+M`       | `Cmd+Alt+M`       |
+| Upload and Open Serial Monitor                  | `Ctrl+Alt+Shift+U` | `Cmd+Alt+Shift+U` |
+
+## Commands
+
+| Command                                                          | Action                                                |
+| ---------------------------------------------------------------- | ----------------------------------------------------- |
+| **Integrated Workbench: New Sketch...**                          | Create a sketch folder with an `.ino` file            |
+| **Integrated Workbench: Verify**                                 | Compile the sketch                                    |
+| **Integrated Workbench: Upload**                                 | Compile and upload the sketch                         |
+| **Integrated Workbench: Upload and Open Serial Monitor**         | Upload, then connect the Serial Monitor               |
+| **Integrated Workbench: Select Board...**                        | Choose the board for the sketch                       |
+| **Integrated Workbench: Select Port...**                         | Choose the port                                       |
+| **Integrated Workbench: Detect Board...**                        | Watch USB while you connect a board                   |
+| **Integrated Workbench: Open Serial Monitor**                    | Open and connect the Serial Monitor                   |
+| **Integrated Workbench: Show Build Output**                      | Open the Build panel tab                              |
+| **Integrated Workbench: Open Sketch Settings**                   | Open board options, port, and Serial Monitor defaults |
+| **Integrated Workbench: Run on Board**                           | Run the open MicroPython file on the board            |
+| **Integrated Workbench: Install MicroPython on Board...**        | Install MicroPython on a Pico or an ESP32             |
+| **Integrated Workbench: Use Folder as MicroPython Project**      | Treat a folder as a MicroPython project               |
+| **Integrated Workbench: Write compile_commands.json for clangd** | Write the sketch's compilation database               |
+| **Integrated Workbench: Get Started**                            | Open the walkthrough                                  |
+
+## Settings
+
+| Setting                                    | Default | Effect                                                              |
+| ------------------------------------------ | ------- | ------------------------------------------------------------------- |
+| `integratedWorkbench.arduinoCliPath`       | `""`    | Path to an `arduino-cli` that you installed. User settings only.    |
+| `integratedWorkbench.pollIntervalMs`       | `2000`  | How often to check for connected boards, in milliseconds            |
+| `integratedWorkbench.registries`           | `[]`    | Extra registries of boards, tools, and USB IDs. User settings only. |
+| `integratedWorkbench.boards`               | `{}`    | The board for each sketch. Set from the Sketch view.                |
+| `integratedWorkbench.micropython.projects` | `[]`    | Folders treated as MicroPython projects                             |
+
+Everything that Integrated Workbench knows about boards, tools, firmware, and USB IDs is data in a
+registry. To add your own, see
+[Build a registry](https://github.com/EthanLowenthal/integrated-workbench/blob/HEAD/docs/REGISTRY.md).
 
 ## Privacy
 
-Integrated Workbench collects no telemetry. It connects to the network only to download tools and board packages you choose to install, to refresh board package indexes, and to read registries you add.
+Integrated Workbench collects no telemetry. It connects to the network only to download tools,
+board packages, libraries, and firmware that you choose to install, to refresh package indexes,
+and to read registries that you add.
 
 ## Known limitations
 
-- Arduino sketches and MicroPython projects are supported today. Embedded Rust is planned.
-- IntelliSense for `.ino` files includes generated function prototypes, except for functions whose signatures use types defined in the sketch; calling one of those before its definition can show an error in the editor even though it compiles.
-- Uploads to STM32 boards other than Nucleo and Discovery (for example over SWD or DFU) need STMicroelectronics' STM32CubeProgrammer, which is installed separately.
+Integrated Workbench has the following known limitations:
+
+- In `.ino` files, IntelliSense includes the function prototypes that `arduino-cli` generates,
+  except for functions whose signatures use types defined in the sketch. Calling one of those
+  functions before its definition can show an error in the editor even though the sketch compiles.
+- Uploads to STM32 boards other than Nucleo and Discovery, for example over SWD or DFU, need
+  STMicroelectronics' STM32CubeProgrammer, which you install separately.
+
+## Release notes
+
+For release notes, see
+[CHANGELOG.md](https://github.com/EthanLowenthal/integrated-workbench/blob/HEAD/CHANGELOG.md). For
+build instructions, see
+[DEVELOPING.md](https://github.com/EthanLowenthal/integrated-workbench/blob/HEAD/DEVELOPING.md).
 
 ## License
 
-MIT. Integrated Workbench downloads arduino-cli and serial-monitor, which are licensed under the GPL-3.0 and run as separate programs.
+MIT. Integrated Workbench downloads `arduino-cli` and `serial-monitor` (GPL-3.0) and `esptool`
+(GPL-2.0), which run as separate programs. For bundled third-party code, see
+[THIRD_PARTY_NOTICES.md](https://github.com/EthanLowenthal/integrated-workbench/blob/HEAD/THIRD_PARTY_NOTICES.md).
 
-Integrated Workbench builds and uploads sketches compatible with Arduino. It is not affiliated with or endorsed by Arduino.
+Integrated Workbench builds and uploads sketches that are compatible with Arduino. It isn't
+affiliated with or endorsed by Arduino.

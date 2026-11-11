@@ -4,6 +4,7 @@ import { basename, extname, sep } from 'node:path';
 import type { BuildLog } from './buildLog.js';
 import { MicroPythonBoard } from './toolchains/micropython/board.js';
 import { projectFiles, tracebackLocation } from './toolchains/micropython/index.js';
+import { adviseUploadFailure } from './toolchains/arduino/uploadAdvice.js';
 import { ProgramError, ReplError, type ByteLink } from './toolchains/micropython/rawRepl.js';
 import type { BoardDoctor } from './doctor.js';
 import type { Session } from './session.js';
@@ -387,12 +388,28 @@ export class Runs implements vscode.Disposable {
     );
     void this.uploadHooks.after?.(port);
     let hint = res.error;
+    let fix: SuggestedFix | undefined;
     if (!res.success && !hint) {
-      // Ask Board Doctor whether it knows why (port held by another app, permissions, ...).
+      // Ask Board Doctor whether it knows why (port held by a named app, permissions, ...),
+      // then read the uploader's own output for the usual causes.
       const st = await this.doctor.refresh();
       hint = st.diagnoses.find(
         (d) => d.port?.path === port && (d.severity === 'error' || d.severity === 'warning'),
       )?.title;
+      const advice = adviseUploadFailure(this.log.current?.text ?? '', target.id, s.boardOptions);
+      hint ??= advice?.reason;
+      if (advice?.option) {
+        const { id, value, label } = advice.option;
+        fix = {
+          message: advice.reason,
+          label,
+          apply: async () => {
+            await s.setOption(id, value);
+            return true;
+          },
+        };
+        hint = undefined; // the fix card says it
+      }
     }
     const summary = res.success ? text.uploadOk(port) : text.uploadFailed(port);
     this.log.finish(res.success, summary);
@@ -405,6 +422,7 @@ export class Runs implements vscode.Disposable {
         summary,
         diagnostics: [],
         hint,
+        fix,
         memory: this.lastMemory,
       },
     });
@@ -420,7 +438,8 @@ export class Runs implements vscode.Disposable {
     this.log.finish(ok, fix.label);
     if (ok) {
       await this.session.recheckTool();
-      await this.build(this.state.last?.kind === 'upload' ? 'upload' : 'build');
+      if (this.state.last?.kind === 'upload') await this.upload();
+      else await this.build();
     }
   }
 

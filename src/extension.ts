@@ -16,7 +16,7 @@ import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { BoardFiles } from './boardFiles.js';
 import { FirmwareInstaller } from './firmwareInstaller.js';
-import { CPPTOOLS_ID, IntelliSense } from './intellisense.js';
+import { CPPTOOLS_ID, IntelliSense, cppToolsAvailableHere } from './intellisense.js';
 import { MonitorController } from './monitor/controller.js';
 import type { BuildTarget } from './toolchains/types.js';
 import { ToolsModel } from './toolsModel.js';
@@ -203,9 +203,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestAp
     ),
     settingsPage,
     vscode.commands.registerCommand('integratedWorkbench.openSketchSettings', () => settingsPage.open()),
-    vscode.commands.registerCommand('integratedWorkbench.installCppExtension', () =>
-      vscode.commands.executeCommand('extension.open', CPPTOOLS_ID),
-    ),
+    vscode.commands.registerCommand('integratedWorkbench.installCppExtension', async () => {
+      if (cppToolsAvailableHere()) return vscode.commands.executeCommand('extension.open', CPPTOOLS_ID);
+      const uri = await intellisense.setUpClangd();
+      if (uri)
+        vscode.window.setStatusBarMessage(
+          text.intellisense.wrote(vscode.workspace.asRelativePath(uri)),
+          5000,
+        );
+    }),
     vscode.commands.registerCommand('integratedWorkbench.writeCompileCommands', async () => {
       const uri = await intellisense.writeCompileCommands();
       if (uri)

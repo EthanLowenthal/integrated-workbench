@@ -6,6 +6,7 @@ import type { RegistryService } from '../registryService.js';
 import type { Session } from '../session.js';
 import { text } from '../text.js';
 import { settingsFileFor } from '../boardSettings.js';
+import { cppToolsAvailableHere } from '../intellisense.js';
 import { webviewHtml, webviewOptions } from './webview.js';
 
 type Msg =
@@ -99,7 +100,16 @@ export class SettingsPage implements vscode.Disposable {
         lineEnding: this.monitor.state.lineEnding,
       },
       intellisense: { status: this.intellisense.status, message: this.intellisense.message },
-      text: text.settingsPage.ui,
+      text: cppToolsAvailableHere()
+        ? text.settingsPage.ui
+        : {
+            ...text.settingsPage.ui,
+            installCpp: text.intellisense.setUpClangd,
+            intellisenseStatus: {
+              ...text.settingsPage.ui.intellisenseStatus,
+              needsExtension: text.intellisense.needsClangd,
+            },
+          },
       endings: text.monitor.ui.endings,
     };
     const json = JSON.stringify(state);

@@ -163,6 +163,23 @@ export const text = {
     errors > 0 ? `Compilation failed: ${errors} error${errors === 1 ? '' : 's'}` : 'Compilation failed',
   uploadFailed: (port: string) => `Upload to ${port} failed`,
 
+  /** Why an upload failed (from the uploader's output), shown under the result. */
+  uploadAdvice: {
+    nanoOldBootloader:
+      'The board did not answer the uploader. Most Nano clones, and Nanos made before 2018, use the old bootloader.',
+    nanoNewBootloader: 'The board did not answer the uploader. This Nano may use the new bootloader.',
+    useOption: (label: string) => `Use "${label}" and Upload`,
+    notInSync:
+      'The board did not answer the uploader. Check that the selected board matches the connected one, then try again; on some boards, press reset just as the upload starts.',
+    espBootMode:
+      'The ESP32 did not enter upload mode. Hold its BOOT button while the upload starts, then release it.',
+    doubleReset:
+      'No board answered on the port. Double-press the reset button, then upload again within a few seconds.',
+    portBusy: 'The port is in use. Close other programs that use it, such as another serial monitor.',
+    permission:
+      'No permission to open the port. On Linux, add yourself to the dialout group and log in again.',
+  },
+
   // MicroPython
   needSerialEngine: 'Serial Monitor Engine required. Install it from Boards and Tools.',
   noMainPy: 'No main.py in this project. Open the .py file to run.',
@@ -279,6 +296,8 @@ export const text = {
   /** IntelliSense (autocomplete and error squiggles in the editor). */
   intellisense: {
     needsExtension: 'IntelliSense requires the C/C++ extension.',
+    needsClangd: 'IntelliSense requires clangd.',
+    setUpClangd: 'Set Up clangd',
     install: 'Install',
     updating: 'Updating IntelliSense...',
     failed: 'IntelliSense could not read the build settings.',

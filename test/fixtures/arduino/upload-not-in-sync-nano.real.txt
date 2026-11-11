@@ -1,0 +1,22 @@
+Error: programmer is not responding
+Warning: attempt 1 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 2 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 3 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 4 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 5 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 6 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 7 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 8 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 9 of 10: not in sync: resp=0x00
+Error: programmer is not responding
+Warning: attempt 10 of 10: not in sync: resp=0x00
+Error: unable to open port /dev/cu.Bluetooth-Incoming-Port for programmer arduino
+Failed uploading: uploading error: exit status 1

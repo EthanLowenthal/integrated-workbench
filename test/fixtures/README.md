@@ -44,3 +44,4 @@ To capture a real Linux sysfs fixture, run `readLinuxSysfs(nodeHost)` from `src/
 - `micropython/rpi-pico-head.real.uf2`, `micropython/rpi-pico2-head.real.uf2` (captured): the first
   two 512-byte UF2 blocks of MicroPython 1.29.0 for Raspberry Pi Pico and Pico 2, from micropython.org
   (MIT). Used for the family-ID checks.
+| Arduino | `arduino/upload-not-in-sync-nano.real.txt` | `arduino-cli upload` of a Nano build to a port with no board (avrdude 8: ten "not in sync" attempts) | real (arduino:avr 1.8.8) |

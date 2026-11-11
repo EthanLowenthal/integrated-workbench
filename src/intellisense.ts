@@ -24,6 +24,14 @@ import type { ArduinoToolchain } from './toolchains/arduino/index.js';
 export const CPPTOOLS_ID = 'ms-vscode.cpptools';
 export const CLANGD_ID = 'llvm-vs-code-extensions.vscode-clangd';
 
+/**
+ * Microsoft's C/C++ extension is licensed for Microsoft's VS Code only; editors built on VS Code
+ * (Cursor, Windsurf, VSCodium, ...) use clangd instead.
+ */
+export function cppToolsAvailableHere(): boolean {
+  return vscode.env.appName.startsWith('Visual Studio Code');
+}
+
 export type IntelliSenseStatus = 'off' | 'needsExtension' | 'updating' | 'ready' | 'error';
 
 const SOURCE = new Set(['.ino', '.pde', '.cpp', '.cc', '.cxx', '.c', '.h', '.hh', '.hpp', '.hxx', '.S']);
@@ -148,6 +156,8 @@ export class IntelliSense implements vscode.Disposable, CustomConfigurationProvi
       }
       this.sketches.set(project.root, { ...data, raw, buildPath });
       this.status = 'ready';
+      // clangd: keep a compile_commands.json the user asked for in step with the board.
+      if (!this.api && existsSync(join(project.root, COMPILE_DB))) await this.writeCompileCommands();
       this.api?.didChangeCustomConfiguration(this);
       this.api?.didChangeCustomBrowseConfiguration(this);
     } catch (err) {
@@ -157,6 +167,15 @@ export class IntelliSense implements vscode.Disposable, CustomConfigurationProvi
       this.output.appendLine(`[intellisense] ${this.message}`);
     }
     this.changed.fire();
+  }
+
+  /** Installs clangd (from this editor's extension store) and writes the sketch's compile_commands.json. */
+  async setUpClangd(): Promise<vscode.Uri | undefined> {
+    if (!vscode.extensions.getExtension(CLANGD_ID))
+      await vscode.commands.executeCommand('workbench.extensions.installExtension', CLANGD_ID);
+    this.lastKey = '';
+    await this.refresh();
+    return this.writeCompileCommands();
   }
 
   /** clangd: write a compile_commands.json pointing at the real sketch files into the sketch folder. */

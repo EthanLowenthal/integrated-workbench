@@ -16,3 +16,4 @@ dist/e2e/**
 dist/registry-check.mjs
 images/**
 .gitignore
+DEVELOPING.md

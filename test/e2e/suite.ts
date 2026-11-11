@@ -25,7 +25,7 @@ export async function run(): Promise<void> {
   const folder = vscode.workspace.workspaceFolders?.[0];
   assert.ok(folder, 'workspace folder open');
 
-  const ext = vscode.extensions.getExtension<TestApi>('integrated-workbench.integrated-workbench');
+  const ext = vscode.extensions.getExtension<TestApi>('ethml.integrated-workbench');
   assert.ok(ext, 'extension found');
   const t0 = Date.now();
   const api = await ext.activate();

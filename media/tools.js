@@ -98,18 +98,24 @@
         ${r.errors.length ? `<button class="link" data-action="showOutput">${r.errors.length} ${esc(r.errors.length === 1 ? W.errorSingular : W.errorPlural)}</button>` : ''}</div>`,
       )
       .join('');
+    // Registries are an advanced feature: listed only once the user has added one in the
+    // integratedWorkbench.registries setting (the built-in one is always there).
+    const registries =
+      s.registries.length > 1
+        ? `<div class="heading" style="margin-top:8px">${esc(W.registries)}</div>${regs}
+        <div class="row" style="margin-top:4px;gap:4px 12px;flex-wrap:wrap">
+          <button class="link" data-action="addRegistry">${icon('add')} ${esc(W.addRegistry)}</button>
+          <button class="link" data-action="editRegistries">${esc(W.configure)}</button>
+          <button class="link" data-action="registryHelp">${esc(W.documentation)}</button>
+        </div>`
+        : '';
     // Settings sit collapsed at the bottom; problems with registries show in Notifications.
     const settings = `<details class="group settings" ${settingsOpen ? 'open' : ''}>
       <summary class="heading">${icon('chevron-right')} ${esc(W.settings)}</summary>
       <div class="settings-body">
         <button class="link" data-action="openSketchSettings">${icon('settings-gear')} ${esc(W.sketchSettings)}</button>
         <button class="link" data-action="openExtensionSettings">${icon('settings')} ${esc(W.extensionSettings)}</button>
-        <div class="heading" style="margin-top:8px">${esc(W.registries)}</div>${regs}
-        <div class="row" style="margin-top:4px;gap:4px 12px;flex-wrap:wrap">
-          <button class="link" data-action="addRegistry">${icon('add')} ${esc(W.addRegistry)}</button>
-          <button class="link" data-action="editRegistries">${esc(W.configure)}</button>
-          <button class="link" data-action="registryHelp">${esc(W.documentation)}</button>
-        </div>
+        ${registries}
       </div></details>`;
     root.innerHTML =
       search +

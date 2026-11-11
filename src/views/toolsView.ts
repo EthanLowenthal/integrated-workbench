@@ -5,6 +5,7 @@ import type { ToolsModel } from '../toolsModel.js';
 import { webviewHtml, webviewOptions } from './webview.js';
 
 export const TOOLS_VIEW = 'integratedWorkbench.tools';
+const EXTENSION_ID = 'ethml.integrated-workbench';
 
 type Msg =
   | {
@@ -89,10 +90,7 @@ export class ToolsView implements vscode.WebviewViewProvider, vscode.Disposable 
         await vscode.commands.executeCommand('integratedWorkbench.openSketchSettings');
         return;
       case 'openExtensionSettings':
-        await vscode.commands.executeCommand(
-          'workbench.action.openSettings',
-          '@ext:integrated-workbench.integrated-workbench',
-        );
+        await vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${EXTENSION_ID}`);
         return;
       case 'registryHelp':
         await vscode.env.openExternal(vscode.Uri.parse(text.registryHelpUrl));

@@ -1,0 +1,38 @@
+name: Release
+# Push a tag like v0.6.0 (matching package.json) to package, attach the VSIX to a GitHub release,
+# and publish to the VS Code Marketplace and Open VSX. Each store is skipped until its token secret
+# exists: VSCE_PAT (Azure DevOps token, Marketplace "Manage" scope) and OVSX_PAT (open-vsx.org).
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Tag matches package.json version
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm run package
+      - name: GitHub release with the VSIX
+        run: gh release create "$GITHUB_REF_NAME" *.vsix --title "$GITHUB_REF_NAME" --notes-file CHANGELOG.md --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Publish to the VS Code Marketplace
+        if: env.VSCE_PAT != ''
+        run: npx vsce publish --packagePath *.vsix
+      - name: Publish to Open VSX
+        if: env.OVSX_PAT != ''
+        run: npx --yes ovsx@1.4.0 publish *.vsix -p "$OVSX_PAT"
