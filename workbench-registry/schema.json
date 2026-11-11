@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/EthanLowenthal/sketchdesk/workbench-registry/schema.json",
+  "$id": "https://github.com/EthanLowenthal/integrated-workbench/workbench-registry/schema.json",
   "title": "Integrated Workbench registry file",
   "description": "One file of an Integrated Workbench registry. A registry is an index.json plus any files it includes; every file uses this same format and may contain any of the sections. See docs/REGISTRY.md.",
   "type": "object",

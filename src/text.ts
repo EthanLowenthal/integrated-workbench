@@ -146,7 +146,7 @@ export const text = {
   trustAndInstall: 'Trust and Install',
   addRegistryPrompt: 'Add Registry',
   addRegistryPlaceholder: 'owner/repo, owner/repo@branch, https://.../index.json, or a local folder path',
-  registryHelpUrl: 'https://github.com/EthanLowenthal/sketchdesk/blob/main/docs/REGISTRY.md',
+  registryHelpUrl: 'https://github.com/EthanLowenthal/integrated-workbench/blob/main/docs/REGISTRY.md',
 
   // Build / upload (shown in the sidebar)
   notInSketch: 'No sketch open.',

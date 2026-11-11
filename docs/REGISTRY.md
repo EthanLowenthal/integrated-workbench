@@ -16,7 +16,7 @@ The built-in one is [`workbench-registry/`](../workbench-registry) in this repo.
 
    ```json
    {
-     "$schema": "https://raw.githubusercontent.com/EthanLowenthal/sketchdesk/HEAD/workbench-registry/schema.json",
+     "$schema": "https://raw.githubusercontent.com/EthanLowenthal/integrated-workbench/HEAD/workbench-registry/schema.json",
      "schema": 1,
      "name": "My boards",
      "usb": [{ "vid": "cafe", "pid": "0001", "name": "My Dev Board", "kind": "native" }]
@@ -49,7 +49,7 @@ A registry is an `index.json` plus any files it lists in `include`. Every file h
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/EthanLowenthal/sketchdesk/HEAD/workbench-registry/schema.json",
+  "$schema": "https://raw.githubusercontent.com/EthanLowenthal/integrated-workbench/HEAD/workbench-registry/schema.json",
   "schema": 1,
   "name": "My boards",
   "include": ["usb.json", "packages/tools.json"],

@@ -280,7 +280,7 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Extra registries of boards, tools and recipes, added after the built-in one. Each entry is a GitHub repo (`owner/repo` or `owner/repo@branch`, read from its `workbench-registry/index.json`), an `https://` URL to an `index.json`, or an absolute path to a local registry folder. See [Building a registry](https://github.com/EthanLowenthal/sketchdesk/blob/main/docs/REGISTRY.md).",
+          "markdownDescription": "Extra registries of boards, tools and recipes, added after the built-in one. Each entry is a GitHub repo (`owner/repo` or `owner/repo@branch`, read from its `workbench-registry/index.json`), an `https://` URL to an `index.json`, or an absolute path to a local registry folder. See [Building a registry](https://github.com/EthanLowenthal/integrated-workbench/blob/main/docs/REGISTRY.md).",
           "scope": "machine"
         },
         "integratedWorkbench.boards": {
@@ -495,7 +495,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/EthanLowenthal/sketchdesk.git"
+    "url": "https://github.com/EthanLowenthal/integrated-workbench.git"
   },
   "dependencies": {
     "ajv": "^8.20.0",
@@ -506,9 +506,9 @@
     "color": "#1B5E7A",
     "theme": "dark"
   },
-  "homepage": "https://github.com/EthanLowenthal/sketchdesk#readme",
+  "homepage": "https://github.com/EthanLowenthal/integrated-workbench#readme",
   "bugs": {
-    "url": "https://github.com/EthanLowenthal/sketchdesk/issues"
+    "url": "https://github.com/EthanLowenthal/integrated-workbench/issues"
   },
   "capabilities": {
     "untrustedWorkspaces": {

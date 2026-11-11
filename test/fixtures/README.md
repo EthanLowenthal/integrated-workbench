@@ -9,7 +9,7 @@ Raw probe output, one file per OS and scenario. Parsers and `diagnose()` are tes
 
 | OS | File | Scenario | Source |
 |---|---|---|---|
-| macOS | `macos/ioreg-no-boards.real.txt` | `ioreg -r -c IOUSBHostDevice -l -w0`, hubs/dock/receivers, no boards | real (macOS 26.3) |
+| macOS | `macos/ioreg-no-boards.real.txt` | `ioreg -r -c IOUSBHostDevice -l -w0`, hubs/dock/receivers, no boards | real (macOS 26.3); serial numbers, MAC address and process names redacted |
 | macOS | `macos/sp-usbhost-no-boards.real.json` | `system_profiler SPUSBHostDataType -json` | real (macOS 26.3) |
 | macOS | `macos/ioreg-ch340.synth.txt` | CH340 clone on built-in driver, `/dev/cu.usbserial-110` | synth |
 | macOS | `macos/ioreg-ch340-no-port.synth.txt` | CH340 present, no driver bound | synth |

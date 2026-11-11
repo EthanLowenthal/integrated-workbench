@@ -23,4 +23,4 @@ export function createDriverDb(entries: readonly DriverEntry[]): DriverDb {
 export const defaultDriverDb: DriverDb = createDriverDb(bundled.drivers as DriverEntry[]);
 
 /** Where to report devices we don't recognize. A product link, not registry data. */
-export const ISSUE_URL = 'https://github.com/EthanLowenthal/sketchdesk/issues/new';
+export const ISSUE_URL = 'https://github.com/EthanLowenthal/integrated-workbench/issues/new';

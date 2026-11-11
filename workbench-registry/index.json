@@ -3,6 +3,6 @@
   "schema": 1,
   "name": "Integrated Workbench",
   "description": "The default registry: tools, board packages, USB IDs, driver pages and project recipes.",
-  "homepage": "https://github.com/EthanLowenthal/sketchdesk",
+  "homepage": "https://github.com/EthanLowenthal/integrated-workbench",
   "include": ["tools.json", "arduino-cores.json", "usb.json", "drivers.json", "recipes.json", "firmware.json"]
 }
