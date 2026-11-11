@@ -4,6 +4,7 @@ import { basename, dirname, extname, join } from 'node:path';
 import type { ProbeHost } from '../../core/probes/host.js';
 import { streamProcess, type StreamRunner } from '../process.js';
 import { parseFqbn } from './fqbn.js';
+import { pathsFor } from '../../core/paths.js';
 import {
   architectureOf,
   libraryForHeader,
@@ -251,7 +252,7 @@ export class ArduinoToolchain implements Toolchain {
 
   buildPath(project: Project): string {
     const hash = createHash('sha1').update(project.root).digest('hex').slice(0, 12);
-    return join(this.opts.buildRoot, `${project.name}-${hash}`);
+    return pathsFor(this.opts.buildRoot).join(this.opts.buildRoot, `${project.name}-${hash}`);
   }
 
   async build(ctx: RunContext): Promise<BuildResult> {

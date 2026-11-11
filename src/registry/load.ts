@@ -1,5 +1,5 @@
 import Ajv, { type ErrorObject } from 'ajv';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { pathsFor } from '../core/paths.js';
 import schema from '../../workbench-registry/schema.json';
 import type { Origin, Registry, RegistryFile, WithOrigin } from './types.js';
 
@@ -41,6 +41,7 @@ export function parseRegistrySpec(spec: string, home?: string): RegistryLocation
   }
   if (s.startsWith('http://')) return { error: `Registries must use https: ${s}` };
   let path = s.startsWith('file://') ? decodeURIComponent(new URL(s).pathname) : s;
+  const { join, isAbsolute } = pathsFor(path, home);
   if (path.startsWith('~/') && home) path = join(home, path.slice(2));
   if (!isAbsolute(path))
     return { error: `Not a GitHub repo (owner/repo), https URL, or absolute path: ${s}` };
@@ -50,7 +51,7 @@ export function parseRegistrySpec(spec: string, home?: string): RegistryLocation
 function relative(base: RegistryLocation, rel: string): RegistryLocation {
   return base.kind === 'url'
     ? { kind: 'url', url: new URL(rel, base.url).toString() }
-    : { kind: 'file', path: resolve(dirname(base.path), rel) };
+    : { kind: 'file', path: pathsFor(base.path).resolve(pathsFor(base.path).dirname(base.path), rel) };
 }
 
 function describe(loc: RegistryLocation): string {

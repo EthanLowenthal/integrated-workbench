@@ -1,4 +1,4 @@
-import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { pathsFor } from '../../core/paths.js';
 
 /**
  * Turns arduino-cli's compile_commands.json (from `compile --only-compilation-database`) into
@@ -53,6 +53,7 @@ export function configFromArgs(args: string[], directory: string, forcedInclude:
   const defines: string[] = [];
   const compilerArgs: string[] = [];
   let standard: string | undefined;
+  const { isAbsolute, join } = pathsFor(directory);
   const abs = (p: string) => (isAbsolute(p) ? p : join(directory, p));
   for (let i = 1; i < args.length; i++) {
     const a = args[i]!;
@@ -69,6 +70,7 @@ export function configFromArgs(args: string[], directory: string, forcedInclude:
 }
 
 function within(file: string, folder: string): string | undefined {
+  const { relative, isAbsolute } = pathsFor(folder, file);
   const rel = relative(folder, file);
   return rel && !rel.startsWith('..') && !isAbsolute(rel) ? rel : undefined;
 }
@@ -87,6 +89,7 @@ export function sketchIntelliSense(
   inoFiles: string[],
   findArduinoH: (includePath: string[]) => string | undefined,
 ): SketchIntelliSense {
+  const { join, isAbsolute, sep } = pathsFor(sketchRoot, buildPath);
   const files = new Map<string, FileConfig>();
   const sketchCopy = join(buildPath, 'sketch');
   const browse = new Set<string>();
@@ -128,6 +131,7 @@ export function rewriteForSketch(
   sketchRoot: string,
   inoFiles: string[],
 ): CompileDbEntry[] {
+  const { join, isAbsolute, dirname } = pathsFor(sketchRoot, buildPath);
   const sketchCopy = join(buildPath, 'sketch');
   const out: CompileDbEntry[] = [];
   for (const e of entries) {
@@ -157,7 +161,7 @@ export function rewriteForSketch(
 }
 
 export const COMPILE_DB = 'compile_commands.json';
-export const isIno = (f: string) => /\.(ino|pde)$/i.test(basename(f));
+export const isIno = (f: string) => /\.(ino|pde)$/i.test(f);
 
 /** Types a prototype may use and still be safe to declare before anything in the sketch. */
 const KNOWN_TYPES = new Set([

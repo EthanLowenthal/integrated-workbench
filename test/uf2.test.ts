@@ -71,7 +71,7 @@ describe('UF2 drives', () => {
   it('Windows: checks drive letters', async () => {
     const drives = await findUf2Drives({
       platform: 'win32',
-      ...fakeFs({}, { [join('E:\\', 'INFO_UF2.TXT')]: RP2040_INFO }),
+      ...fakeFs({}, { 'E:\\INFO_UF2.TXT': RP2040_INFO }),
     });
     expect(drives.map((d) => d.boardId)).toEqual(['RPI-RP2']);
   });

@@ -32,7 +32,7 @@ describe('built-in registry', () => {
     const loaded = await loadRegistry(root, nodeRegistryIO, { builtin: true });
     expect(loaded.errors).toEqual([]);
     expect(loaded.name).toBe('Integrated Workbench');
-    expect(loaded.files.map((f) => f.location.split('/').pop())).toEqual([
+    expect(loaded.files.map((f) => f.location.split(/[\\/]/).pop())).toEqual([
       'index.json',
       'tools.json',
       'arduino-cores.json',

@@ -1,5 +1,6 @@
 import { promises as fsp } from 'node:fs';
-import { basename, dirname, join, posix, relative, sep } from 'node:path';
+import { join, posix, relative, sep } from 'node:path';
+import { pathsFor } from '../../core/paths.js';
 import type { SerialPort } from '../../core/types.js';
 import type { ProbeHost } from '../../core/probes/host.js';
 import type {
@@ -53,6 +54,7 @@ export class MicroPythonToolchain implements Toolchain {
   constructor(private readonly opts: MicroPythonOptions) {}
 
   async findProject(filePath: string): Promise<Project | undefined> {
+    const { basename, dirname, sep } = pathsFor(filePath);
     const roots = this.opts.workspaceRoots();
     const within = roots.find((r) => filePath.startsWith(r + sep) || filePath === r);
     let dir = dirname(filePath);

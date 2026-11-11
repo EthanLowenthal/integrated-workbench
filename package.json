@@ -1,7 +1,7 @@
 {
   "name": "integrated-workbench",
   "displayName": "Integrated Workbench",
-  "description": "Build, upload, and monitor microcontroller projects. Detects connected boards, manages board packages, and includes a Serial Monitor with a plotter. Supports Arduino sketches for AVR, ESP32, STM32, and Raspberry Pi Pico.",
+  "description": "Build, upload, and monitor microcontroller projects. Detects connected boards, manages board packages and libraries, and includes a Serial Monitor with a plotter. Supports Arduino sketches (AVR, ESP32, STM32, Raspberry Pi Pico) and MicroPython.",
   "version": "0.5.0",
   "publisher": "integrated-workbench",
   "license": "MIT",
@@ -11,7 +11,6 @@
   },
   "categories": [
     "Programming Languages",
-    "Debuggers",
     "Other"
   ],
   "keywords": [
@@ -24,13 +23,18 @@
     "microcontroller",
     "ch340",
     "board manager",
-    "arduino-cli"
+    "arduino-cli",
+    "micropython",
+    "rp2040",
+    "esptool",
+    "uf2"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
     "workspaceContains:**/*.ino",
     "onLanguage:cpp",
-    "onLanguage:c"
+    "onLanguage:c",
+    "workspaceContains:**/boot.py"
   ],
   "contributes": {
     "commands": [
@@ -261,7 +265,8 @@
         "integratedWorkbench.arduinoCliPath": {
           "type": "string",
           "default": "",
-          "description": "Path to an arduino-cli executable. When empty, Integrated Workbench uses the copy it manages, or an arduino-cli found on PATH."
+          "description": "Path to an arduino-cli executable. When empty, Integrated Workbench uses the copy it manages, or an arduino-cli found on PATH.",
+          "scope": "machine"
         },
         "integratedWorkbench.pollIntervalMs": {
           "type": "number",
@@ -275,7 +280,8 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Extra registries of boards, tools and recipes, added after the built-in one. Each entry is a GitHub repo (`owner/repo` or `owner/repo@branch`, read from its `workbench-registry/index.json`), an `https://` URL to an `index.json`, or an absolute path to a local registry folder. See [Building a registry](https://github.com/EthanLowenthal/sketchdesk/blob/main/docs/REGISTRY.md)."
+          "markdownDescription": "Extra registries of boards, tools and recipes, added after the built-in one. Each entry is a GitHub repo (`owner/repo` or `owner/repo@branch`, read from its `workbench-registry/index.json`), an `https://` URL to an `index.json`, or an absolute path to a local registry folder. See [Building a registry](https://github.com/EthanLowenthal/sketchdesk/blob/main/docs/REGISTRY.md).",
+          "scope": "machine"
         },
         "integratedWorkbench.boards": {
           "type": "object",
@@ -503,5 +509,12 @@
   "homepage": "https://github.com/EthanLowenthal/sketchdesk#readme",
   "bugs": {
     "url": "https://github.com/EthanLowenthal/sketchdesk/issues"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Compiling and uploading can run code from the workspace (for example compiler options in a sketch), so Integrated Workbench runs only in trusted workspaces."
+    },
+    "virtualWorkspaces": false
   }
 }

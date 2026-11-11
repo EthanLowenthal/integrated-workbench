@@ -1,5 +1,5 @@
 import { promises as fsp } from 'node:fs';
-import { join } from 'node:path';
+import { posix, win32 } from 'node:path';
 
 /**
  * UF2 bootloader drives (Raspberry Pi RP2040 / RP2350 in BOOTSEL mode). The board shows up as a
@@ -41,6 +41,7 @@ function candidateRoots(platform: NodeJS.Platform, user?: string): string[] {
 export async function findUf2Drives(o: DriveSearch): Promise<Uf2Drive[]> {
   const readdir = o.readdir ?? ((p: string) => fsp.readdir(p));
   const readFile = o.readFile ?? ((p: string) => fsp.readFile(p, 'utf8'));
+  const { join } = o.platform === 'win32' ? win32 : posix;
   const mounts: string[] = [];
   if (o.platform === 'win32') {
     for (const l of 'DEFGHIJKLMNOPQRSTUVWXYZ') mounts.push(`${l}:\\`);
